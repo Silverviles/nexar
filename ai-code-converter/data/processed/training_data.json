@@ -1,0 +1,50 @@
+[
+  {
+    "input": "# Classical: Add two numbers\ndef add_numbers(a, b):\n    return a + b\n\nresult = add_numbers(3, 5)\nprint(result)  # Output: 8",
+    "target": "# Quantum: Add two numbers using quantum gates\nfrom qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister\n\ndef quantum_add(a, b):\n    # Convert to binary (simplified for 3-bit numbers)\n    qr = QuantumRegister(6, 'q')\n    cr = ClassicalRegister(4, 'c')\n    qc = QuantumCircuit(qr, cr)\n    \n    # Encode first number\n    if a & 1: qc.x(0)\n    if a & 2: qc.x(1)\n    if a & 4: qc.x(2)\n    \n    # Encode second number\n    if b & 1: qc.x(3)\n    if b & 2: qc.x(4)\n    if b & 4: qc.x(5)\n    \n    # Quantum adder circuit (simplified)\n    qc.cx(3, 0)  # Add bits\n    qc.cx(4, 1)\n    qc.cx(5, 2)\n    \n    qc.measure([0,1,2,3], [0,1,2,3])\n    return qc\n\ncircuit = quantum_add(3, 5)",
+    "metadata": {
+      "algorithm_name": "addition",
+      "category": "arithmetic",
+      "difficulty": "basic",
+      "input_size": "small",
+      "quantum_advantage": "none",
+      "description": "Simple addition operation"
+    }
+  },
+  {
+    "input": "# Classical: Boolean OR operation\ndef boolean_or(a, b):\n    return a or b\n\nresult = boolean_or(True, False)\nprint(result)  # Output: True",
+    "target": "# Quantum: Boolean OR using quantum gates\nfrom qiskit import QuantumCircuit\n\ndef quantum_or(a, b):\n    qc = QuantumCircuit(3, 1)\n    \n    # Encode inputs\n    if a: qc.x(0)\n    if b: qc.x(1)\n    \n    # OR logic: output is 1 if either input is 1\n    qc.x(0)  # NOT a\n    qc.x(1)  # NOT b\n    qc.ccx(0, 1, 2)  # Toffoli: output = (NOT a) AND (NOT b)\n    qc.x(2)  # NOT output = OR(a, b)\n    \n    qc.measure(2, 0)\n    return qc\n\ncircuit = quantum_or(True, False)",
+    "metadata": {
+      "algorithm_name": "boolean_or",
+      "category": "logic",
+      "difficulty": "basic",
+      "input_size": "small",
+      "quantum_advantage": "none",
+      "description": "Boolean OR operation using quantum gates"
+    }
+  },
+  {
+    "input": "# Classical: Find maximum of two numbers\ndef find_max(a, b):\n    if a > b:\n        return a\n    else:\n        return b\n\nresult = find_max(7, 5)\nprint(result)  # Output: 7",
+    "target": "# Quantum: Compare two numbers\nfrom qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister\n\ndef quantum_compare(a, b, n_bits=3):\n    qr = QuantumRegister(n_bits*2 + 1, 'q')\n    cr = ClassicalRegister(1, 'c')\n    qc = QuantumCircuit(qr, cr)\n    \n    # Encode first number in qubits 0 to n_bits-1\n    for i in range(n_bits):\n        if a & (1 << i):\n            qc.x(i)\n    \n    # Encode second number in qubits n_bits to 2*n_bits-1\n    for i in range(n_bits):\n        if b & (1 << i):\n            qc.x(n_bits + i)\n    \n    # Comparison circuit (simplified)\n    # Result qubit will be 1 if a > b\n    for i in range(n_bits):\n        qc.cx(i, 2*n_bits)\n        qc.x(n_bits + i)\n        qc.ccx(n_bits + i, i, 2*n_bits)\n        qc.x(n_bits + i)\n    \n    qc.measure(2*n_bits, 0)\n    return qc\n\ncircuit = quantum_compare(7, 5)",
+    "metadata": {
+      "algorithm_name": "find_maximum",
+      "category": "comparison",
+      "difficulty": "intermediate",
+      "input_size": "small",
+      "quantum_advantage": "none",
+      "description": "Find maximum of two numbers"
+    }
+  },
+  {
+    "input": "# Classical: Linear search\ndef linear_search(arr, target):\n    for i in range(len(arr)):\n        if arr[i] == target:\n            return i\n    return -1\n\narr = [2, 5, 7, 8]\nresult = linear_search(arr, 7)\nprint(result)  # Output: 2",
+    "target": "# Quantum: Grover's search (simplified for small array)\nfrom qiskit import QuantumCircuit\nfrom qiskit.circuit.library import GroverOperator\n\ndef quantum_search(arr, target):\n    n = 2  # For 4 items, we need 2 qubits\n    qc = QuantumCircuit(n)\n    \n    # Initialize superposition\n    qc.h(range(n))\n    \n    # Oracle: mark the target state\n    # For target at index 2 (binary: 10)\n    target_binary = format(arr.index(target), f'0{n}b')\n    \n    # Create oracle\n    for i, bit in enumerate(target_binary):\n        if bit == '0':\n            qc.x(i)\n    \n    # Multi-controlled Z\n    qc.h(n-1)\n    qc.mcx(list(range(n-1)), n-1)\n    qc.h(n-1)\n    \n    # Uncompute\n    for i, bit in enumerate(target_binary):\n        if bit == '0':\n            qc.x(i)\n    \n    # Diffusion operator\n    qc.h(range(n))\n    qc.x(range(n))\n    qc.h(n-1)\n    qc.mcx(list(range(n-1)), n-1)\n    qc.h(n-1)\n    qc.x(range(n))\n    qc.h(range(n))\n    \n    qc.measure_all()\n    return qc\n\ncircuit = quantum_search([2, 5, 7, 8], 7)",
+    "metadata": {
+      "algorithm_name": "linear_search",
+      "category": "search",
+      "difficulty": "advanced",
+      "input_size": "small",
+      "quantum_advantage": "yes",
+      "description": "Search using Grover's algorithm"
+    }
+  }
+]

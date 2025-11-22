@@ -2,7 +2,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from typing import Dict, Tuple, Optional, Any
+from typing import Dict, Tuple, Optional, Any, List
 import logging
 import json
 
@@ -28,15 +28,11 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 class DecisionEngineService:
-    """Service for ML-based hardware recommendation"""
+    """Service for ML-based hardware recommendation with Physics-Aware Logic"""
     
     def __init__(self, model_path: str, scaler_path: str):
         """
         Initialize the decision engine service
-        
-        Args:
-            model_path: Path to the trained model pickle file
-            scaler_path: Path to the feature scaler pickle file
         """
         self.model: Optional[Any] = None
         self.scaler: Optional[Any] = None
@@ -44,7 +40,10 @@ class DecisionEngineService:
         self.model_type: Optional[str] = None
         self.model_accuracy: Optional[float] = None
         
-        # Feature column order (must match training!)
+        # ---------------------------------------------------------
+        # STEP 1: UPDATE FEATURE COLUMNS
+        # This must match the training notebook EXACTLY (16 features)
+        # ---------------------------------------------------------
         self.feature_columns = [
             'problem_size',
             'qubits_required',
@@ -55,29 +54,33 @@ class DecisionEngineService:
             'entanglement_score',
             'memory_requirement_mb',
             'problem_type_encoded',
-            'time_complexity_encoded'
+            'time_complexity_encoded',
+            'circuit_volume',
+            'noise_sensitivity',
+            'quantum_overhead_ratio',
+            'nisq_viability_score',
+            'gate_density',
+            'entanglement_factor'
         ]
         
-        # CORRECTED: These match LabelEncoder's alphabetical ordering
-        # Based on sorted order of your problem types
+        # Encoding maps (Sorted alphabetically to match LabelEncoder behavior)
         self.problem_type_encoding = {
-            ProblemType.DYNAMIC_PROGRAMMING: 0,  # alphabetically first
+            ProblemType.DYNAMIC_PROGRAMMING: 0,
             ProblemType.FACTORIZATION: 1,
             ProblemType.MATRIX_OPS: 2,
             ProblemType.OPTIMIZATION: 3,
             ProblemType.RANDOM_CIRCUIT: 4,
             ProblemType.SEARCH: 5,
             ProblemType.SIMULATION: 6,
-            ProblemType.SORTING: 7               # alphabetically last
+            ProblemType.SORTING: 7
         }
         
-        # CORRECTED: These match LabelEncoder's alphabetical ordering
         self.time_complexity_encoding = {
-            TimeComplexity.EXPONENTIAL: 0,       # alphabetically first
+            TimeComplexity.EXPONENTIAL: 0,
             TimeComplexity.NLOGN: 1,
             TimeComplexity.POLYNOMIAL: 2,
             TimeComplexity.POLYNOMIAL_SPEEDUP: 3,
-            TimeComplexity.QUADRATIC_SPEEDUP: 4  # alphabetically last
+            TimeComplexity.QUADRATIC_SPEEDUP: 4
         }
         
         # Load model and scaler
@@ -113,27 +116,88 @@ class DecisionEngineService:
         except Exception as e:
             logger.error(f"❌ Failed to load model: {str(e)}")
             raise
+
+    # ---------------------------------------------------------
+    # STEP 2: ADD PHYSICS CALCULATION HELPER
+    # ---------------------------------------------------------
+    def _calculate_physics_features(self, features_dict: Dict[str, Any]) -> list:
+        """
+        Calculate derived physics features matching the training logic.
+        """
+        # Extract raw values for readability
+        q = features_dict['qubits_required']
+        d = features_dict['circuit_depth']
+        cx = features_dict['cx_gate_ratio']
+        size = features_dict['problem_size']
+        gates = features_dict['gate_count']
+        ent = features_dict['entanglement_score']
+
+        # 1. Circuit Volume (qubits * depth)
+        circuit_volume = q * d
+
+        # 2. Noise Sensitivity
+        noise_sensitivity = q * d * cx
+
+        # 3. Quantum Overhead Ratio (avoid div by zero)
+        quantum_overhead_ratio = size / max(q, 1)
+
+        # 4. NISQ Viability Score (Logic must match training data generation)
+        nisq_score = 1.0
+        if q > 50: 
+            nisq_score *= 0.1 # Too many qubits for NISQ
+        if d > 1000: 
+            nisq_score *= 0.1 # Too deep, decoherence risk
+        if circuit_volume > 50000: 
+            nisq_score *= 0.1 # Volume too high
+
+        # 5. Gate Density
+        gate_density = gates / max(q, 1)
+
+        # 6. Entanglement Factor
+        entanglement_factor = cx * ent
+
+        # Return only the new features in correct order
+        return [
+            circuit_volume,
+            noise_sensitivity,
+            quantum_overhead_ratio,
+            nisq_score,
+            gate_density,
+            entanglement_factor
+        ]
     
+    # ---------------------------------------------------------
+    # STEP 3: UPDATE FEATURE PREPARATION
+    # ---------------------------------------------------------
     def _prepare_features(self, input_data: CodeAnalysisInput) -> np.ndarray:
         """
-        Prepare features for model prediction
-        
-        Args:
-            input_data: Code analysis input
-            
-        Returns:
-            Scaled feature array ready for prediction
+        Prepare features for model prediction (10 Raw + 6 Derived)
         """
-        # Encode categorical features
+        # 1. Encode categorical features
         problem_type_encoded = self.problem_type_encoding.get(
             input_data.problem_type, 0
         )
         time_complexity_encoded = self.time_complexity_encoding.get(
             input_data.time_complexity, 0
         )
-        
-        # Create feature array in correct order
-        features = [
+
+        # 2. Create dictionary for easy access to raw values
+        features_dict = {
+            'problem_size': input_data.problem_size,
+            'qubits_required': input_data.qubits_required,
+            'circuit_depth': input_data.circuit_depth,
+            'gate_count': input_data.gate_count,
+            'cx_gate_ratio': input_data.cx_gate_ratio,
+            'superposition_score': input_data.superposition_score,
+            'entanglement_score': input_data.entanglement_score,
+            'memory_requirement_mb': input_data.memory_requirement_mb
+        }
+
+        # 3. Calculate Derived Physics Features
+        physics_features = self._calculate_physics_features(features_dict)
+
+        # 4. Combine All Features (16 Total)
+        final_feature_vector = [
             input_data.problem_size,
             input_data.qubits_required,
             input_data.circuit_depth,
@@ -143,19 +207,25 @@ class DecisionEngineService:
             input_data.entanglement_score,
             input_data.memory_requirement_mb,
             problem_type_encoded,
-            time_complexity_encoded
+            time_complexity_encoded,
+            *physics_features  # Unpack the 6 new features here
         ]
         
-        # Convert to DataFrame for consistency
-        df = pd.DataFrame([features], columns=self.feature_columns)
+        # 5. Create DataFrame with correct columns
+        df = pd.DataFrame([final_feature_vector], columns=self.feature_columns)
         
-        # Scale features
+        # 6. Scale
         if self.scaler is None:
             raise RuntimeError("Scaler not loaded")
+            
+        # Ensure columns match exactly what the scaler expects
         scaled_features = self.scaler.transform(df)
         
         return scaled_features
     
+    # ---------------------------------------------------------
+    # STEP 4: UPDATE RATIONALE LOGIC
+    # ---------------------------------------------------------
     def _generate_rationale(
         self,
         input_data: CodeAnalysisInput,
@@ -170,25 +240,33 @@ class DecisionEngineService:
         # Analyze key factors
         factors = []
         
+        # Qubit checks
         if input_data.qubits_required > 0:
             if input_data.qubits_required <= 50:
                 factors.append(f"{input_data.qubits_required} qubits (within NISQ limits)")
             else:
                 factors.append(f"{input_data.qubits_required} qubits (exceeds current hardware)")
         
+        # Quantum scores
         if input_data.superposition_score > 0.7:
             factors.append("high superposition potential")
         
         if input_data.entanglement_score > 0.7:
             factors.append("strong entanglement")
         
-        if input_data.circuit_depth > 1000:
-            factors.append("deep circuit (noise concerns)")
-        
+        # Problem size check
         if input_data.problem_size < 100 and input_data.qubits_required > 0:
             factors.append("small problem (overhead may dominate)")
+
+        # Physics checks (Volume & Depth)
+        circuit_volume = input_data.qubits_required * input_data.circuit_depth
         
-        # Build rationale
+        if circuit_volume > 50000:
+            factors.append("circuit volume too high for stable execution")
+        elif input_data.circuit_depth > 1000:
+            factors.append("circuit depth > 1000 (decoherence risk)")
+        
+        # Build rationale string
         if hardware == "Quantum":
             rationale = f"Recommended for Quantum execution ({confidence:.1%} confidence). "
             if factors:
@@ -250,7 +328,7 @@ class DecisionEngineService:
                     error="Model not loaded. Please check configuration."
                 )
             
-            # Prepare features
+            # Prepare features (Now handles physics calculation internally)
             features = self._prepare_features(input_data)
             
             # Make prediction

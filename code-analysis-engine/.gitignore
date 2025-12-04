@@ -1,6 +1,67 @@
-# IDE
-.idea
-.vscode
+# ----------------------------
+#  Python Cache / Bytecode
+# ----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.pdb
 
-# Build
+# ----------------------------
+#  Virtual Environment
+# ----------------------------
+venv/
+.env/
+.envrc
+.venv/
+pip-wheel-metadata/
+
+# ----------------------------
+#  Python Build / Packaging
+# ----------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ----------------------------
+#  FastAPI / Uvicorn Logs
+# ----------------------------
+*.log
+logs/
+uvicorn.log
+
+# ----------------------------
+#  IDE / Editor
+# ----------------------------
+.idea/
+.vscode/
 *.iml
+
+# ----------------------------
+#  Testing / Coverage
+# ----------------------------
+.pytest_cache/
+.cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ----------------------------
+#  MyPy / Type Checking
+# ----------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ----------------------------
+#  Jupyter
+# ----------------------------
+.ipynb_checkpoints/
+
+# ----------------------------
+#  Local Tooling Files
+# ----------------------------
+.DS_Store
+Thumbs.db

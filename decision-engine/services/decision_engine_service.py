@@ -25,6 +25,10 @@ except ImportError:
         TimeComplexity
     )
 
+from .cost_analyser import CostAnalyzer
+from .rule_service import RuleBasedSystem
+from .decision_merger import DecisionMerger
+
 logger = logging.getLogger(__name__)
 
 class DecisionEngineService:
@@ -39,6 +43,11 @@ class DecisionEngineService:
         self.model_loaded: bool = False
         self.model_type: Optional[str] = None
         self.model_accuracy: Optional[float] = None
+        
+        # Initialize sub-components
+        self.cost_analyzer = CostAnalyzer()
+        self.rule_system = RuleBasedSystem()
+        self.decision_merger = DecisionMerger()
         
         # ---------------------------------------------------------
         # STEP 1: UPDATE FEATURE COLUMNS
@@ -223,96 +232,13 @@ class DecisionEngineService:
         
         return scaled_features
     
-    # ---------------------------------------------------------
-    # STEP 4: UPDATE RATIONALE LOGIC
-    # ---------------------------------------------------------
-    def _generate_rationale(
-        self,
-        input_data: CodeAnalysisInput,
-        prediction: int,
-        confidence: float,
-        quantum_prob: float
-    ) -> str:
-        """Generate human-readable rationale for the recommendation"""
-        
-        hardware = "Quantum" if prediction == 1 else "Classical"
-        
-        # Analyze key factors
-        factors = []
-        
-        # Qubit checks
-        if input_data.qubits_required > 0:
-            if input_data.qubits_required <= 50:
-                factors.append(f"{input_data.qubits_required} qubits (within NISQ limits)")
-            else:
-                factors.append(f"{input_data.qubits_required} qubits (exceeds current hardware)")
-        
-        # Quantum scores
-        if input_data.superposition_score > 0.7:
-            factors.append("high superposition potential")
-        
-        if input_data.entanglement_score > 0.7:
-            factors.append("strong entanglement")
-        
-        # Problem size check
-        if input_data.problem_size < 100 and input_data.qubits_required > 0:
-            factors.append("small problem (overhead may dominate)")
-
-        # Physics checks (Volume & Depth)
-        circuit_volume = input_data.qubits_required * input_data.circuit_depth
-        
-        if circuit_volume > 50000:
-            factors.append("circuit volume too high for stable execution")
-        elif input_data.circuit_depth > 1000:
-            factors.append("circuit depth > 1000 (decoherence risk)")
-        
-        # Build rationale string
-        if hardware == "Quantum":
-            rationale = f"Recommended for Quantum execution ({confidence:.1%} confidence). "
-            if factors:
-                rationale += f"Key factors: {', '.join(factors)}. "
-            rationale += "Problem exhibits quantum advantage characteristics."
-        else:
-            rationale = f"Recommended for Classical execution ({confidence:.1%} confidence). "
-            if input_data.qubits_required == 0:
-                rationale += "Classical algorithm with no quantum operations. "
-            elif factors:
-                rationale += f"Factors: {', '.join(factors)}. "
-            rationale += "Classical approach is more efficient for this workload."
-        
-        return rationale
-    
-    def _estimate_cost_and_time(
-        self,
-        input_data: CodeAnalysisInput,
-        hardware: str
-    ) -> Tuple[float, float]:
+    def predict(self, input_data: CodeAnalysisInput, budget_limit_usd: Optional[float] = None) -> DecisionEngineResponse:
         """
-        Estimate execution time and cost
-        
-        Returns:
-            (execution_time_ms, cost_usd)
-        """
-        if hardware == "Quantum":
-            # Quantum cost: based on qubit count and circuit depth
-            base_time = 100  # ms
-            time_ms = base_time + (input_data.circuit_depth * 0.5) + (input_data.qubits_required * 10)
-            
-            # Cost: $0.00035 per shot * 1000 shots + setup
-            cost_usd = 0.35 + (input_data.qubits_required * 0.01)
-        else:
-            # Classical cost: based on problem size
-            time_ms = input_data.problem_size * 0.01
-            cost_usd = 0.001 * (input_data.problem_size / 1000)
-        
-        return time_ms, cost_usd
-    
-    def predict(self, input_data: CodeAnalysisInput) -> DecisionEngineResponse:
-        """
-        Make hardware recommendation based on code analysis
+        Make hardware recommendation based on code analysis, rules, and cost
         
         Args:
             input_data: Code analysis input
+            budget_limit_usd: Optional budget limit in USD
             
         Returns:
             Decision engine response with recommendation
@@ -328,6 +254,9 @@ class DecisionEngineService:
                     error="Model not loaded. Please check configuration."
                 )
             
+            # ---------------------------------------------------------
+            # 1. ML MODEL PREDICTION
+            # ---------------------------------------------------------
             # Prepare features (Now handles physics calculation internally)
             features = self._prepare_features(input_data)
             
@@ -338,49 +267,83 @@ class DecisionEngineService:
             probabilities = self.model.predict_proba(features)[0]
             
             # Extract probabilities
-            classical_prob = probabilities[0]
-            quantum_prob = probabilities[1]
-            confidence = max(probabilities)
+            classical_prob = float(probabilities[0])
+            quantum_prob = float(probabilities[1])
+            confidence = float(max(probabilities))
             
-            # Determine hardware
-            hardware = HardwareType.QUANTUM if prediction == 1 else HardwareType.CLASSICAL
+            # Determine ML hardware recommendation
+            ml_hardware = HardwareType.QUANTUM if prediction == 1 else HardwareType.CLASSICAL
             
-            # Generate rationale
-            rationale = self._generate_rationale(
-                input_data, prediction, confidence, quantum_prob
+            ml_decision = {
+                'hardware': ml_hardware,
+                'confidence': confidence,
+                'quantum_probability': quantum_prob,
+                'classical_probability': classical_prob,
+                'rationale': f"ML Model predicts {ml_hardware.value} with {confidence:.1%} confidence"
+            }
+            
+            # ---------------------------------------------------------
+            # 2. RULE-BASED VALIDATION
+            # ---------------------------------------------------------
+            rule_decision = self.rule_system.evaluate(input_data)
+            
+            # ---------------------------------------------------------
+            # 3. COST ANALYSIS
+            # ---------------------------------------------------------
+            cost_analysis = self.cost_analyzer.analyze(
+                input_data, 
+                ml_hardware, 
+                budget_limit_usd
             )
             
-            # Estimate cost and time
-            exec_time, cost = self._estimate_cost_and_time(input_data, hardware.value)
-            
-            # Create recommendation
-            recommendation = HardwareRecommendation(
-                recommended_hardware=hardware,
-                confidence=float(confidence),
-                quantum_probability=float(quantum_prob),
-                classical_probability=float(classical_prob),
-                rationale=rationale
+            # ---------------------------------------------------------
+            # 4. DECISION MERGING
+            # ---------------------------------------------------------
+            final_recommendation = self.decision_merger.merge(
+                ml_decision,
+                rule_decision,
+                cost_analysis
             )
             
-            # Generate alternatives
+            # ---------------------------------------------------------
+            # 5. CONSTRUCT RESPONSE
+            # ---------------------------------------------------------
+            
+            # Determine alternatives
             alternatives = []
-            if confidence < 0.90:  # If not very confident, provide alternative
-                alt_hardware = "Classical" if hardware == HardwareType.QUANTUM else "Quantum"
-                alt_confidence = 1.0 - confidence
-                alt_time, alt_cost = self._estimate_cost_and_time(input_data, alt_hardware)
+            
+            # If recommendation is Quantum, offer Classical as alternative (and vice versa)
+            rec_hw = final_recommendation.recommended_hardware
+            alt_hw = HardwareType.CLASSICAL if rec_hw == HardwareType.QUANTUM else HardwareType.QUANTUM
+            
+            # Get cost/time for alternative
+            if alt_hw == HardwareType.QUANTUM:
+                alt_cost = cost_analysis['quantum_cost_usd']
+                alt_time = cost_analysis['quantum_time_ms']
+            else:
+                alt_cost = cost_analysis['classical_cost_usd']
+                alt_time = cost_analysis['classical_time_ms']
                 
-                alternatives.append({
-                    "hardware": alt_hardware,
-                    "confidence": float(alt_confidence),
-                    "trade_off": f"Alternative option: {alt_time:.0f}ms execution, ${alt_cost:.4f} cost"
-                })
+            alternatives.append({
+                "hardware": alt_hw.value,
+                "confidence": 1.0 - final_recommendation.confidence,
+                "trade_off": f"Alternative: {alt_time:.0f}ms execution, ${alt_cost:.4f} cost"
+            })
+            
+            # Get estimated cost/time for recommended hardware
+            if rec_hw == HardwareType.QUANTUM:
+                est_cost = cost_analysis['quantum_cost_usd']
+                est_time = cost_analysis['quantum_time_ms']
+            else:
+                est_cost = cost_analysis['classical_cost_usd']
+                est_time = cost_analysis['classical_time_ms']
             
             return DecisionEngineResponse(
                 success=True,
-                recommendation=recommendation,
-                alternatives=alternatives if alternatives else None,
-                estimated_execution_time_ms=float(exec_time),
-                estimated_cost_usd=float(cost),
+                recommendation=final_recommendation,
+                alternatives=alternatives,
+                estimated_execution_time_ms=float(est_time),
+                estimated_cost_usd=float(est_cost),
                 error=None
             )
             

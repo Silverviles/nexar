@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict
+from typing import Dict, Optional
 
 try:
     # Try relative imports first (when used as a module)
@@ -34,6 +34,7 @@ def get_decision_service() -> DecisionEngineService:
 @router.post("/predict", response_model=DecisionEngineResponse)
 async def predict_hardware(
     input_data: CodeAnalysisInput,
+    budget_limit_usd: Optional[float] = None,
     service: DecisionEngineService = Depends(get_decision_service)
 ):
     """
@@ -46,10 +47,11 @@ async def predict_hardware(
     - **problem_size**: Size of the problem
     - **qubits_required**: Number of qubits needed (0 for classical)
     - **Other features**: Various quantum and classical metrics
+    - **budget_limit_usd**: Optional budget constraint in USD
     
     Returns hardware recommendation with confidence scores and rationale.
     """
-    response = service.predict(input_data)
+    response = service.predict(input_data, budget_limit_usd)
     
     if not response.success:
         raise HTTPException(status_code=500, detail=response.error)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Optional
 from enum import Enum
 
 class HardwareType(str, Enum):
@@ -95,6 +95,8 @@ class DecisionEngineResponse(BaseModel):
 
 class HealthCheckResponse(BaseModel):
     """Health check response"""
+    model_config = {"protected_namespaces": ()}
+    
     status: str = Field(..., description="Service status")
     model_loaded: bool = Field(..., description="Whether ML model is loaded")
     model_type: Optional[str] = Field(None, description="Type of ML model")

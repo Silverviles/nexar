@@ -4,3 +4,12 @@
 
 # Build
 *.iml
+
+/datasets
+/codet5-quantum
+/codet5-quantum-best
+/better_datasets
+/base_pairs
+
+# Images
+*.png

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
 
+
 class QuantumProvider(ABC):
     """
     An abstract base class for quantum providers.

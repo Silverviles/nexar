@@ -1,0 +1,69 @@
+# Byte-compiled / caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+.venv/
+env/
+ENV/
+venv.bak/
+env.bak/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+wheelhouse/
+
+# Installer / pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing / coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+pytestdebug.log
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints
+
+# PyInstaller
+*.manifest
+*.spec
+
+# C extensions and compiled files
+*.so
+*.pyd
+
+# Logs and local settings
+*.log
+local_settings.py
+celerybeat-schedule
+
+# Databases
+*.sqlite3
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.egg
+*.egg-info
+*.log
+*.cache

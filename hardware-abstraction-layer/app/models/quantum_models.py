@@ -1,5 +1,7 @@
+from typing import Dict, Any
+
 from pydantic import BaseModel
-from typing import List, Dict, Any
+
 
 class QuantumDevice(BaseModel):
     """
@@ -11,11 +13,13 @@ class QuantumDevice(BaseModel):
     status: str
     other_info: Dict[str, Any] = {}
 
+
 class QuantumCircuit(BaseModel):
     """
     A Pydantic model for a quantum circuit.
     """
     qasm: str
+
 
 class QuantumJob(BaseModel):
     """
@@ -24,6 +28,7 @@ class QuantumJob(BaseModel):
     job_id: str
     provider: str
     status: str
+
 
 class QuantumResult(BaseModel):
     """

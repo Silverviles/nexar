@@ -11,6 +11,8 @@ from qiskit import QuantumCircuit
 from qiskit_aer import Aer
 from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
+import ast
+import astor
 
 # ------------------------------
 # FastAPI app
@@ -275,6 +277,33 @@ def safe_execute_qc(qc_code: str, gate_type="xor", shots=1024) -> dict:
             "fallback_reason": str(e)
         }
 
+def extract_xor_function(python_code: str) -> str:
+    """
+    Detect XOR operations in Python code and return a minimal XOR function
+    """
+    try:
+        tree = ast.parse(python_code)
+        found_xor = False
+
+        class XorFinder(ast.NodeVisitor):
+            def visit_BinOp(self, node):
+                nonlocal found_xor
+                if isinstance(node.op, ast.BitXor):
+                    found_xor = True
+                self.generic_visit(node)
+
+        XorFinder().visit(tree)
+
+        if found_xor:
+            # Return minimal XOR function
+            return "def xor(a, b):\n    return a ^ b\n"
+        else:
+            # No XOR found, return original code
+            return python_code
+    except Exception as e:
+        print(f"Failed to extract XOR: {e}")
+        return python_code  # fallback
+
 # ------------------------------
 # API Endpoints
 # ------------------------------
@@ -317,3 +346,23 @@ async def test_circuit():
         "test_counts": counts,
         "message": "Test circuit should show 00 and 11 states"
     }
+
+
+# ------------------------------
+# Updated API endpoint
+# ------------------------------
+@app.post("/translate3/")
+async def translate_python_to_quantum3(request: PythonCodeRequest):
+    try:
+        # Extract minimal XOR function from the code
+        xor_only_code = extract_xor_function(request.python_code)
+
+        # Generate quantum code from minimal XOR function
+        # quantum_code = generate_quantum_code(xor_only_code)
+        return {
+            "original_python_code": request.python_code,
+            "xor_only_code": xor_only_code,
+            # "quantum_code": quantum_code
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

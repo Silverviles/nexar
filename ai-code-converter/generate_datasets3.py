@@ -87,19 +87,19 @@ pairs = [
     # ------------------------------------------------------------
     (
         "def not_gate(bit):\n    return 1 - bit",
-        "# inputs: bit\n# outputs: out\nx out"
+        "# inputs: bit\n# outputs: out\ncx bit, out\nx out"
     ),
     (
         "def invert(bit):\n    return not bit",
-        "# inputs: bit\n# outputs: out\nx out"
+        "# inputs: bit\n# outputs: out\ncx bit, out\nx out"
     ),
     (
         "bit = 1\nresult = ~bit",
-        "# inputs: bit\n# outputs: result\nx result"
+        "# inputs: bit\n# outputs: result\ncx bit, result\nx result"
     ),
     (
         "def not_operator(a):\n    return not a",
-        "# inputs: a\n# outputs: out\nx out"
+        "# inputs: a\n# outputs: out\ncx a, out\nx out"
     ),
     
     # ------------------------------------------------------------
@@ -210,7 +210,7 @@ with OUT.open("w") as f:
     for i in range(350):
         py, q = random.choice(variations)
         f.write(json.dumps({
-            "input": "Translate Python to quantum circuit:\n" + py,
+            "input": "Convert the following Python logic into an equivalent quantum gate sequence:\n" + py,
             "output": q
         }) + "\n")
 

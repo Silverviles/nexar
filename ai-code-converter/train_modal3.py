@@ -11,7 +11,7 @@ from transformers import (
 )
 
 MODEL = "C:/Users/black/OneDrive/Desktop/research/nexar/ai-code-converter/codet5-quantum/checkpoint-450"
-DATA = "better_datasets/python_to_quantum.jsonl"
+DATA = "better_datasets/python_to_quantum2.jsonl"
 
 # Set device (GPU if available, else CPU)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,13 +43,14 @@ def tokenize(batch):
 tokenized_dataset = dataset.map(tokenize, batched=True)
 
 args = TrainingArguments(
-    output_dir="codet5-quantum",
+    output_dir="codet5-quantum2",
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
     num_train_epochs=6,
     logging_steps=10,
-    save_strategy="epoch",  # Keep as epoch
-    eval_strategy="epoch",  # Changed from "steps" to "epoch"
+    save_strategy="epoch",  
+    eval_strategy="epoch",
+    save_total_limit=3,  
     learning_rate=5e-5,
     warmup_steps=100,
     weight_decay=0.01,
@@ -98,7 +99,7 @@ def generate_quantum_code_improved(python_code: str):
     """Generate quantum code with proper device handling"""
     # Tokenize
     inputs = tokenizer(
-        f"Translate Python to quantum circuit:\n{python_code}",
+        f"Convert the following Python logic into an equivalent quantum gate sequence:\n{python_code}",
         return_tensors="pt",
         truncation=True,
         max_length=256
@@ -139,5 +140,5 @@ for i, test in enumerate(test_examples, 1):
     print("-" * 40)
 
 # Save the best model
-trainer.save_model("codet5-quantum-best")
+trainer.save_model("codet5-quantum-best-version2")
 print("\n✅ Best model saved to: codet5-quantum-best")

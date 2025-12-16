@@ -2,7 +2,7 @@ import json
 import random
 from pathlib import Path
 
-OUT = Path("better_datasets/python_to_quantum.jsonl")
+OUT = Path("better_datasets/python_to_quantum2.jsonl")
 OUT.parent.mkdir(exist_ok=True)
 
 pairs = [

@@ -10,6 +10,6 @@
 /codet5-quantum-best
 /better_datasets
 /base_pairs
-
+/__pycache__
 # Images
 *.png

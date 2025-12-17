@@ -11,5 +11,6 @@
 /better_datasets
 /base_pairs
 /__pycache__
+/results_manual_test
 # Images
 *.png

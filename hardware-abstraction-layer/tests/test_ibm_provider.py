@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
+from qiskit.circuit import QuantumCircuit
+
 from app.providers.ibm import IBMProvider
 
 
@@ -28,6 +30,56 @@ class TestIbmProvider(unittest.TestCase):
         self.assertEqual(devices[0]["name"], "ibm_brisbane")
         self.assertEqual(devices[0]["version"], "1.0.0")
         self.assertEqual(devices[0]["description"], "A quantum device")
+
+    @patch("app.providers.ibm.Sampler")
+    @patch("app.providers.ibm.Session")
+    @patch("app.providers.ibm.generate_preset_pass_manager")
+    @patch("app.providers.ibm.QiskitRuntimeService")
+    def test_execute_circuit(
+        self,
+        mock_qiskit_runtime_service,
+        mock_generate_preset_pass_manager,
+        mock_session,
+        mock_sampler,
+    ):
+        # Arrange
+        mock_service_instance = mock_qiskit_runtime_service.return_value
+        mock_backend = MagicMock()
+        mock_service_instance.backend.return_value = mock_backend
+
+        mock_pass_manager = MagicMock()
+        mock_generate_preset_pass_manager.return_value = mock_pass_manager
+        mock_transpiled_circuit = MagicMock()
+        mock_pass_manager.run.return_value = mock_transpiled_circuit
+
+        mock_session_instance = mock_session.return_value.__enter__.return_value
+        mock_sampler_instance = mock_sampler.return_value
+        mock_job = MagicMock()
+        mock_job.job_id = "job_123"
+        mock_sampler_instance.run.return_value = mock_job
+
+        provider = IBMProvider()
+        circuit = QuantumCircuit(1, 1)
+        device_name = "ibm_brisbane"
+        shots = 1024
+
+        # Act
+        job_id = provider.execute_circuit(circuit, device_name, shots)
+
+        # Assert
+        mock_service_instance.backend.assert_called_once_with(device_name)
+        mock_generate_preset_pass_manager.assert_called_once_with(
+            target=mock_backend.target, optimization_level=1
+        )
+        mock_pass_manager.run.assert_called_once_with(circuit)
+        mock_session.assert_called_once_with(
+            service=mock_service_instance, backend=mock_backend
+        )
+        mock_sampler.assert_called_once_with(session=mock_session_instance)
+        mock_sampler_instance.run.assert_called_once_with(
+            mock_transpiled_circuit, shots=shots
+        )
+        self.assertEqual(job_id, "job_123")
 
 
 if __name__ == "__main__":

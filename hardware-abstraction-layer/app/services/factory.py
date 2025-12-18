@@ -8,11 +8,11 @@ def create_quantum_service() -> QuantumService:
     """
     Factory function to create and configure the QuantumService.
     """
-    quantum_service = QuantumService()
-    quantum_service.register_provider(AWSProvider())
-    quantum_service.register_provider(AzureProvider())
-    quantum_service.register_provider(IBMProvider())
-    return quantum_service
+    service = QuantumService()
+    service.register_provider(AWSProvider())
+    service.register_provider(AzureProvider())
+    service.register_provider(IBMProvider())
+    return service
 
 
 quantum_service = create_quantum_service()

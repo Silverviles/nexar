@@ -1,18 +1,31 @@
-from app.providers.aws import AWSProvider
-from app.providers.azure import AzureProvider
-from app.providers.ibm import IBMProvider
-from app.services.quantum_service import QuantumService
+from app.providers.aws_classical import AWSClassicalProvider
+from app.providers.aws_quantum import AWSQuantumProvider
+from app.providers.azure_classical import AzureClassicalProvider
+from app.providers.azure_quantum import AzureQuantumProvider
+from app.providers.ibm_classical import IBMClassicalProvider
+from app.providers.ibm_quantum import IBMQuantumProvider
+from app.providers.local import LocalClassicalProvider
+from app.services.compute_service import ComputeService
 
 
-def create_quantum_service() -> QuantumService:
+def create_compute_service() -> ComputeService:
     """
-    Factory function to create and configure the QuantumService.
+    Factory function to create and configure the ComputeService.
     """
-    service = QuantumService()
-    service.register_provider(AWSProvider())
-    service.register_provider(AzureProvider())
-    service.register_provider(IBMProvider())
+    service = ComputeService()
+
+    # Register Quantum Providers
+    service.register_provider(AWSQuantumProvider())
+    service.register_provider(AzureQuantumProvider())
+    service.register_provider(IBMQuantumProvider())
+
+    # Register Classical Providers
+    service.register_provider(AWSClassicalProvider())
+    service.register_provider(AzureClassicalProvider())
+    service.register_provider(IBMClassicalProvider())
+    service.register_provider(LocalClassicalProvider())
+
     return service
 
 
-quantum_service = create_quantum_service()
+compute_service = create_compute_service()

@@ -3,13 +3,13 @@ from typing import List, Dict, Any
 from app.providers.base import QuantumProvider
 
 
-class AzureProvider(QuantumProvider):
+class AWSQuantumProvider(QuantumProvider):
     """
-    A quantum provider for Azure Quantum.
+    A quantum provider for AWS Braket.
     """
 
     def get_provider_name(self) -> str:
-        return "azure"
+        return "aws-quantum"
 
     def list_devices(self) -> List[Dict[str, Any]]:
         # TODO: Implement this method

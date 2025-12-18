@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.api.routes import router
-from app.services.factory import quantum_service
+from app.services.factory import compute_service
 
 app = FastAPI(
     title="Hardware Abstraction Layer for Quantum Computing",
@@ -18,4 +18,4 @@ def root():
 
 @app.get("/quantum/providers")
 def list_quantum_providers():
-    return {"providers": quantum_service.list_providers()}
+    return {"providers": compute_service.list_providers()}

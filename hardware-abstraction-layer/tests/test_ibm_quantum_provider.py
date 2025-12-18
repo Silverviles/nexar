@@ -3,11 +3,11 @@ from unittest.mock import patch, MagicMock
 
 from qiskit.circuit import QuantumCircuit
 
-from app.providers.ibm import IBMProvider
+from app.providers.ibm_quantum import IBMQuantumProvider
 
 
-class TestIbmProvider(unittest.TestCase):
-    @patch("app.providers.ibm.QiskitRuntimeService")
+class TestIbmQuantumProvider(unittest.TestCase):
+    @patch("app.providers.ibm_quantum.QiskitRuntimeService")
     def test_list_devices(self, mock_qiskit_runtime_service):
         # Arrange
         mock_backend = MagicMock()
@@ -18,7 +18,7 @@ class TestIbmProvider(unittest.TestCase):
         mock_service_instance = mock_qiskit_runtime_service.return_value
         mock_service_instance.backends.return_value = [mock_backend]
 
-        provider = IBMProvider()
+        provider = IBMQuantumProvider()
 
         # Act
         devices = provider.list_devices()
@@ -31,16 +31,16 @@ class TestIbmProvider(unittest.TestCase):
         self.assertEqual(devices[0]["version"], "1.0.0")
         self.assertEqual(devices[0]["description"], "A quantum device")
 
-    @patch("app.providers.ibm.Sampler")
-    @patch("app.providers.ibm.Session")
-    @patch("app.providers.ibm.generate_preset_pass_manager")
-    @patch("app.providers.ibm.QiskitRuntimeService")
+    @patch("app.providers.ibm_quantum.Sampler")
+    @patch("app.providers.ibm_quantum.Session")
+    @patch("app.providers.ibm_quantum.generate_preset_pass_manager")
+    @patch("app.providers.ibm_quantum.QiskitRuntimeService")
     def test_execute_circuit(
-        self,
-        mock_qiskit_runtime_service,
-        mock_generate_preset_pass_manager,
-        mock_session,
-        mock_sampler,
+            self,
+            mock_qiskit_runtime_service,
+            mock_generate_preset_pass_manager,
+            mock_session,
+            mock_sampler,
     ):
         # Arrange
         mock_service_instance = mock_qiskit_runtime_service.return_value
@@ -58,7 +58,7 @@ class TestIbmProvider(unittest.TestCase):
         mock_job.job_id = "job_123"
         mock_sampler_instance.run.return_value = mock_job
 
-        provider = IBMProvider()
+        provider = IBMQuantumProvider()
         circuit = QuantumCircuit(1, 1)
         device_name = "ibm_brisbane"
         shots = 1024
@@ -73,11 +73,11 @@ class TestIbmProvider(unittest.TestCase):
         )
         mock_pass_manager.run.assert_called_once_with(circuit)
         mock_session.assert_called_once_with(
-            service=mock_service_instance, backend=mock_backend
+            backend=mock_backend
         )
-        mock_sampler.assert_called_once_with(session=mock_session_instance)
+        mock_sampler.assert_called_once_with(mode=mock_session_instance)
         mock_sampler_instance.run.assert_called_once_with(
-            mock_transpiled_circuit, shots=shots
+            [mock_transpiled_circuit], shots=shots
         )
         self.assertEqual(job_id, "job_123")
 

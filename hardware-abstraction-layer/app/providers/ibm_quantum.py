@@ -8,7 +8,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Batch
 from app.providers.base import QuantumProvider
 
 
-class IBMProvider(QuantumProvider):
+class IBMQuantumProvider(QuantumProvider):
     """
     A quantum provider for IBM Qiskit.
     """
@@ -17,7 +17,7 @@ class IBMProvider(QuantumProvider):
         self.service = QiskitRuntimeService()
 
     def get_provider_name(self) -> str:
-        return "ibm"
+        return "ibm-quantum"
 
     def list_devices(self) -> List[Dict[str, Any]]:
         backends = self.service.backends()

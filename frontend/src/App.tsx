@@ -16,6 +16,8 @@ import ExecutionHistory from "./pages/ExecutionHistory";
 import MLModels from "./pages/MLModels";
 import CostManagement from "./pages/CostManagement";
 import Settings from "./pages/Settings";
+import AICodeConverter from "./pages/AICodeConverter";
+import CodeConversionResults from "./pages/CodeConversionResults";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +74,16 @@ const App = () => (
             <Route path="/settings" element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-converter" element={
+              <ProtectedRoute>
+                <AICodeConverter />
+              </ProtectedRoute>
+            } />
+            <Route path="/conversion-results" element={
+              <ProtectedRoute>
+                <CodeConversionResults />
               </ProtectedRoute>
             } />
             

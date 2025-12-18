@@ -410,7 +410,6 @@ async def execute_quantum_code(request: QuantumCodeRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Optional: Add a test endpoint to verify circuits
 @app.post("/test_circuit/")
 async def test_circuit():
     """Test endpoint to verify non-trivial circuit generation"""

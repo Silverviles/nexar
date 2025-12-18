@@ -7,22 +7,19 @@ from io import BytesIO
 from PIL import Image
 import time
 
-# FastAPI server URL (update if needed)
 BASE_URL = "http://127.0.0.1:8000"
 
 def get_user_gate():
-    """Ask user which gate to test."""
     valid_gates = ["XOR", "OR", "NOT", "NOR"]
     while True:
-        print("Which gate do you want to test?")
+        print("Gate to test?")
         print("Options: XOR, OR, NOT, NOR")
-        gate = input("Enter your choice: ").strip().upper()
+        gate = input("Choice: ").strip().upper()
         if gate in valid_gates:
             return gate
-        print("Invalid choice. Please select from XOR, OR, NOT, NOR.\n")
+        print("error.\n")
 
 def generate_python_code(gate):
-    """Generate a simple Python function for the selected gate."""
     if gate == "XOR":
         return "def xor_gate(a, b): return a ^ b"
     elif gate == "OR":
@@ -33,12 +30,9 @@ def generate_python_code(gate):
         return "def nor_gate(a, b): return 1 - (a | b)"
 
 def execute_python_gate(python_code, gate_name, iterations=1000000):
-    """Execute Python gate function many times to measure performance."""
-    # Create execution namespace
     exec_globals = {}
     exec_locals = {}
     
-    # Execute the Python code to define the function
     exec(python_code, exec_globals, exec_locals)
     
     # Get the gate function

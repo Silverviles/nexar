@@ -41,6 +41,22 @@ class BaseProvider(ABC):
         """
         pass
 
+    def execute_batch(self, tasks: List[Any], device_name: str, **kwargs) -> List[str]:
+        """
+        Executes a batch of tasks. Default implementation loops through tasks.
+        Providers can override this for optimized batch execution.
+        """
+        job_ids = []
+        for task in tasks:
+            # determining which execute method to call is tricky here because 
+            # we are in the base class and don't know if it is quantum or classical.
+            # We will rely on subclasses to implement this or the specific intermediate classes.
+            raise NotImplementedError("Batch execution not implemented for this provider type.")
+
+    @property
+    def max_batch_size(self) -> int:
+        return 10
+
 
 class QuantumProvider(BaseProvider):
     """
@@ -51,13 +67,15 @@ class QuantumProvider(BaseProvider):
     def execute_circuit(self, circuit: Any, device_name: str, shots: int) -> str:
         """
         Executes a quantum circuit on a specified device.
-
-        :param circuit: The quantum circuit to execute.
-        :param device_name: The name of the device to execute the circuit on.
-        :param shots: The number of times to run the circuit.
-        :return: The ID of the job.
         """
         pass
+
+    def execute_batch(self, tasks: List[Any], device_name: str, **kwargs) -> List[str]:
+        """
+        Default batch implementation for quantum providers: Sequential execution.
+        """
+        shots = kwargs.get("shots", 1024)
+        return [self.execute_circuit(circuit, device_name, shots) for circuit in tasks]
 
 
 class ClassicalProvider(BaseProvider):
@@ -69,9 +87,11 @@ class ClassicalProvider(BaseProvider):
     def execute_task(self, task: Any, device_name: str = "default") -> str:
         """
         Executes a classical task.
-
-        :param task: The task to execute (e.g., code, parameters).
-        :param device_name: Optional device/environment specifier.
-        :return: The ID of the job.
         """
         pass
+
+    def execute_batch(self, tasks: List[Any], device_name: str, **kwargs) -> List[str]:
+        """
+        Default batch implementation for classical providers: Sequential execution.
+        """
+        return [self.execute_task(task, device_name) for task in tasks]

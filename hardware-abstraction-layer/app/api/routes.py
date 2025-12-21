@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 
-from app.models.classical_models import ClassicalTask
 from app.models.quantum_models import QuantumCircuit
+from app.models.classical_models import ClassicalTask
+from app.models.execution import JobPriority, OptimizationStrategy, JobRequest
 from app.services.factory import compute_service
+from app.services.job_manager import job_manager
 
 router = APIRouter(prefix="/api")
 
@@ -23,29 +25,62 @@ def list_quantum_devices(provider_name: str):
 
 
 @router.post("/quantum/{provider_name}/execute")
-def execute_quantum_circuit(provider_name: str, circuit: QuantumCircuit, device_name: str, shots: int = 1024):
-    # TODO: Validate that circuit is converted to the correct format for the provider if needed
-    job_id = compute_service.execute_quantum_circuit(provider_name, circuit, device_name, shots)
+def execute_quantum_circuit(
+    provider_name: str, 
+    circuit: QuantumCircuit, 
+    device_name: str, 
+    shots: int = 1024,
+    priority: JobPriority = JobPriority.HIGH,
+    strategy: OptimizationStrategy = OptimizationStrategy.TIME
+):
+    req = JobRequest(
+        task=circuit,
+        provider_name=provider_name,
+        device_name=device_name,
+        shots=shots,
+        priority=priority,
+        strategy=strategy
+    )
+    job_id = job_manager.submit_job(req)
     return {"job_id": job_id}
 
 
 @router.get("/quantum/jobs/{provider_name}/{job_id}")
 def get_quantum_job_status(provider_name: str, job_id: str):
-    status = compute_service.get_job_status(provider_name, job_id)
+    # Try JobManager first (for HAL IDs)
+    status = job_manager.get_job_status(job_id)
+    if status == "UNKNOWN":
+        # Fallback to direct provider check (for legacy/provider IDs)
+        status = compute_service.get_job_status(provider_name, job_id)
     return {"status": status}
 
 
 @router.get("/quantum/jobs/{provider_name}/{job_id}/result")
 def get_quantum_job_result(provider_name: str, job_id: str):
-    result = compute_service.get_job_result(provider_name, job_id)
+    result = job_manager.get_job_result(job_id)
+    if not result:
+        result = compute_service.get_job_result(provider_name, job_id)
     return {"result": result}
 
 
 # --- Classical Endpoints ---
 
 @router.post("/classical/{provider_name}/execute")
-def execute_classical_task(provider_name: str, task: ClassicalTask, device_name: str = "default"):
-    job_id = compute_service.execute_classical_task(provider_name, task, device_name)
+def execute_classical_task(
+    provider_name: str, 
+    task: ClassicalTask, 
+    device_name: str = "default",
+    priority: JobPriority = JobPriority.HIGH,
+    strategy: OptimizationStrategy = OptimizationStrategy.TIME
+):
+    req = JobRequest(
+        task=task,
+        provider_name=provider_name,
+        device_name=device_name,
+        priority=priority,
+        strategy=strategy
+    )
+    job_id = job_manager.submit_job(req)
     return {"job_id": job_id}
 
 
@@ -53,11 +88,15 @@ def execute_classical_task(provider_name: str, task: ClassicalTask, device_name:
 
 @router.get("/jobs/{provider_name}/{job_id}")
 def get_job_status(provider_name: str, job_id: str):
-    status = compute_service.get_job_status(provider_name, job_id)
+    status = job_manager.get_job_status(job_id)
+    if status == "UNKNOWN":
+        status = compute_service.get_job_status(provider_name, job_id)
     return {"status": status}
 
 
 @router.get("/jobs/{provider_name}/{job_id}/result")
 def get_job_result(provider_name: str, job_id: str):
-    result = compute_service.get_job_result(provider_name, job_id)
+    result = job_manager.get_job_result(job_id)
+    if not result:
+        result = compute_service.get_job_result(provider_name, job_id)
     return {"result": result}

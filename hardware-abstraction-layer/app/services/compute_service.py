@@ -50,6 +50,13 @@ class ComputeService:
             raise ValueError(f"Provider '{provider_name}' is not a ClassicalProvider.")
         return provider.execute_task(task, device_name)
 
+    def execute_batch(self, provider_name: str, tasks: List[Any], device_name: str, **kwargs) -> List[str]:
+        """
+        Executes a batch of tasks.
+        """
+        provider = self._get_provider(provider_name)
+        return provider.execute_batch(tasks, device_name, **kwargs)
+
     def get_job_status(self, provider_name: str, job_id: str) -> str:
         """
         Gets the status of a job.

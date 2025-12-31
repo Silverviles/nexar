@@ -1,35 +1,98 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Landing from "./pages/Landing";
+import SignIn from "./pages/auth/SignIn";
+import SignUp from "./pages/auth/SignUp";
+import Index from "./pages/Index";
+import CodeAnalysis from "./pages/CodeAnalysis";
+import DecisionResults from "./pages/DecisionResults";
+import HardwareStatus from "./pages/HardwareStatus";
+import ExecutionHistory from "./pages/ExecutionHistory";
+import MLModels from "./pages/MLModels";
+import CostManagement from "./pages/CostManagement";
+import Settings from "./pages/Settings";
+import AICodeConverter from "./pages/AICodeConverter";
+import CodeConversionResults from "./pages/CodeConversionResults";
+import NotFound from "./pages/NotFound";
 
-function App() {
-  const [count, setCount] = useState(0)
+const queryClient = new QueryClient();
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            
+            {/* Protected routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/analysis" element={
+              <ProtectedRoute>
+                <CodeAnalysis />
+              </ProtectedRoute>
+            } />
+            <Route path="/results" element={
+              <ProtectedRoute>
+                <DecisionResults />
+              </ProtectedRoute>
+            } />
+            <Route path="/hardware" element={
+              <ProtectedRoute>
+                <HardwareStatus />
+              </ProtectedRoute>
+            } />
+            <Route path="/history" element={
+              <ProtectedRoute>
+                <ExecutionHistory />
+              </ProtectedRoute>
+            } />
+            <Route path="/models" element={
+              <ProtectedRoute>
+                <MLModels />
+              </ProtectedRoute>
+            } />
+            <Route path="/costs" element={
+              <ProtectedRoute>
+                <CostManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-converter" element={
+              <ProtectedRoute>
+                <AICodeConverter />
+              </ProtectedRoute>
+            } />
+            <Route path="/conversion-results" element={
+              <ProtectedRoute>
+                <CodeConversionResults />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
-export default App
+export default App;

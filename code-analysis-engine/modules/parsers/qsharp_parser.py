@@ -47,10 +47,11 @@ class PythonParser(BaseParser):
 
 
 class QSharpParser(BaseParser):
-    """Parser for Q# (Microsoft Quantum Development Kit)"""
+    """Parser for Q# code with support for parameterized and controlled gates."""
     
     def __init__(self):
         super().__init__()
+        # Expanded gate mapping including measurement and basic gates
         self.gate_mapping = {
             'H': GateType.H,
             'X': GateType.X,
@@ -60,12 +61,14 @@ class QSharpParser(BaseParser):
             'T': GateType.T,
             'CNOT': GateType.CNOT,
             'CX': GateType.CX,
+            'CZ': GateType.CZ,
             'SWAP': GateType.SWAP,
-            'Measure': GateType.MEASURE
+            'M': GateType.MEASURE,      # Q# alias for Measure on single qubit
+            'Measure': GateType.MEASURE,
+            'Reset': GateType.RESET
         }
     
     def parse(self, code: str) -> Dict[str, Any]:
-        """Parse Q# code"""
         self.code = code
         self.lines = code.split('\n')
         
@@ -73,7 +76,7 @@ class QSharpParser(BaseParser):
             'imports': self.extract_imports(),
             'registers': self.extract_registers(),
             'gates': self.extract_quantum_operations(),
-            'measurements': [],
+            'measurements': [],  # Could populate from Measure ops if needed
             'functions': self.extract_qsharp_functions(),
             'metadata': {
                 'lines_of_code': self.count_lines(code),
@@ -84,77 +87,206 @@ class QSharpParser(BaseParser):
         }
     
     def extract_imports(self) -> List[str]:
-        """Extract Q# using statements"""
+        """Extract Q# using/open statements"""
         imports = []
         for line in self.lines:
-            if 'using' in line or 'open' in line:
-                imports.append(line.strip())
+            stripped = line.strip()
+            if stripped.startswith(('open ', 'using ')):
+                imports.append(stripped)
         return imports
     
     def extract_registers(self) -> Dict[str, Any]:
-        """Extract Q# qubit allocations"""
+        """Extract Q# qubit allocations (using statements)"""
         quantum_regs = []
-        
-        # Pattern: using (qubits = Qubit[n])
-        qubit_pattern = r'using\s*\(\s*\w+\s*=\s*Qubit\[(\d+)\]'
+        # Pattern: using (name = Qubit[n]) or using (name = Qubit[n]) {
+        qubit_pattern = re.compile(r'using\s*\(\s*(\w+)\s*=\s*Qubit\[(\d+)\]\s*\)')
         
         for i, line in enumerate(self.lines):
-            match = re.search(qubit_pattern, line)
+            match = qubit_pattern.search(line)
             if match:
-                n_qubits = int(match.group(1))
-                quantum_regs.append(
-                    QuantumRegisterNode(name='qubits', size=n_qubits, line_number=i+1)
-                )
+                name = match.group(1)
+                size = int(match.group(2))
+                quantum_regs.append(QuantumRegisterNode(
+                    name=name, size=size, line_number=i+1
+                ))
         
         return {'quantum': quantum_regs, 'classical': []}
     
     def extract_quantum_operations(self) -> List[QuantumGateNode]:
-        """Extract Q# quantum operations"""
+        """Extract Q# quantum operations, including gates, rotations, measure, controlled ops."""
         gates = []
         
-        # Pattern: GATE(qubit);
-        gate_pattern = r'(\w+)\s*\(\s*\w+(?:\[\d+\])?\s*\)'
-        
         for i, line in enumerate(self.lines):
-            matches = re.finditer(gate_pattern, line)
-            for match in matches:
-                gate_name = match.group(1)
-                
-                if gate_name in self.gate_mapping:
-                    gate_type = self.gate_mapping[gate_name]
-                    is_controlled = gate_type in {GateType.CNOT, GateType.CX}
-                    
+            line = line.strip().rstrip(';')
+            
+            # Skip empty or non-operations
+            if not line or line.startswith('//') or line.startswith('using') or line.startswith('if ') or line.startswith('for '):
+                continue
+
+            # Handle controlled functors: (Controlled Gate)([controls], args)
+            # e.g. (Controlled X)([q0], q1) or (Controlled R1)([c], (theta, q))
+            if 'Controlled' in line:
+                ctrl_match = re.search(
+                    r'Controlled\s+(\w+)\s*\(\s*\[([^\]]*)\],\s*(.*)\)',
+                    line
+                )
+                if ctrl_match:
+                    base_gate = ctrl_match.group(1)
+
+                    # count control qubits symbolically
+                    ctrl_count = ctrl_match.group(2).count('qubits[')
+                    control_qubits = [-1] * ctrl_count
+
+                    args_str = ctrl_match.group(3).strip()
+                    if args_str.startswith('('):
+                        args_str = args_str.strip('()')
+
+                    parts = [p.strip() for p in args_str.split(',')]
+
+                    target_idx = -1
+                    parameters = []
+
+                    if len(parts) == 2:
+                        param, target = parts
+                        idx_match = re.search(r'\[(\w+)\]', target)
+                        if idx_match and idx_match.group(1).isdigit():
+                            target_idx = int(idx_match.group(1))
+                        parameters.append(self._parse_parameter(param))
+
+                    gate_type = self.gate_mapping.get(base_gate)
+                    if base_gate == 'R1':
+                        gate_type = GateType.RZ
+
+                    if gate_type:
+                        gates.append(QuantumGateNode(
+                            gate_type=gate_type,
+                            qubits=[target_idx],
+                            parameters=parameters,
+                            is_controlled=True,
+                            control_qubits=control_qubits,
+                            line_number=i + 1
+                        ))
+                continue
+            
+            # Simple gate invocation pattern: Gate(args)
+            gate_match = re.match(r'(\w+)\s*\((.*)\)', line)
+            if not gate_match:
+                continue
+            gate_name = gate_match.group(1)
+            arg_list = gate_match.group(2)
+            
+            # Parameterized rotations: R(PauliX, angle, q) or R1(angle, q)
+            if gate_name == 'R':
+                # e.g. R(PauliZ, theta, q) -> map to RZ
+                parts = [p.strip() for p in arg_list.split(',')]
+                if len(parts) == 3:
+                    pauli = parts[0]
+                    angle_str = parts[1]
+                    target_str = parts[2]
+                    # Determine axis
+                    axis = re.sub(r'Pauli', '', pauli)
+                    target_idx = int(re.search(r'\[(\d+)\]', target_str).group(1))
+                    angle = self._parse_parameter(parts[0])
+
+                    gate_type = {
+                        'X': GateType.RX,
+                        'Y': GateType.RY,
+                        'Z': GateType.RZ
+                    }.get(axis, GateType.CUSTOM)
                     gates.append(QuantumGateNode(
                         gate_type=gate_type,
-                        qubits=[0],  # Simplified
-                        is_controlled=is_controlled,
+                        qubits=[target_idx],
+                        parameters=[angle],
+                        is_controlled=False,
+                        control_qubits=[],
                         line_number=i+1
                     ))
+                continue
+            
+            if gate_name == 'R1':
+                # R1(angle, qubit)
+                parts = [p.strip() for p in arg_list.split(',')]
+                if len(parts) == 2:
+                    angle = self._parse_parameter(parts[0])
+                    target_str = parts[1]
+                    target_idx = int(re.search(r'\[(\d+)\]', target_str).group(1))
+                    gates.append(QuantumGateNode(
+                        gate_type=GateType.RZ,  # treat R1 as RZ for parser purposes
+                        qubits=[target_idx],
+                        parameters=[angle],
+                        is_controlled=False,
+                        control_qubits=[],
+                        line_number=i+1
+                    ))
+                continue
+            
+            # Map simple gates using gate_mapping
+            if gate_name in self.gate_mapping:
+                gate_type = self.gate_mapping[gate_name]
+                # Split arguments (handles 1 or 2 qubits)
+                args = [arg.strip() for arg in arg_list.split(',')]
+                control_qubits = []
+                target_qubits = []
+                for arg in args:
+                    if not arg: 
+                        continue
+                    # detect index inside brackets
+                    idx_match = re.search(r'\[(\w+)\]', arg)
+                    if idx_match:
+                        idx = int(idx_match.group(1)) if idx_match.group(1).isdigit() else -1
+                        if gate_type in {GateType.CNOT, GateType.CX, GateType.CZ}:
+                            # Assume first arg is control
+                            if not target_qubits:
+                                control_qubits.append(idx)
+                            else:
+                                target_qubits.append(idx)
+                        else:
+                            target_qubits.append(idx)
+                    else:
+                        # If no brackets, assume single qubit variable (treat as 0 or skip)
+                        pass
+                is_ctrl = len(control_qubits) > 0
+                # For 2-qubit gates not explicitly Controlled, first arg is control for CNOT/CZ
+                if gate_type in {GateType.CNOT, GateType.CX, GateType.CZ} and len(target_qubits)==1 and len(control_qubits)==0:
+                    control_qubits = [target_qubits[0]]
+                    target_qubits = [target_qubits[1]] if len(target_qubits)>1 else []
+                # Build gate node
+                gates.append(QuantumGateNode(
+                    gate_type=gate_type,
+                    qubits=target_qubits if target_qubits else control_qubits,
+                    parameters=[],
+                    is_controlled=is_ctrl,
+                    control_qubits=control_qubits,
+                    line_number=i+1
+                ))
         
         return gates
     
     def extract_qsharp_functions(self) -> List[ASTNode]:
-        """Extract Q# operation definitions as ASTNode"""
+        """Extract Q# operation/function definitions (with functor qualifiers)."""
         functions = []
-        pattern = r'operation\s+(\w+)\s*\('
-
-        for match in re.finditer(pattern, self.code):
+        # Pattern matches operation or function with optional is Adj/Ctl
+        pattern = re.compile(r'(?:operation|function)\s+(\w+)\s*\(.*?\)\s*:\s*\w+(?:\s*is\s*([^ {]+))?')
+        for match in pattern.finditer(self.code):
+            name = match.group(1)
+            functors = match.group(2) or ""
+            attrs = {"language": "qsharp"}
+            # Detect functor support
+            if 'Adj' in functors:
+                attrs["adjointable"] = True
+            if 'Ctl' in functors:
+                attrs["controlledable"] = True
             functions.append(ASTNode(
                 node_type=NodeType.FUNCTION,
-                name=match.group(1),
+                name=name,
                 line_number=None,
                 children=[],
-                attributes={"language": "qsharp"}
+                attributes=attrs
             ))
-
         return functions
-
-    def extract_qsharp_operations(self) -> List[Dict]:
-        """Extract Q# operation definitions"""
-        operations = []
-        op_pattern = r'operation\s+(\w+)\s*\('
-        
-        for match in re.finditer(op_pattern, self.code):
-            operations.append({'name': match.group(1), 'type': 'operation'})
-        
-        return operations
+    
+    def _parse_parameter(self, param: str):
+        try:
+            return float(param)
+        except Exception:
+            return "symbolic"

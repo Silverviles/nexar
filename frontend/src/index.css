@@ -1,68 +1,229 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 187 80% 50%;
+    --primary-foreground: 222 47% 6%;
+
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 30% 12%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 187 80% 40%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 45%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 6%;
+
+    --quantum: 187 100% 50%;
+    --quantum-glow: 187 100% 60%;
+    --classical: 280 60% 55%;
+    --hybrid: 142 76% 45%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 187 80% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 187 80% 50%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 222 30% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 30% 15%;
+    --sidebar-ring: 187 80% 50%;
+
+    --chart-1: 187 80% 50%;
+    --chart-2: 280 60% 55%;
+    --chart-3: 142 76% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 51%;
+
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Inter', sans-serif;
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 187 80% 50%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 30% 12%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 187 80% 40%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 187 80% 50%;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    @apply font-semibold tracking-tight;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer utilities {
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 40px hsl(var(--primary) / 0.1);
+  }
+
+  .glow-quantum {
+    box-shadow: 0 0 20px hsl(var(--quantum) / 0.4), 0 0 60px hsl(var(--quantum) / 0.2);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 15px hsl(var(--success) / 0.4);
+  }
+
+  .glow-warning {
+    box-shadow: 0 0 15px hsl(var(--warning) / 0.4);
+  }
+
+  .glow-destructive {
+    box-shadow: 0 0 15px hsl(var(--destructive) / 0.4);
+  }
+
+  .gradient-quantum {
+    background: linear-gradient(135deg, hsl(var(--quantum)) 0%, hsl(var(--primary)) 100%);
+  }
+
+  .gradient-card {
+    background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(222 47% 6%) 100%);
+  }
+
+  .glass {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .grid-pattern {
+    background-image: 
+      linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .bg-grid-white\/\[0\.02\] {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 20px hsl(var(--quantum) / 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 40px hsl(var(--quantum) / 0.6);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll on mobile */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better touch targets */
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Adjust font sizes for better readability on mobile */
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
   }
 }

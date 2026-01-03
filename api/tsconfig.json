@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "module": "ESNext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "esnext",
     "types": [],
@@ -31,6 +31,16 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+
+    // Path aliases
+    "ignoreDeprecations": "6.0",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@config/*": ["./config/*"],
+      "@middleware/*": ["./middleware/*"],
+      "@routes/*": ["./routes/*"]
+    }
   }
 }

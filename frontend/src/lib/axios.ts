@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Create axios instance with base configuration
-const axiosInstance = axios.create({
+const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
   timeout: 10000,
   headers: {
@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
 });
 
 // Request interceptor - adds auth token to requests
-axiosInstance.interceptors.request.use(
+api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
     if (token) {
@@ -24,7 +24,7 @@ axiosInstance.interceptors.request.use(
 );
 
 // Response interceptor - handles common errors
-axiosInstance.interceptors.response.use(
+api.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -59,4 +59,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance;
+export default api;

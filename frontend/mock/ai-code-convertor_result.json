@@ -1,0 +1,78 @@
+{
+  "test_metadata": {
+    "gate_type": "NOR",
+    "test_timestamp": "2025-12-18 13:32:43",
+    "shots_executed": 1000,
+    "server_url": "http://127.0.0.1:8000"
+  },
+  "original_python_code": "def nor_gate(a, b): return 1 - (a | b)",
+  "translation_results": {
+    "raw_quantum_code": "qc = QuantumCircuit(2, 2)\nqc.h(0)\nqc.h(1)\nqc.x(0)\nqc.cx(0,1)\nqc.measure([0,1],[0,1])",
+    "quantum_code_with_imports": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(2, 2)\nqc.h(0)\nqc.h(1)\nqc.x(0)\nqc.cx(0,1)\nqc.measure([0,1],[0,1])",
+    "translation_success": true
+  },
+  "quantum_execution": {
+    "success": true,
+    "used_generated_code": true,
+    "fallback_reason": null,
+    "counts": {
+      "11": 257,
+      "00": 254,
+      "01": 259,
+      "10": 230
+    },
+    "probabilities": {
+      "11": 0.257,
+      "00": 0.254,
+      "01": 0.259,
+      "10": 0.23
+    },
+    "circuit_analysis": {
+      "depth": 4,
+      "num_qubits": 2,
+      "num_gates": 6,
+      "gate_counts": {
+        "h": 2,
+        "measure": 2,
+        "x": 1,
+        "cx": 1
+      },
+      "execution_time_seconds": 0.004038810729980469
+    }
+  },
+  "performance_comparison": {
+    "quantum_simulation": {
+      "execution_time_seconds": 0.004038810729980469,
+      "execution_time_ms": 4.038810729980469,
+      "shots": 1000,
+      "shots_per_second": 247597.63872491146
+    },
+    "python_execution": {
+      "execution_time_ms": 289.34769999978016,
+      "execution_time_seconds": 0.28934769999978016,
+      "operations": 4000000,
+      "operations_per_second": 13824198.36066794,
+      "time_per_operation_ns": 72.33692499994504
+    },
+    "speed_comparison": {
+      "python_vs_quantum_speed_ratio": 55.83332067244408,
+      "quantum_time_per_shot_ms": 0.004038810729980469,
+      "python_time_per_operation_ns": 72.33692499994504,
+      "python_is_faster_by_factor": 0.013958330168111021,
+      "faster_implementation": "Quantum"
+    },
+    "comparison_summary": "Quantum simulation is 71.6x faster than Python"
+  },
+  "visualizations": {
+    "circuit_diagram_available": true,
+    "histogram_available": true,
+    "note": "Images displayed as popup, not saved in JSON"
+  },
+  "summary": {
+    "gate_type_tested": "NOR",
+    "circuit_complexity": "Simple",
+    "total_unique_states": 4,
+    "most_probable_state": "01",
+    "translation_quality": "Good"
+  }
+}

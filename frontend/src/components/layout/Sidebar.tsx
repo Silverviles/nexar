@@ -14,6 +14,7 @@ import {
   Atom,
   Menu,
   X,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Code, label: "Code Analysis", path: "/analysis" },
-  { icon: Activity, label: "Decision Results", path: "/results" },
+  { icon: Sparkles, label: "Python → Quantum", path: "/ai-converter" },
+  { icon: Activity, label: "Decision Engine", path: "/decision-engine" },
   { icon: Server, label: "Hardware Status", path: "/hardware" },
   { icon: History, label: "Execution History", path: "/history" },
   { icon: Brain, label: "ML Models", path: "/models" },

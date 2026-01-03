@@ -92,6 +92,7 @@ const App = () => (
                 <AICodeConverter />
               </ProtectedRoute>
             } />
+            
             <Route path="/conversion-results" element={
               <ProtectedRoute>
                 <CodeConversionResults />

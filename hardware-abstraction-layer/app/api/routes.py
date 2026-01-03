@@ -63,6 +63,41 @@ def get_quantum_job_result(provider_name: str, job_id: str):
     return {"result": result}
 
 
+@router.get("/v1/hardware/status")
+def get_hardware_status():
+    """
+    Get the overall status of the Hardware Abstraction Layer.
+    """
+    providers = compute_service.list_providers()
+    return {
+        "status": "online",
+        "service": "Hardware Abstraction Layer",
+        "providers_available": len(providers),
+        "providers": providers
+    }
+
+
+@router.get("/v1/hardware/devices")
+def list_all_hardware_devices():
+    """
+    List all available devices from all registered providers.
+    """
+    all_devices = []
+    providers = compute_service.list_providers()
+    
+    for provider in providers:
+        try:
+            devices = compute_service.list_devices(provider)
+            # Tag devices with their provider for clarity
+            for device in devices:
+                device["provider"] = provider
+            all_devices.extend(devices)
+        except Exception as e:
+            print(f"Error fetching devices for {provider}: {e}")
+            
+    return {"devices": all_devices}
+
+
 # --- Classical Endpoints ---
 
 @router.post("/classical/{provider_name}/execute")

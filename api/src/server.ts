@@ -1,15 +1,34 @@
 import express from 'express';
 import type { Request, Response } from 'express';
+import cors from 'cors';
+import { logger } from '@config/logger.js';
+import { corsOptions } from '@config/cors.js';
+import decisionEngineRoutes from '@routes/decision-engine.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DECISION_ENGINE_URL = process.env.DECISION_ENGINE_URL || 'http://localhost:8083';
+
+// CORS configuration
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
+// API Gateway routes for decision engine
+app.use('/api/v1/decision-engine', decisionEngineRoutes);
+
 app.get('/', (req: Request, res: Response) => {
-    res.json({ message: 'Welcome to my modern TypeScript + Node.js API 🚀' });
+    res.json({ 
+        message: 'Welcome to my modern TypeScript + Node.js API 🚀',
+        endpoints: {
+            decisionEngine: '/api/v1/decision-engine',
+            health: '/api/v1/decision-engine/health',
+            predict: '/api/v1/decision-engine/predict'
+        }
+    });
 });
 
 app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
+    logger.info(`✅ Server running on http://localhost:${PORT}`);
+    logger.info(`🔗 Decision Engine proxy: ${DECISION_ENGINE_URL}`);
 });

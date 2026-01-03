@@ -16,7 +16,9 @@ app.use(express.json());
 
 // API Gateway routes for decision engine
 app.use('/api/v1/decision-engine', decisionEngineRoutes);
-app.use('/', aiCodeConverterRoutes);
+
+// API Gateway routes for AI code converter
+app.use('/api', aiCodeConverterRoutes);
 
 app.get('/', (req: Request, res: Response) => {
     res.json({ 
@@ -29,17 +31,6 @@ app.get('/', (req: Request, res: Response) => {
     });
 });
 
-app.get('/', (req: Request, res: Response) => {
-    res.json({ 
-        message: 'Welcome to Quantum Code Converter API Gateway',
-        endpoints: {
-            aiCodeConverter: '/',
-            translate: '/translate',
-            execute: '/execute',
-            translate3: '/translate3'
-        }
-    });
-});
 
 app.listen(PORT, () => {
     logger.info(`✅ Server running on http://localhost:${PORT}`);

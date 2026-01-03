@@ -44,15 +44,18 @@ export default function AICodeConverter() {
 
       // Step 1: Translate Python to Quantum
       toast.info("Translating Python to quantum code...");
-      const translateResponse = await fetch("http://localhost:3000/translate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          python_code: inputCode,
-        }),
-      });
+      const translateResponse = await fetch(
+        "http://localhost:3000/api/translate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            python_code: inputCode,
+          }),
+        }
+      );
 
       if (!translateResponse.ok) {
         throw new Error(`Translation failed: ${translateResponse.status}`);
@@ -70,7 +73,7 @@ export default function AICodeConverter() {
 
       // Step 2: Execute Quantum Circuit
       toast.info("Executing quantum circuit...");
-      const executeResponse = await fetch("http://localhost:3000/execute", {
+      const executeResponse = await fetch("http://localhost:3000/api/execute", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -441,10 +444,6 @@ export default function AICodeConverter() {
                         </span>{" "}
                         for the same operations.
                       </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Quantum simulation is for algorithm verification, not
-                        performance comparison.
-                      </p>
                     </div>
                   )}
 
@@ -525,53 +524,7 @@ export default function AICodeConverter() {
           </Card>
         </div>
 
-        {/* Info Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>How It Works</CardTitle>
-            <CardDescription>Single-step conversion process</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Code className="h-5 w-5 text-primary" />
-                </div>
-                <h4 className="font-medium">1. Paste Python</h4>
-                <p className="text-sm text-muted-foreground">
-                  Paste any Python code with logic operations
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <ArrowRight className="h-5 w-5 text-primary" />
-                </div>
-                <h4 className="font-medium">2. AI Translation</h4>
-                <p className="text-sm text-muted-foreground">
-                  AI model converts to quantum circuit code
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Play className="h-5 w-5 text-primary" />
-                </div>
-                <h4 className="font-medium">3. Execute</h4>
-                <p className="text-sm text-muted-foreground">
-                  Circuit runs with 1000 shots on simulator
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <BarChart className="h-5 w-5 text-primary" />
-                </div>
-                <h4 className="font-medium">4. Results</h4>
-                <p className="text-sm text-muted-foreground">
-                  Get complete analysis and performance metrics
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
     </MainLayout>
   );

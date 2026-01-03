@@ -5,6 +5,10 @@ from typing import Dict, List, Optional
 from collections import defaultdict
 import uuid
 
+from typing import Dict, List, Optional, Any
+
+from app.core.config import settings
+from app.messaging.factory import messaging_client
 from app.models.execution import JobRequest, JobSubmission, JobPriority, OptimizationStrategy
 from app.services.factory import compute_service
 from app.providers.base import BaseProvider
@@ -29,6 +33,21 @@ class JobManager:
             self._monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
             self._monitor_thread.start()
 
+    def _publish_status_update(self, submission: JobSubmission, status: str, extra_data: Dict = None):
+        if messaging_client:
+            message = {
+                "job_id": submission.id,
+                "provider_job_id": submission.provider_job_id,
+                "status": status,
+                "provider": submission.request.provider_name,
+                "device": submission.request.device_name,
+                "timestamp": time.time()
+            }
+            if extra_data:
+                message.update(extra_data)
+            
+            messaging_client.publish_message(settings.PUBSUB_TOPIC_NAME, message)
+
     def submit_job(self, request: JobRequest) -> str:
         job_id = str(uuid.uuid4())
         submission = JobSubmission(
@@ -42,11 +61,15 @@ class JobManager:
             
             # If HIGH priority, execute immediately
             if request.priority == JobPriority.HIGH:
+                submission.status = "QUEUED"
+                self._publish_status_update(submission, "QUEUED")
                 self._execute_batch([submission])
             else:
                 # Add to pending queue (keyed by provider + device)
                 key = f"{request.provider_name}|{request.device_name}"
                 self._pending_jobs[key].append(submission)
+                submission.status = "QUEUED"
+                self._publish_status_update(submission, "QUEUED")
         
         return job_id
 
@@ -56,10 +79,14 @@ class JobManager:
             submission = self._jobs[job_id]
             if submission.provider_job_id:
                 # Delegate to provider
-                return compute_service.get_job_status(
+                status = compute_service.get_job_status(
                     submission.request.provider_name, 
                     submission.provider_job_id
                 )
+                if status != submission.status:
+                    submission.status = status
+                    self._publish_status_update(submission, status)
+                return status
             return submission.status
         return "UNKNOWN"
 
@@ -67,10 +94,14 @@ class JobManager:
         if job_id in self._jobs:
             submission = self._jobs[job_id]
             if submission.provider_job_id:
-                return compute_service.get_job_result(
+                result = compute_service.get_job_result(
                     submission.request.provider_name,
                     submission.provider_job_id
                 )
+                # Assuming the job is complete if we get a result
+                submission.status = "COMPLETED"
+                self._publish_status_update(submission, "COMPLETED", extra_data={"result": result})
+                return result
         return {}
 
     def _monitor_loop(self):
@@ -118,13 +149,6 @@ class JobManager:
         tasks = [sub.request.task for sub in batch]
         
         try:
-            # We need to access the provider directly to call execute_batch
-            # compute_service wraps it, but currently compute_service methods are specific.
-            # Let's add a generic 'execute_batch' to compute_service or access provider.
-            # Ideally compute_service should have 'execute_batch'.
-            
-            # Hack: access private provider map in compute_service? No.
-            # Let's add execute_batch to ComputeService.
             provider_job_ids = compute_service.execute_batch(
                 provider_name, 
                 tasks, 
@@ -136,12 +160,13 @@ class JobManager:
             for sub, p_id in zip(batch, provider_job_ids):
                 sub.status = "SUBMITTED"
                 sub.provider_job_id = p_id
+                self._publish_status_update(sub, "SUBMITTED")
                 
         except Exception as e:
             print(f"Batch execution failed: {e}")
             for sub in batch:
                 sub.status = "FAILED"
-                # Log error in result? Need a way to store local error.
+                self._publish_status_update(sub, "FAILED", extra_data={"error": str(e)})
 
 job_manager = JobManager()
 # Start the background thread

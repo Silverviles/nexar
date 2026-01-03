@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     AZURE_CLIENT_SECRET: Optional[str] = None
     AZURE_LOCATION: str = "westus"
 
+    # Google Cloud
+    GOOGLE_PROJECT_ID: Optional[str] = None
+    PUBSUB_TOPIC_NAME: str = "hal-job-updates"
+
     class Config:
         env_file = ".env"
 

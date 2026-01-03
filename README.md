@@ -10,7 +10,7 @@ This monorepo contains 6 services:
 - **decision-engine** — Python FastAPI service (port 8003)
 - **api** — TypeScript Express API (port 3000)
 - **frontend** — React + Vite web app (port 5173)
-- **hardware-abstraction-layer** — Rust binary
+- **hardware-abstraction-layer** — Python FastAPI service (port 8004)
 
 ## Prerequisites
 
@@ -18,7 +18,6 @@ Install these tools before setting up any service:
 
 - **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
 - **Python** (3.10 or higher) - [Download here](https://python.org/)
-- **Rust** (latest stable) - [Install via rustup](https://rustup.rs/)
 - **Git** - [Download here](https://git-scm.com/)
 
 ## Setup Instructions

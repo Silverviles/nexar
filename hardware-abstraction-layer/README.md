@@ -52,7 +52,7 @@ pip install -r requirements.txt
 4. Run the app with Uvicorn (development mode with hot reload):
 
 ```powershell
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8083
 ```
 
 The API will be available at: http://127.0.0.1:8000

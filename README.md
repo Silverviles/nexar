@@ -165,26 +165,33 @@ uvicorn main:app --host 0.0.0.0 --port 8003 --reload
 
 **Verification:** Visit http://localhost:8003/ - you should see `{"message": "Hello World"}`
 
-### 4. Hardware Abstraction Layer (Rust)
-
-The hardware abstraction layer is a Rust binary for system-level operations.
+### 4. Hardware Abstraction Layer (Port 8004)
 
 **Step 1:** Navigate to the service directory
 ```bash
 cd hardware-abstraction-layer
 ```
 
-**Step 2:** Build the project
+**Step 2:** Create and activate virtual environment
 ```bash
-cargo build --release
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-**Step 3:** Run the binary
+**Step 3:** Install dependencies
 ```bash
-cargo run --release
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-**Verification:** You should see "Hello, world!" printed to the console.
+**Step 4:** Start the service
+```bash
+uvicorn main:app --host 127.0.0.1 --port 8004 --reload
+```
+
+**Verification:** Visit http://localhost:8004/ - you should see `{"message": "Hello World"}`
+
+**Verification:** You should see "{"status":"running"}" printed to the console.
 
 ## Running Multiple Services
 
@@ -193,7 +200,7 @@ To run the full application, start services in separate terminals in this order:
 1. **Start the API** (Terminal 1)
 2. **Start Python services** (Terminals 2-4) - only the ones you need
 3. **Start the frontend** (Terminal 5)
-4. **Build Rust HAL** (if needed)
+4. **Start the HAL** (Terminal 6)
 
 ## Quick Start Commands
 
@@ -224,12 +231,18 @@ cd decision-engine && python -m venv .venv && source .venv/bin/activate && pip i
 cd frontend && npm install && npm run dev
 ```
 
+**Terminal 6 - Hardware Abstraction Layer:**
+```bash
+cd hardware-abstraction-layer && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --port 8004 --reload
+```
+
 ## Port Summary
 
 - API: http://localhost:3000/
 - AI Code Converter: http://localhost:8001/
 - Code Analysis Engine: http://localhost:8002/
 - Decision Engine: http://localhost:8003/
+- Hardware Abstraction Layer: http://localhost:8004/
 - Frontend: http://localhost:5173/
 
 ## Troubleshooting

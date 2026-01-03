@@ -10,7 +10,8 @@ import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import Index from "./pages/Index";
 import CodeAnalysis from "./pages/CodeAnalysis";
-import DecisionResults from "./pages/DecisionResults";
+import DecisionEngine from "./pages/decision-engine/DecisionEngine";
+import DecisionResults from "./pages/decision-engine/DecisionResults";
 import HardwareStatus from "./pages/HardwareStatus";
 import ExecutionHistory from "./pages/ExecutionHistory";
 import MLModels from "./pages/MLModels";
@@ -44,6 +45,16 @@ const App = () => (
             <Route path="/analysis" element={
               <ProtectedRoute>
                 <CodeAnalysis />
+              </ProtectedRoute>
+            } />
+            <Route path="/decision-engine" element={
+              <ProtectedRoute>
+                <DecisionEngine />
+              </ProtectedRoute>
+            } />
+            <Route path="/decision-results" element={
+              <ProtectedRoute>
+                <DecisionResults />
               </ProtectedRoute>
             } />
             <Route path="/results" element={

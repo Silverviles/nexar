@@ -2,7 +2,7 @@
 Code Analysis Engine - Complete Implementation with Accurate Analysis
 Port: 8002
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from pydantic import BaseModel
 from typing import Optional
 import uvicorn
@@ -15,12 +15,24 @@ from modules.quantum_analyzer import QuantumAnalyzer
 from modules.algorithm_detector import QuantumAlgorithmDetector 
 from models.analysis_result import CodeAnalysisResult, ProblemType, TimeComplexity
 from modules.ml_algorithm_classifier import MLAlgorithmClassifier
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Code Analysis Engine",
     description="Analyzes quantum-classical code for intelligent routing",
     version="1.0.0"
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",  # Vite dev
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # allows OPTIONS, POST, GET, etc.
+    allow_headers=["*"],
+)
+api_router = APIRouter(prefix="/api/v1")
 
 # Initialize components
 language_detector = LanguageDetector()
@@ -41,7 +53,7 @@ class LanguageDetectionResponse(BaseModel):
     details: str
 
 # Routes
-@app.get("/")
+@api_router.get("/")
 async def root():
     return {
         "service": "Code Analysis Engine",
@@ -56,11 +68,11 @@ async def root():
         ]
     }
 
-@app.get("/health")
+@api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "code-analysis-engine"}
 
-@app.post("/detect-language", response_model=LanguageDetectionResponse)
+@api_router.post("/detect-language", response_model=LanguageDetectionResponse)
 async def detect_language(submission: CodeSubmission):
     """Detect programming language"""
     try:
@@ -69,7 +81,7 @@ async def detect_language(submission: CodeSubmission):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/analyze", response_model=CodeAnalysisResult)
+@api_router.post("/analyze", response_model=CodeAnalysisResult)
 async def analyze_code(submission: CodeSubmission):
     """
     Complete code analysis pipeline with accurate metrics
@@ -170,7 +182,7 @@ async def analyze_code(submission: CodeSubmission):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-@app.get("/supported-languages")
+@api_router.get("/supported-languages")
 async def get_supported_languages():
     """List supported quantum programming languages"""
     return {
@@ -183,6 +195,8 @@ async def get_supported_languages():
         ],
         "count": 5
     }
+
+app.include_router(api_router)
 
 # Helper Functions
 
@@ -247,7 +261,7 @@ def build_analysis_result(
         memory_mb = quantum_analyzer.estimate_memory_requirement(qubits)
         
         is_quantum_eligible = True
-        problem_size = qubits
+        problem_size = qubits if qubits > 0 else max(metadata.get('lines_of_code', 0), 1)
         
         # Build detailed notes
         notes = (

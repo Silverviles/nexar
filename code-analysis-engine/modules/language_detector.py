@@ -239,12 +239,14 @@ class LanguageDetector:
         # ---------------------------------------------------------------
         # 5️⃣ PYTHON (fallback only)
         # ---------------------------------------------------------------
-        if self._is_python(code):
+        python_score = score(SupportedLanguage.PYTHON)
+
+        if self._is_python(code) or python_score >= 0.15:
             return {
                 "language": SupportedLanguage.PYTHON,
-                "confidence": 0.50,
+                "confidence": round(max(0.50, python_score), 3),
                 "is_supported": True,
-                "details": "Detected plain Python (no quantum framework)"
+                "details": "Detected plain Python (fallback)"
             }
 
         # ---------------------------------------------------------------

@@ -62,7 +62,7 @@ export default function DecisionResults() {
         </Button>
 
         {/* Primary Recommendation */}
-        <Card variant={isQuantum ? "quantum" : isClassical ? "classical" : "glass"} className="animate-scale-in">
+        <Card variant={isQuantum ? "quantum" : "glass"} className="animate-scale-in">
           <CardHeader>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function DecisionResults() {
             
             <div className="mt-4 flex gap-3 flex-wrap">
               <Button 
-                variant={isQuantum ? "quantum" : isClassical ? "classical" : "default"} 
+                variant={isQuantum ? "quantum" : "default"} 
                 className="gap-2"
               >
                 <Sparkles className="h-4 w-4" />

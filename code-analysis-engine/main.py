@@ -2,7 +2,8 @@
 Code Analysis Engine - Complete Implementation with Accurate Analysis
 Port: 8002
 """
-from fastapi import FastAPI, HTTPException, APIRouter
+import logging
+from fastapi import FastAPI, HTTPException, APIRouter, Request
 from pydantic import BaseModel
 from typing import Optional
 import uvicorn
@@ -32,7 +33,7 @@ app.add_middleware(
     allow_methods=["*"],  # allows OPTIONS, POST, GET, etc.
     allow_headers=["*"],
 )
-api_router = APIRouter(prefix="/api/v1")
+api_router = APIRouter(prefix="/api/v1/code-analysis-engine")
 
 # Initialize components
 language_detector = LanguageDetector()
@@ -41,6 +42,10 @@ complexity_analyzer = ComplexityAnalyzer()
 quantum_analyzer = QuantumAnalyzer()
 algorithm_detector = QuantumAlgorithmDetector() 
 ml_classifier = MLAlgorithmClassifier()
+
+# Initialize logger
+logger = logging.getLogger("uvicorn")
+logger.setLevel(logging.INFO)
 
 # Request Models
 class CodeSubmission(BaseModel):
@@ -53,8 +58,10 @@ class LanguageDetectionResponse(BaseModel):
     details: str
 
 # Routes
+
 @api_router.get("/")
-async def root():
+async def root(request: Request):
+    logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Root endpoint accessed.")
     return {
         "service": "Code Analysis Engine",
         "version": "1.0.0",
@@ -69,20 +76,23 @@ async def root():
     }
 
 @api_router.get("/health")
-async def health_check():
+async def health_check(request: Request):
+    logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Health check passed.")
     return {"status": "healthy", "service": "code-analysis-engine"}
 
 @api_router.post("/detect-language", response_model=LanguageDetectionResponse)
-async def detect_language(submission: CodeSubmission):
+async def detect_language(submission: CodeSubmission, request: Request):
     """Detect programming language"""
     try:
         result = language_detector.detect(code=submission.code)
+        logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Detected language: {result['language']}")
         return LanguageDetectionResponse(**result)
     except Exception as e:
+        logger.error(f"[CodeAnalysisEngine] {request.method} {request.url} - Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/analyze", response_model=CodeAnalysisResult)
-async def analyze_code(submission: CodeSubmission):
+async def analyze_code(submission: CodeSubmission, request: Request):
     """
     Complete code analysis pipeline with accurate metrics
     Returns metrics for Decision Engine
@@ -94,6 +104,7 @@ async def analyze_code(submission: CodeSubmission):
         lang_result = language_detector.detect(code=code)
         
         if not lang_result["is_supported"]:
+            logger.warning(f"[CodeAnalysisEngine] {request.method} {request.url} - Unsupported language: {lang_result['language']}")
             raise HTTPException(
                 status_code=400, 
                 detail=f"Unsupported language: {lang_result['language']}"
@@ -177,23 +188,23 @@ async def analyze_code(submission: CodeSubmission):
             algorithm_detection_source=algorithm_detection_source  
         )
         
+        logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Analysis completed for code submission.")
         return result
         
     except Exception as e:
+        logger.error(f"[CodeAnalysisEngine] {request.method} {request.url} - Analysis failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @api_router.get("/supported-languages")
-async def get_supported_languages():
-    """List supported quantum programming languages"""
+async def get_supported_languages(request: Request):
+    """List supported programming languages dynamically using LanguageDetector"""
+    
+    supported_languages = [lang.value for lang in SupportedLanguage if lang.value != "unknown"]
+
+    logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Supported languages listed.")
     return {
-        "languages": [
-            {"name": "Python", "value": "python"},
-            {"name": "Qiskit", "value": "qiskit"},
-            {"name": "Q#", "value": "qsharp"},
-            {"name": "Cirq", "value": "cirq"},
-            {"name": "OpenQASM", "value": "openqasm"}
-        ],
-        "count": 5
+        "languages": [{"name": lang.capitalize(), "value": lang} for lang in supported_languages],
+        "count": len(supported_languages)
     }
 
 app.include_router(api_router)

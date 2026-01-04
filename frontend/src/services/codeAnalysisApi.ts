@@ -2,15 +2,14 @@
  * API Service for Code Analysis Engine
  */
 
+import api from "@/lib/axios";
 import type {
   AnalysisResult,
   CodeSubmission,
   SupportedLanguagesResponse,
 } from "@/types/codeAnalysis";
 
-const API_BASE_URL =
-  import.meta.env.VITE_CODE_ANALYSIS_ENGINE_API_BASE ||
-  "http://localhost:8002/api/v1";
+const API_BASE_URL = "/v1/code-analysis-engine";
 
 class CodeAnalysisAPI {
   private baseUrl: string;
@@ -23,50 +22,53 @@ class CodeAnalysisAPI {
    * Get list of supported programming languages
    */
   async getSupportedLanguages(): Promise<SupportedLanguagesResponse> {
-    const response = await fetch(`${this.baseUrl}/supported-languages`);
+    try {
+      const response = await api.get(`${this.baseUrl}/supported-languages`);
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch supported languages: ${response.statusText}`
-      );
+      if (response.status !== 200) {
+        throw new Error(
+          `Failed to fetch supported languages: ${response.statusText}`
+        );
+      }
+
+      return response.data; // No need for response.json(), axios does it for you
+    } catch (error) {
+      throw new Error(error.message || "Error fetching supported languages");
     }
-
-    return response.json();
   }
 
   /**
    * Analyze submitted code
    */
   async analyzeCode(submission: CodeSubmission): Promise<AnalysisResult> {
-    const response = await fetch(`${this.baseUrl}/analyze`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(submission),
-    });
+    try {
+      const response = await api.post(`${this.baseUrl}/analyze`, submission);
 
-    if (!response.ok) {
-      const error = await response
-        .json()
-        .catch(() => ({ detail: response.statusText }));
-      throw new Error(error.detail || "Failed to analyze code");
+      if (response.status !== 200) {
+        throw new Error(`Failed to analyze code: ${response.statusText}`);
+      }
+
+      return response.data; // The parsed JSON is in response.data
+    } catch (error) {
+      throw new Error(error.message || "Failed to analyze code");
     }
-
-    return response.json();
   }
 
   /**
    * Check API health
    */
   async healthCheck(): Promise<{ status: string; service: string }> {
-    const response = await fetch(`${this.baseUrl}/health`);
+    try {
+      const response = await api.get(`${this.baseUrl}/health`);
 
-    if (!response.ok) {
-      throw new Error("Service is unavailable");
+      if (response.status !== 200) {
+        throw new Error("Service is unavailable");
+      }
+
+      return response.data;
+    } catch (error) {
+      throw new Error(error.message || "Error checking service health");
     }
-
-    return response.json();
   }
 }
 

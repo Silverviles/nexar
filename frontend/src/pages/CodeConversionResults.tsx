@@ -207,7 +207,7 @@ export default function CodeConversionResults() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Gate Type</CardTitle>
               <Code className="h-4 w-4 text-muted-foreground" />
@@ -218,7 +218,7 @@ export default function CodeConversionResults() {
                 {getComplexityText(result.executionResults.performance.depth)}
               </Badge>
             </CardContent>
-          </Card>
+          </Card> */}
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

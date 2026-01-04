@@ -318,7 +318,7 @@ export default function AICodeConverter() {
                     </p>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <p>✓ 1. Translating Python to quantum code</p>
-                      <p>✓ 2. Executing quantum circuit (1000 shots)</p>
+                      <p>✓ 2. Executing quantum circuit </p>
                       <p>→ 3. Analyzing results and performance</p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-4">
@@ -514,7 +514,7 @@ export default function AICodeConverter() {
                         }
                         className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
                       >
-                        Complex Logic
+                        NOT Gate
                       </button>
                     </div>
                   </div>

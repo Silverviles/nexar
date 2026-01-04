@@ -9,8 +9,11 @@ from models.schemas import (
 from services.ai_service import ai_service
 from services.quantum_service import quantum_service
 from utils.helpers import extract_logic_function
+from routes.quantum_analysis import router as quantum_analysis_router
 
 router = APIRouter(prefix="/api", tags=["quantum"])
+
+router.include_router(quantum_analysis_router)
 
 @router.post("/translate", response_model=TranslationResponse)
 async def translate_python_to_quantum(request: PythonCodeRequest):

@@ -30,7 +30,11 @@ def create_app() -> FastAPI:
                 "/api/translate": "POST - Translate Python to quantum code",
                 "/api/execute": "POST - Execute quantum circuit",
                 "/api/extract-logic": "POST - Extract logic function",
-                "/api/health": "GET - Health check"
+                "/api/health": "GET - Health check",
+                "/api/quantum/patterns": "GET - List detectable quantum patterns",
+                "/api/quantum/analyze": "POST - Analyze code for quantum suitability",
+                "/api/quantum/analyze/batch": "POST - Analyze multiple code snippets",
+                "/api/quantum/test": "GET - Test analysis with example"
             }
         }
     

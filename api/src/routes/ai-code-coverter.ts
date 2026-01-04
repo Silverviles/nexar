@@ -49,5 +49,6 @@ const forwardRequest = async (req: Request, res: Response) => {
 // Define routes that match your FastAPI endpoints
 router.post("/translate", forwardRequest);
 router.post("/execute", forwardRequest);
+router.post("/quantum/analyze", forwardRequest);
 
 export default router;

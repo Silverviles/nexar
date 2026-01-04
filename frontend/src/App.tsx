@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import AICodeConverter from "./pages/AICodeConverter";
 import CodeConversionResults from "./pages/CodeConversionResults";
 import NotFound from "./pages/NotFound";
+import QuantumASTPatternAnalyzer from "./pages/QuantumASTPatternAnalyzer";
 
 const queryClient = new QueryClient();
 
@@ -35,70 +36,114 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
-            
+
             {/* Protected routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            } />
-            <Route path="/analysis" element={
-              <ProtectedRoute>
-                <CodeAnalysis />
-              </ProtectedRoute>
-            } />
-            <Route path="/decision-engine" element={
-              <ProtectedRoute>
-                <DecisionEngine />
-              </ProtectedRoute>
-            } />
-            <Route path="/decision-results" element={
-              <ProtectedRoute>
-                <DecisionResults />
-              </ProtectedRoute>
-            } />
-            <Route path="/results" element={
-              <ProtectedRoute>
-                <DecisionResults />
-              </ProtectedRoute>
-            } />
-            <Route path="/hardware" element={
-              <ProtectedRoute>
-                <HardwareStatus />
-              </ProtectedRoute>
-            } />
-            <Route path="/history" element={
-              <ProtectedRoute>
-                <ExecutionHistory />
-              </ProtectedRoute>
-            } />
-            <Route path="/models" element={
-              <ProtectedRoute>
-                <MLModels />
-              </ProtectedRoute>
-            } />
-            <Route path="/costs" element={
-              <ProtectedRoute>
-                <CostManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-converter" element={
-              <ProtectedRoute>
-                <AICodeConverter />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/conversion-results" element={
-              <ProtectedRoute>
-                <CodeConversionResults />
-              </ProtectedRoute>
-            } />
-            
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analysis"
+              element={
+                <ProtectedRoute>
+                  <CodeAnalysis />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/decision-engine"
+              element={
+                <ProtectedRoute>
+                  <DecisionEngine />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/decision-results"
+              element={
+                <ProtectedRoute>
+                  <DecisionResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/results"
+              element={
+                <ProtectedRoute>
+                  <DecisionResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hardware"
+              element={
+                <ProtectedRoute>
+                  <HardwareStatus />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <ProtectedRoute>
+                  <ExecutionHistory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/models"
+              element={
+                <ProtectedRoute>
+                  <MLModels />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/costs"
+              element={
+                <ProtectedRoute>
+                  <CostManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-converter"
+              element={
+                <ProtectedRoute>
+                  <AICodeConverter />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/conversion-results"
+              element={
+                <ProtectedRoute>
+                  <CodeConversionResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ast-pattern-analyzer"
+              element={
+                <ProtectedRoute>
+                  <QuantumASTPatternAnalyzer />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

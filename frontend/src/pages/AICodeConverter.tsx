@@ -482,7 +482,7 @@ export default function AICodeConverter() {
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() =>
-                          setInputCode(`def xor_gate(a, b):\n    return a ^ b`)
+                          setInputCode(`def xor_gate(a, b): return a ^ b`)
                         }
                         className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
                       >
@@ -491,7 +491,7 @@ export default function AICodeConverter() {
                       <button
                         onClick={() =>
                           setInputCode(
-                            `def nor_gate(a, b):\n    return 1 - (a | b)`
+                            `def nor_gate(a, b): return 1 - (a | b)`
                           )
                         }
                         className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
@@ -500,7 +500,7 @@ export default function AICodeConverter() {
                       </button>
                       <button
                         onClick={() =>
-                          setInputCode(`def and_gate(a, b):\n    return a & b`)
+                          setInputCode(`def and_gate(a, b): return a & b`)
                         }
                         className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
                       >
@@ -509,7 +509,7 @@ export default function AICodeConverter() {
                       <button
                         onClick={() =>
                           setInputCode(
-                            `def logic_func(a, b, c):\n    return (a and b) or (not c)`
+                            `def not_gate(a): return 1 - a`
                           )
                         }
                         className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"

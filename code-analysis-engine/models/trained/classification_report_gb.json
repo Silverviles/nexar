@@ -1,0 +1,75 @@
+{
+  "amplitude_amplification": {
+    "precision": 0.8333333333333334,
+    "recall": 1.0,
+    "f1-score": 0.9090909090909091,
+    "support": 200.0
+  },
+  "bernstein_vazirani": {
+    "precision": 1.0,
+    "recall": 0.68,
+    "f1-score": 0.8095238095238095,
+    "support": 800.0
+  },
+  "deutsch_jozsa": {
+    "precision": 0.5947955390334573,
+    "recall": 1.0,
+    "f1-score": 0.745920745920746,
+    "support": 800.0
+  },
+  "grover": {
+    "precision": 1.0,
+    "recall": 0.8225,
+    "f1-score": 0.9026063100137174,
+    "support": 800.0
+  },
+  "qaoa": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 200.0
+  },
+  "qft": {
+    "precision": 1.0,
+    "recall": 0.76625,
+    "f1-score": 0.867657466383581,
+    "support": 800.0
+  },
+  "qpe": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 200.0
+  },
+  "shor": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 200.0
+  },
+  "simon": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 200.0
+  },
+  "vqe": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 200.0
+  },
+  "accuracy": 0.8670454545454546,
+  "macro avg": {
+    "precision": 0.9428128872366791,
+    "recall": 0.9268750000000001,
+    "f1-score": 0.9234799240932763,
+    "support": 4400.0
+  },
+  "weighted avg": {
+    "precision": 0.9187507040666892,
+    "recall": 0.8670454545454546,
+    "f1-score": 0.8732692834753785,
+    "support": 4400.0
+  }
+}

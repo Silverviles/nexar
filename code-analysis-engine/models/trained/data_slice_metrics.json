@@ -1,0 +1,10 @@
+{
+  "low_gates": {
+    "accuracy": 0.8669244767970883,
+    "samples": 4396
+  },
+  "medium_gates": {
+    "accuracy": 1.0,
+    "samples": 4
+  }
+}

@@ -266,14 +266,16 @@ class LanguageDetector:
     def _score_signatures(self, code: str):
         scores = {}
         for lang, patterns in self.signatures.items():
+            flags = re.MULTILINE
+            if lang != SupportedLanguage.OPENQASM:
+                flags |= re.IGNORECASE
+
             matches = sum(
                 1 for p in patterns
-                if re.search(p, code, flags=re.MULTILINE | re.IGNORECASE)
+                if re.search(p, code, flags=flags)
             )
-            # Normalize score between 0–1
             scores[lang] = min(matches * 0.20, 1.0)
         return scores
-
 
     # ---------------------------------------------------------------
     # Token / syntax heuristics for small snippets

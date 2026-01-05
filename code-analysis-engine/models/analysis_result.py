@@ -96,7 +96,7 @@ class CodeAnalysisResult(BaseModel):
     memory_requirement_mb: float = Field(..., ge=0, description="Memory requirement in MB")
     
     # Additional metadata
-    is_quantum_eligible: bool = Field(default=False, description="Eligible for quantum execution")
+    is_quantum: bool = Field(default=False, description="Is quantum code")
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Overall confidence")
     analysis_notes: str = Field(default="", description="Additional notes")
     
@@ -119,7 +119,7 @@ class CodeAnalysisResult(BaseModel):
                 "entanglement_score": 0.75,
                 "time_complexity": "O(sqrt(n))",
                 "memory_requirement_mb": 0.5,
-                "is_quantum_eligible": True,
+                "is_quantum": True,
                 "confidence_score": 0.9
             }
         }

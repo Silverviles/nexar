@@ -20,19 +20,22 @@ interface ResultsDisplayProps {
 
 export function ResultsDisplay({ result }: ResultsDisplayProps) {
   const [terminalText, setTerminalText] = useState("");
-  const isQuantum = result.is_quantum_eligible;
+  const isQuantum = result.is_quantum;
   const primaryColor = isQuantum ? "purple" : "cyan";
 
   // Typewriter effect for analysis notes
   useEffect(() => {
+    if (!result.analysis_notes) return;
+
     setTerminalText("");
     let index = 0;
     const text = result.analysis_notes;
 
     const interval = setInterval(() => {
-      if (index < text.length) {
-        setTerminalText((prev) => prev + text[index]);
-        index++;
+      index++;
+
+      if (index <= text.length) {
+        setTerminalText(text.slice(0, index));
       } else {
         clearInterval(interval);
       }
@@ -105,8 +108,8 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                 )}
                 <span className="text-lg font-semibold">
                   {isQuantum
-                    ? "QUANTUM ELIGIBLE - NEURAL ROUTING RECOMMENDED"
-                    : "OPTIMIZED FOR CLASSICAL EXECUTION"}
+                    ? "QUANTUM CODE DETECTED — HARDWARE RECOMMENDATION PENDING"
+                    : "CLASSICAL CODE DETECTED — HARDWARE RECOMMENDATION PENDING"}
                 </span>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">

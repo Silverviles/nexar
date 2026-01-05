@@ -1,6 +1,6 @@
 # Code Analysis Engine
 
-A FastAPI-based microservice for analyzing quantum and classical code in the Nexar Quantum-Classical Code Router system. This service parses code, detects programming languages, performs complexity analysis, and extracts quantum circuit metrics for intelligent routing decisions.
+A FastAPI-based microservice for analyzing quantum and classical code in the Nexar Quantum-Classical Code Router system. This service detects programming languages, parses code, performs both quantum and classical code analysis, uses ML to detect quantum algorithms in the code and extracts quantum circuit metrics for intelligent routing decisions.
 
 ## Overview
 
@@ -79,6 +79,7 @@ uvicorn main:app --host 0.0.0.0 --port 8002 --reload
 ```
 
 The service will be available at:
+
 - **API Root**: http://localhost:8002/api/v1/code-analysis-engine/
 - **API Docs**: http://localhost:8002/docs
 - **ReDoc**: http://localhost:8002/redoc
@@ -98,13 +99,13 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8002
 
 ### Core Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/code-analysis-engine/` | Service info and capabilities |
-| GET | `/api/v1/code-analysis-engine/health` | Health check |
-| POST | `/api/v1/code-analysis-engine/detect-language` | Detect programming language |
-| POST | `/api/v1/code-analysis-engine/analyze` | Complete code analysis |
-| GET | `/api/v1/code-analysis-engine/supported-languages` | List supported languages |
+| Method | Endpoint                                           | Description                   |
+| ------ | -------------------------------------------------- | ----------------------------- |
+| GET    | `/api/v1/code-analysis-engine/`                    | Service info and capabilities |
+| GET    | `/api/v1/code-analysis-engine/health`              | Health check                  |
+| POST   | `/api/v1/code-analysis-engine/detect-language`     | Detect programming language   |
+| POST   | `/api/v1/code-analysis-engine/analyze`             | Complete code analysis        |
+| GET    | `/api/v1/code-analysis-engine/supported-languages` | List supported languages      |
 
 ---
 
@@ -113,6 +114,7 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8002
 Returns service information and capabilities.
 
 **Response:**
+
 ```json
 {
   "service": "Code Analysis Engine",
@@ -135,6 +137,7 @@ Returns service information and capabilities.
 Health check endpoint.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -149,6 +152,7 @@ Health check endpoint.
 Detect the programming language of submitted code.
 
 **Request Body:**
+
 ```json
 {
   "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0, 1)"
@@ -156,6 +160,7 @@ Detect the programming language of submitted code.
 ```
 
 **Response:**
+
 ```json
 {
   "language": "qiskit",
@@ -172,6 +177,7 @@ Detect the programming language of submitted code.
 Complete code analysis pipeline. Returns metrics for the Decision Engine.
 
 **Request Body:**
+
 ```json
 {
   "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0, 1)\nqc.measure_all()"
@@ -179,6 +185,7 @@ Complete code analysis pipeline. Returns metrics for the Decision Engine.
 ```
 
 **Response (Quantum Code):**
+
 ```json
 {
   "detected_language": "qiskit",
@@ -210,7 +217,7 @@ Complete code analysis pipeline. Returns metrics for the Decision Engine.
   "entanglement_score": 0.75,
   "time_complexity": "O(sqrt(n))",
   "memory_requirement_mb": 0.5,
-  "is_quantum_eligible": true,
+  "is_quantum": true,
   "confidence_score": 0.9,
   "analysis_notes": "Quantum analysis: qiskit | 2 qubits | Depth: 3 (accurate) | Superposition: 1.00 (simulated) | Entanglement: 0.75 (simulated)",
   "detected_algorithms": ["grover"],
@@ -219,6 +226,7 @@ Complete code analysis pipeline. Returns metrics for the Decision Engine.
 ```
 
 **Response (Classical Code):**
+
 ```json
 {
   "detected_language": "python",
@@ -245,7 +253,7 @@ Complete code analysis pipeline. Returns metrics for the Decision Engine.
   "entanglement_score": 0.0,
   "time_complexity": "O(n^2)",
   "memory_requirement_mb": 8.0,
-  "is_quantum_eligible": false,
+  "is_quantum": false,
   "confidence_score": 0.98,
   "analysis_notes": "Classical analysis: python | 25 LOC | Time: O(n^2) (accurate) | Space: O(n) (accurate)",
   "detected_algorithms": [],
@@ -260,14 +268,15 @@ Complete code analysis pipeline. Returns metrics for the Decision Engine.
 List all supported programming languages.
 
 **Response:**
+
 ```json
 {
   "languages": [
-    {"name": "Python", "value": "python"},
-    {"name": "Qiskit", "value": "qiskit"},
-    {"name": "Cirq", "value": "cirq"},
-    {"name": "Qsharp", "value": "qsharp"},
-    {"name": "Openqasm", "value": "openqasm"}
+    { "name": "Python", "value": "python" },
+    { "name": "Qiskit", "value": "qiskit" },
+    { "name": "Cirq", "value": "cirq" },
+    { "name": "Qsharp", "value": "qsharp" },
+    { "name": "Openqasm", "value": "openqasm" }
   ],
   "count": 5
 }
@@ -275,13 +284,13 @@ List all supported programming languages.
 
 ## Supported Languages
 
-| Language | Type | Description |
-|----------|------|-------------|
-| Python | Classical | Standard Python code |
-| Qiskit | Quantum | IBM's quantum computing framework |
-| Cirq | Quantum | Google's quantum computing framework |
-| Q# | Quantum | Microsoft's quantum language |
-| OpenQASM | Quantum | Open Quantum Assembly Language |
+| Language | Type      | Description                          |
+| -------- | --------- | ------------------------------------ |
+| Python   | Classical | Standard Python code                 |
+| Qiskit   | Quantum   | IBM's quantum computing framework    |
+| Cirq     | Quantum   | Google's quantum computing framework |
+| Q#       | Quantum   | Microsoft's quantum language         |
+| OpenQASM | Quantum   | Open Quantum Assembly Language       |
 
 ## Analysis Pipeline
 
@@ -333,29 +342,29 @@ Code Submission
 
 The engine classifies code into the following problem types:
 
-| Problem Type | Description |
-|--------------|-------------|
-| `search` | Search problems (e.g., Grover's algorithm) |
-| `optimization` | Optimization problems (e.g., VQE, QAOA) |
-| `simulation` | Quantum simulation |
-| `machine_learning` | Quantum ML algorithms |
-| `factorization` | Integer factorization (e.g., Shor's algorithm) |
-| `cryptography` | Cryptographic applications |
-| `sampling` | Sampling problems (e.g., QFT) |
-| `classical` | Classical algorithms |
+| Problem Type       | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| `search`           | Search problems (e.g., Grover's algorithm)     |
+| `optimization`     | Optimization problems (e.g., VQE, QAOA)        |
+| `simulation`       | Quantum simulation                             |
+| `machine_learning` | Quantum ML algorithms                          |
+| `factorization`    | Integer factorization (e.g., Shor's algorithm) |
+| `cryptography`     | Cryptographic applications                     |
+| `sampling`         | Sampling problems (e.g., QFT)                  |
+| `classical`        | Classical algorithms                           |
 
 ## Time Complexity Classes
 
-| Complexity | Notation | Example |
-|------------|----------|---------|
-| Constant | O(1) | Array access |
-| Logarithmic | O(log n) | Binary search |
-| Linear | O(n) | Linear search |
-| Linearithmic | O(n log n) | Merge sort |
-| Quadratic | O(n²) | Bubble sort |
-| Cubic | O(n³) | Matrix multiplication |
-| Exponential | O(2ⁿ) | Brute force |
-| Quantum Advantage | O(√n) | Grover's algorithm |
+| Complexity        | Notation   | Example               |
+| ----------------- | ---------- | --------------------- |
+| Constant          | O(1)       | Array access          |
+| Logarithmic       | O(log n)   | Binary search         |
+| Linear            | O(n)       | Linear search         |
+| Linearithmic      | O(n log n) | Merge sort            |
+| Quadratic         | O(n²)      | Bubble sort           |
+| Cubic             | O(n³)      | Matrix multiplication |
+| Exponential       | O(2ⁿ)      | Brute force           |
+| Quantum Advantage | O(√n)      | Grover's algorithm    |
 
 ## Testing
 
@@ -417,7 +426,7 @@ result = response.json()
 print(f"Language: {result['detected_language']}")
 print(f"Problem Type: {result['problem_type']}")
 print(f"Qubits: {result['qubits_required']}")
-print(f"Quantum Eligible: {result['is_quantum_eligible']}")
+print(f"Quantum Code: {result['is_quantum']}")
 ```
 
 ## Integration
@@ -446,12 +455,14 @@ PORT=8002
 ### Common Issues
 
 **Import Errors**
+
 ```bash
 # Ensure all dependencies are installed
 pip install -r requirements.txt
 ```
 
 **Tree-sitter Build Issues**
+
 ```bash
 # Rebuild tree-sitter parsers
 pip uninstall tree-sitter
@@ -459,12 +470,14 @@ pip install tree-sitter==0.20.4
 ```
 
 **Port Already in Use**
+
 ```bash
 # Kill existing process
 lsof -ti:8002 | xargs kill -9
 ```
 
 **Unsupported Language Error**
+
 - Ensure the code contains recognizable patterns for supported languages
 - Check the `/supported-languages` endpoint for valid languages
 

@@ -48,13 +48,13 @@ export function QuantumMetricsDisplay({
             {metrics.has_superposition && (
               <Badge variant="quantum" className="gap-1">
                 <Sparkles className="h-3 w-3" />
-                Superposition
+                Superposition Capable
               </Badge>
             )}
             {metrics.has_entanglement && (
               <Badge variant="quantum" className="gap-1">
                 <Link className="h-3 w-3" />
-                Entanglement
+                Entanglement Capable
               </Badge>
             )}
             {detectedAlgorithms.length > 0 && (
@@ -142,7 +142,7 @@ export function QuantumMetricsDisplay({
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-purple-400" />
                 <span className="text-muted-foreground">
-                  Superposition Potential
+                  Superposition Utilization
                 </span>
               </div>
               <span className="font-mono font-semibold">
@@ -161,7 +161,7 @@ export function QuantumMetricsDisplay({
               <div className="flex items-center gap-2">
                 <Link className="h-4 w-4 text-purple-400" />
                 <span className="text-muted-foreground">
-                  Entanglement Complexity
+                  Peak Entanglement Achieved
                 </span>
               </div>
               <span className="font-mono font-semibold">

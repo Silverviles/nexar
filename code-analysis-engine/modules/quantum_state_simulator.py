@@ -59,7 +59,9 @@ class QuantumStateSimulator:
             entanglement_history.append(self._calculate_entanglement())
         
         # Calculate final scores
-        superposition_score = self._normalize_entropy(entropy_history[-1])
+        superposition_score = max(
+            self._normalize_entropy(e) for e in entropy_history
+        )
         entanglement_score = max(entanglement_history)
         
         return {

@@ -112,7 +112,7 @@ class CompleteAnalysisEngine:
             time_complexity=time_complexity,
             memory_requirement_mb=memory_mb,
             
-            is_quantum_eligible=False,
+            is_quantum=False,
             confidence_score=0.95,
             analysis_notes="Classical code analysis using accurate AST-based methods",
             detected_algorithms=[]
@@ -225,7 +225,7 @@ class CompleteAnalysisEngine:
             time_complexity=time_complexity,
             memory_requirement_mb=memory_mb,
             
-            is_quantum_eligible=True,
+            is_quantum=True,
             confidence_score=confidence,
             analysis_notes=f"Quantum analysis with state simulation. "
                           f"Critical path length: {len(depth_details)}. "

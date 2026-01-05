@@ -38,17 +38,31 @@ import { cn } from "@/lib/utils";
 
 const sampleCode = `from qiskit import QuantumCircuit
 
-# Quantum circuit generated from Python code
 qc = QuantumCircuit(2, 2)
 
-# Apply quantum gates
-qc.h(0)  # Hadamard gate on qubit 0
-qc.h(1)  # Hadamard gate on qubit 1
-qc.x(0)  # X gate (NOT) on qubit 0
-qc.cx(0, 1)  # CNOT gate with control=0, target=1
+# 1. Create superposition
+qc.h(0)
+qc.h(1)
 
-# Measure qubits
-qc.measure([0, 1], [0, 1])`;
+# 2. Oracle: phase flip on |11⟩
+qc.cz(0, 1)
+
+# 3. Diffusion operator
+qc.h(0)
+qc.h(1)
+
+qc.x(0)
+qc.x(1)
+
+qc.cz(0, 1)
+
+qc.x(0)
+qc.x(1)
+
+qc.h(0)
+qc.h(1)
+
+qc.draw("mpl")`;
 
 export default function CodeAnalysis() {
   const [code, setCode] = useState(sampleCode);

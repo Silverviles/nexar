@@ -145,7 +145,7 @@ async def analyze_code(submission: CodeSubmission, request: Request):
                 use_ensemble=True
             )
             
-            if ml_result['confidence'] > 0.7:
+            if ml_result['confidence'] > 0.5:
                 detected_algorithms = [ml_result['algorithm']]
                 problem_type = ml_result['problem_type']
                 algorithm_confidence = ml_result['confidence']
@@ -271,7 +271,7 @@ def build_analysis_result(
         # Memory requirement for simulation
         memory_mb = quantum_analyzer.estimate_memory_requirement(qubits)
         
-        is_quantum_eligible = True
+        is_quantum = True
         problem_size = qubits if qubits > 0 else max(metadata.get('lines_of_code', 0), 1)
         
         # Build detailed notes
@@ -304,7 +304,7 @@ def build_analysis_result(
         # Estimate memory from space complexity
         memory_mb = estimate_classical_memory(space_comp)
         
-        is_quantum_eligible = False
+        is_quantum = False
         problem_size = metadata.get('lines_of_code', 1)
         
         notes = (
@@ -336,7 +336,7 @@ def build_analysis_result(
         time_complexity=time_comp,
         memory_requirement_mb=memory_mb,
         
-        is_quantum_eligible=is_quantum_eligible,
+        is_quantum=is_quantum,
         confidence_score=confidence,
         analysis_notes=notes,
         detected_algorithms=detected_algorithms,

@@ -77,7 +77,7 @@ export interface AnalysisResult {
   entanglement_score: number;
   time_complexity: TimeComplexity;
   memory_requirement_mb: number;
-  is_quantum_eligible: boolean;
+  is_quantum: boolean;
   confidence_score: number;
   analysis_notes: string;
   detected_algorithms: string[];

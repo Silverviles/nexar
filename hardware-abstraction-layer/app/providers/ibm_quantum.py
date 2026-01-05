@@ -1,11 +1,15 @@
 from typing import List, Dict, Any, Union, Optional, Callable
+import logging
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import BackendV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Batch
 
+from app.core.config import settings
 from app.providers.base import QuantumProvider
+
+logger = logging.getLogger(__name__)
 
 
 class IBMQuantumProvider(QuantumProvider):
@@ -14,9 +18,20 @@ class IBMQuantumProvider(QuantumProvider):
     """
 
     def __init__(self):
+        self.service = None
         try:
-            self.service = QiskitRuntimeService()
-        except Exception:
+            if settings.IBM_QUANTUM_TOKEN:
+                self.service = QiskitRuntimeService(
+                    channel="ibm_quantum_platform",
+                    token=settings.IBM_QUANTUM_TOKEN
+                )
+                logger.info("IBM Quantum Service initialized with provided token.")
+            else:
+                 # Fallback to default (env vars or saved account)
+                self.service = QiskitRuntimeService()
+                logger.info("IBM Quantum Service initialized with default credentials.")
+        except Exception as e:
+            logger.error(f"Failed to initialize IBM Quantum Service: {e}")
             self.service = None
 
     def get_provider_name(self) -> str:

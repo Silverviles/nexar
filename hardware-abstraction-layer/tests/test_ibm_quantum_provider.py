@@ -31,6 +31,17 @@ class TestIbmQuantumProvider(unittest.TestCase):
         self.assertEqual(devices[0]["version"], "1.0.0")
         self.assertEqual(devices[0]["description"], "A quantum device")
 
+    @patch("app.providers.ibm_quantum.QiskitRuntimeService")
+    def test_init_failure(self, mock_qiskit_runtime_service):
+        # Arrange
+        mock_qiskit_runtime_service.side_effect = Exception("Auth Error")
+
+        # Act
+        provider = IBMQuantumProvider()
+
+        # Assert
+        self.assertIsNone(provider.service)
+
     @patch("app.providers.ibm_quantum.Sampler")
     @patch("app.providers.ibm_quantum.Session")
     @patch("app.providers.ibm_quantum.generate_preset_pass_manager")

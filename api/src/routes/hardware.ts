@@ -3,7 +3,7 @@ import axios from 'axios';
 import { logger } from '@config/logger.js';
 
 const router = Router();
-const HARDWARE_LAYER_URL = process.env.HARDWARE_LAYER_URL || 'http://localhost:8084';
+const HARDWARE_LAYER_URL = process.env.HARDWARE_LAYER_URL || 'http://localhost:8004';
 
 // Handler function for forwarding requests to Hardware Layer
 const forwardToHardware = async (req: Request, res: Response) => {

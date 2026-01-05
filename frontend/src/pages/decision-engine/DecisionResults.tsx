@@ -235,13 +235,7 @@ export default function DecisionResults() {
             </div>
             
             <div className="mt-4 flex gap-3 flex-wrap">
-              <Button 
-                variant={isQuantum ? "quantum" : "default"} 
-                className="gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                Execute on {recommendation.recommended_hardware}
-              </Button>
+
               <Button variant="outline" onClick={() => navigate('/decision-engine')}>
                 Try Different Parameters
               </Button>

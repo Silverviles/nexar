@@ -1,0 +1,34 @@
+{
+  "test_gate": "or",
+  "python_code": "def or_gate(a, b):\n    return a | b\n",
+  "generated_quantum_code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(2)\nqc.cx(0,1)\nqc.cx(1,0)",
+  "status": "execution_complete",
+  "execution": {
+    "success": true,
+    "shots": 1000,
+    "measurement_counts": {
+      "11 00": 1000
+    },
+    "used_generated_code": false,
+    "fallback_used": true,
+    "probabilities": {
+      "11 00": 1.0
+    }
+  },
+  "performance": {
+    "depth": 3,
+    "num_qubits": 2,
+    "num_gates": 4,
+    "gate_counts": {
+      "measure": 2,
+      "x": 1,
+      "cx": 1,
+      "barrier": 1
+    },
+    "execution_time_seconds": 0.0041277408599853516
+  },
+  "images": {
+    "circuit_diagram": "quantum_circuit.png",
+    "measurement_histogram": "quantum_histogram.png"
+  }
+}

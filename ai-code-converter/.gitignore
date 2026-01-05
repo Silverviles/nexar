@@ -4,3 +4,16 @@
 
 # Build
 *.iml
+
+/datasets
+/codet5-quantum
+/codet5-quantum-best
+/better_datasets
+/base_pairs
+/__pycache__
+/results_manual_test
+/modal_training_utils/codet5-quantum
+/modal_training_utils/datasets
+/modal_training_utils/better_datasets
+# Images
+*.png

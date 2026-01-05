@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -62,8 +62,8 @@
     --chart-4: 38 92% 50%;
     --chart-5: 0 72% 51%;
 
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-sans: 'Inter', sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --font-sans: "Inter", sans-serif;
   }
 
   .dark {
@@ -99,23 +99,32 @@
     font-family: var(--font-sans);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-sans);
     @apply font-semibold tracking-tight;
   }
 
-  code, pre, .font-mono {
+  code,
+  pre,
+  .font-mono {
     font-family: var(--font-mono);
   }
 }
 
 @layer utilities {
   .glow-primary {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 40px hsl(var(--primary) / 0.1);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3),
+      0 0 40px hsl(var(--primary) / 0.1);
   }
 
   .glow-quantum {
-    box-shadow: 0 0 20px hsl(var(--quantum) / 0.4), 0 0 60px hsl(var(--quantum) / 0.2);
+    box-shadow: 0 0 20px hsl(var(--quantum) / 0.4),
+      0 0 60px hsl(var(--quantum) / 0.2);
   }
 
   .glow-success {
@@ -131,11 +140,19 @@
   }
 
   .gradient-quantum {
-    background: linear-gradient(135deg, hsl(var(--quantum)) 0%, hsl(var(--primary)) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--quantum)) 0%,
+      hsl(var(--primary)) 100%
+    );
   }
 
   .gradient-card {
-    background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(222 47% 6%) 100%);
+    background: linear-gradient(
+      180deg,
+      hsl(var(--card)) 0%,
+      hsl(222 47% 6%) 100%
+    );
   }
 
   .glass {
@@ -145,15 +162,19 @@
   }
 
   .grid-pattern {
-    background-image: 
-      linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+    background-image: linear-gradient(
+        hsl(var(--border) / 0.3) 1px,
+        transparent 1px
+      ),
       linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
   .bg-grid-white\/\[0\.02\] {
-    background-image: 
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    background-image: linear-gradient(
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px
+      ),
       linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
   }
 
@@ -167,7 +188,8 @@
 }
 
 @keyframes pulseGlow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 20px hsl(var(--quantum) / 0.4);
   }
@@ -178,7 +200,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -214,7 +237,11 @@
   }
 
   /* Better touch targets */
-  button, a, input, select, textarea {
+  button,
+  a,
+  input,
+  select,
+  textarea {
     min-height: 44px;
   }
 
@@ -226,4 +253,35 @@
   h2 {
     font-size: 1.25rem;
   }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+/* Terminal cursor blink */
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
 }

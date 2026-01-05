@@ -26,15 +26,6 @@ app.use("/api/v1/code-analysis-engine", codeAnalysisRoutes);
 // API Gateway routes for AI code converter
 app.use('/api', aiCodeConverterRoutes);
 
-app.get('/', (req: Request, res: Response) => {
-    res.json({ 
-        message: 'Welcome to my modern TypeScript + Node.js API 🚀',
-        endpoints: {
-            decisionEngine: '/api/v1/decision-engine',
-            health: '/api/v1/decision-engine/health',
-            predict: '/api/v1/decision-engine/predict'
-        }
-    });
 app.get("/", (req: Request, res: Response) => {
   res.json({
     message: "Welcome to my modern TypeScript + Node.js API 🚀",

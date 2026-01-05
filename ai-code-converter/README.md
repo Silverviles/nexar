@@ -645,3 +645,8 @@ pip install torch transformers
 ## License
 
 See the main project LICENSE file.
+
+
+## Merge History
+Merged with dev1 branch on 2026-01-03
+("Merge remote-tracking branch 'origin/dev/v1.0' into feat/ai-code-converter", 2026-01-03)

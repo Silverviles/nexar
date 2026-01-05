@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ClassicalMetricsDisplay } from "./ClassicalMetrics";
 import { QuantumMetricsDisplay } from "./QuantumMetrics";
+import { EnvironmentRecommendation } from "./EnvironmentRecommendation";
 import type { AnalysisResult } from "@/types/codeAnalysis";
 import { getLanguageDisplayName } from "@/lib/languageDetection";
 import { cn } from "@/lib/utils";
@@ -242,6 +243,9 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Environment Recommendation Section */}
+      <EnvironmentRecommendation analysisResult={result} />
     </div>
   );
 }

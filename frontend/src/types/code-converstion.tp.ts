@@ -30,3 +30,36 @@ export interface ConversionResult {
     speedDifference: number;
   };
 }
+
+export interface PatternInfo {
+  pattern: string;
+  confidence: number;
+  quantum_algo: string;
+  speedup: string;
+  suitability_score: number;
+}
+
+export interface QuantumSuitability {
+  score: number;
+  level: "high" | "medium" | "low";
+  message: string;
+}
+
+export interface CodeMetrics {
+  has_function: boolean;
+  has_loop: boolean;
+  has_condition: boolean;
+  line_count: number;
+  function_count: number;
+  loop_count: number;
+  condition_count: number;
+}
+
+export interface AnalysisResponse {
+  success: boolean;
+  patterns: PatternInfo[];
+  quantum_suitability: QuantumSuitability;
+  metrics: CodeMetrics;
+  original_code?: string;
+  error?: string;
+}

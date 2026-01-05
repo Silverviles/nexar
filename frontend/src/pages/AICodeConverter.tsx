@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { toast } from "sonner";
+import quantumService from "@/services/ai-converter-service";
 
 export default function AICodeConverter() {
   const navigate = useNavigate();
@@ -32,115 +33,127 @@ export default function AICodeConverter() {
   const [results, setResults] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
-  // Single execution function - like your test script
   const executeFullFlow = async () => {
-    if (!inputCode.trim() || isLoading) return;
+  if (!inputCode.trim() || isLoading) return;
 
-    setIsLoading(true);
-    setResults(null);
+  setIsLoading(true);
+  setResults(null);
 
-    try {
-      toast.info("Starting full conversion flow...");
+  try {
+    const completeResults = await quantumService.executeFullFlow(inputCode);
+    setResults(completeResults);
+  } catch (error: any) {
+    console.error("Full flow error:", error);
+    // Error is already handled in the service with toast notifications
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-      // Step 1: Translate Python to Quantum
-      toast.info("Translating Python to quantum code...");
-      const translateResponse = await fetch(
-        "http://localhost:3000/api/translate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            python_code: inputCode,
-          }),
-        }
-      );
+  // const executeFullFlow = async () => {
+  //   if (!inputCode.trim() || isLoading) return;
 
-      if (!translateResponse.ok) {
-        throw new Error(`Translation failed: ${translateResponse.status}`);
-      }
+  //   setIsLoading(true);
+  //   setResults(null);
 
-      const translation = await translateResponse.json();
-      const quantumCode = translation.quantum_code;
+  //   try {
+  //     toast.info("Starting full conversion flow...");
+  //     toast.info("Translating Python to quantum code...");
+  //     const translateResponse = await fetch(
+  //       "http://localhost:3000/api/translate",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({
+  //           python_code: inputCode,
+  //         }),
+  //       }
+  //     );
 
-      // Add imports if needed
-      const quantumCodeWithImports = quantumCode.startsWith("from qiskit")
-        ? quantumCode
-        : `from qiskit import QuantumCircuit\n${quantumCode}`;
+  //     if (!translateResponse.ok) {
+  //       throw new Error(`Translation failed: ${translateResponse.status}`);
+  //     }
 
-      toast.success("Translation successful!");
+  //     const translation = await translateResponse.json();
+  //     const quantumCode = translation.quantum_code;
 
-      // Step 2: Execute Quantum Circuit
-      toast.info("Executing quantum circuit...");
-      const executeResponse = await fetch("http://localhost:3000/api/execute", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          quantum_code: quantumCodeWithImports,
-          gate_type: "auto", // Auto-detect
-          shots: 1000,
-        }),
-      });
+  //     const quantumCodeWithImports = quantumCode.startsWith("from qiskit")
+  //       ? quantumCode
+  //       : `from qiskit import QuantumCircuit\n${quantumCode}`;
 
-      if (!executeResponse.ok) {
-        throw new Error(`Execution failed: ${executeResponse.status}`);
-      }
+  //     toast.success("Translation successful!");
 
-      const execution = await executeResponse.json();
+  //     toast.info("Executing quantum circuit...");
+  //     const executeResponse = await fetch("http://localhost:3000/api/execute", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         quantum_code: quantumCodeWithImports,
+  //         gate_type: "auto", 
+  //         shots: 1000,
+  //       }),
+  //     });
 
-      if (!execution.success) {
-        throw new Error("Quantum execution failed");
-      }
+  //     if (!executeResponse.ok) {
+  //       throw new Error(`Execution failed: ${executeResponse.status}`);
+  //     }
 
-      toast.success("Execution successful!");
+  //     const execution = await executeResponse.json();
 
-      // Step 3: Estimate Python performance
-      toast.info("Analyzing performance...");
-      let pythonPerformance = null;
-      try {
-        // Simple estimation based on gate type
-        const estimatedOpsPerSecond = 10_000_000; // 10M ops/sec
-        const estimatedPerOp = 0.0001; // 0.1µs per operation
+  //     if (!execution.success) {
+  //       throw new Error("Quantum execution failed");
+  //     }
 
-        // Calculate quantum stats
-        const quantumTime =
-          execution.performance?.execution_time_seconds * 1000 || 0; // ms
-        const quantumPerShot = quantumTime / 1000; // ms per shot
+  //     toast.success("Execution successful!");
 
-        pythonPerformance = {
-          estimatedOpsPerSecond,
-          estimatedPerOp,
-          speedDifference: quantumPerShot / estimatedPerOp,
-        };
-      } catch (e) {
-        console.log("Performance estimation skipped:", e);
-      }
+  //     // Step 3: Estimate Python performance
+  //     toast.info("Analyzing performance...");
+  //     let pythonPerformance = null;
+  //     try {
+  //       // Simple estimation based on gate type
+  //       const estimatedOpsPerSecond = 10_000_000; // 10M ops/sec
+  //       const estimatedPerOp = 0.0001; // 0.1µs per operation
 
-      // Step 4: Prepare complete results
-      const completeResults = {
-        metadata: {
-          timestamp: new Date().toISOString(),
-          shots: 1000,
-          gateType: "Auto-detected",
-        },
-        pythonCode: inputCode,
-        quantumCode: quantumCodeWithImports,
-        executionResults: execution,
-        pythonPerformance,
-      };
+  //       // Calculate quantum stats
+  //       const quantumTime =
+  //         execution.performance?.execution_time_seconds * 1000 || 0; // ms
+  //       const quantumPerShot = quantumTime / 1000; // ms per shot
 
-      setResults(completeResults);
-      toast.success("Full flow completed!");
-    } catch (error: any) {
-      console.error("Full flow error:", error);
-      toast.error(`Error: ${error.message || "Failed to complete conversion"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //       pythonPerformance = {
+  //         estimatedOpsPerSecond,
+  //         estimatedPerOp,
+  //         speedDifference: quantumPerShot / estimatedPerOp,
+  //       };
+  //     } catch (e) {
+  //       console.log("Performance estimation skipped:", e);
+  //     }
+
+  //     // Step 4: Prepare complete results
+  //     const completeResults = {
+  //       metadata: {
+  //         timestamp: new Date().toISOString(),
+  //         shots: 1000,
+  //         gateType: "Auto-detected",
+  //       },
+  //       pythonCode: inputCode,
+  //       quantumCode: quantumCodeWithImports,
+  //       executionResults: execution,
+  //       pythonPerformance,
+  //     };
+
+  //     setResults(completeResults);
+  //     toast.success("Full flow completed!");
+  //   } catch (error: any) {
+  //     console.error("Full flow error:", error);
+  //     toast.error(`Error: ${error.message || "Failed to complete conversion"}`);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const copyToClipboard = async (text: string, type: string) => {
     try {
@@ -428,7 +441,7 @@ export default function AICodeConverter() {
                   </div>
 
                   {/* Quick Performance Comparison */}
-                  {results.pythonPerformance && (
+                  {/* {results.pythonPerformance && (
                     <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
                       <div className="flex items-center gap-2 mb-2">
                         <Cpu className="h-4 w-4" />
@@ -445,7 +458,7 @@ export default function AICodeConverter() {
                         for the same operations.
                       </p>
                     </div>
-                  )}
+                  )} */}
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-4 border-t">
@@ -500,11 +513,11 @@ export default function AICodeConverter() {
                       </button>
                       <button
                         onClick={() =>
-                          setInputCode(`def and_gate(a, b): return a & b`)
+                          setInputCode(`def or_gate(a, b): return a | b`)
                         }
                         className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
                       >
-                        AND Gate
+                        OR Gate
                       </button>
                       <button
                         onClick={() =>

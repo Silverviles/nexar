@@ -33,46 +33,8 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-interface PatternInfo {
-  pattern: string;
-  confidence: number;
-  quantum_algo: string;
-  speedup: string;
-  suitability_score: number;
-}
-
-interface QuantumSuitability {
-  score: number;
-  level: "high" | "medium" | "low";
-  message: string;
-}
-
-interface CodeMetrics {
-  has_function: boolean;
-  has_loop: boolean;
-  has_condition: boolean;
-  line_count: number;
-  function_count: number;
-  loop_count: number;
-  condition_count: number;
-}
-
-interface AnalysisResponse {
-  success: boolean;
-  patterns: PatternInfo[];
-  quantum_suitability: QuantumSuitability;
-  metrics: CodeMetrics;
-  original_code?: string;
-  error?: string;
-}
-
+import { AnalysisResponse } from "@/types/code-converstion.tp";
+import quantumAnalysisService from "@/services/quantumAnalysisService";
 export default function QuantumPatternAnalyzer() {
   const navigate = useNavigate();
   const [inputCode, setInputCode] = useState("");
@@ -81,51 +43,22 @@ export default function QuantumPatternAnalyzer() {
   const [copied, setCopied] = useState(false);
   const [includeCode, setIncludeCode] = useState(false);
 
-  const analyzeCode = async () => {
-    if (!inputCode.trim() || isLoading) return;
+const analyzeCode = async () => {
+  if (!inputCode.trim() || isLoading) return;
 
-    setIsLoading(true);
-    setResults(null);
+  setIsLoading(true);
+  setResults(null);
 
-    try {
-      toast.info("Analyzing code for quantum patterns...");
-
-      const response = await fetch(
-        "http://localhost:3000/api/quantum/analyze",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            code: inputCode,
-            include_code: includeCode,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.detail || `Analysis failed: ${response.status}`
-        );
-      }
-
-      const data: AnalysisResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || "Analysis failed");
-      }
-
-      setResults(data);
-      toast.success("Analysis completed!");
-    } catch (error: any) {
-      console.error("Analysis error:", error);
-      toast.error(`Error: ${error.message || "Failed to analyze code"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  try {
+    const data = await quantumAnalysisService.analyzeCode(inputCode, includeCode);
+    setResults(data);
+  } catch (error: any) {
+    console.error("Analysis error:", error);
+    // Error is already handled in the service
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const copyToClipboard = async (text: string, type: string) => {
     try {

@@ -14,6 +14,16 @@ class TestIbmQuantumProvider(unittest.TestCase):
         mock_backend.name = "ibm_brisbane"
         mock_backend.version = "1.0.0"
         mock_backend.description = "A quantum device"
+        mock_backend.num_qubits = 127
+        mock_backend.simulator = False
+        mock_backend.basis_gates = ["cx", "id", "rz", "sx", "x"]
+        mock_backend.coupling_map = [[0, 1], [1, 0], [1, 2], [2, 1]]
+        
+        # Mock status()
+        mock_status = MagicMock()
+        mock_status.operational = True
+        mock_status.pending_jobs = 5
+        mock_backend.status.return_value = mock_status
 
         mock_service_instance = mock_qiskit_runtime_service.return_value
         mock_service_instance.backends.return_value = [mock_backend]
@@ -30,6 +40,24 @@ class TestIbmQuantumProvider(unittest.TestCase):
         self.assertEqual(devices[0]["name"], "ibm_brisbane")
         self.assertEqual(devices[0]["version"], "1.0.0")
         self.assertEqual(devices[0]["description"], "A quantum device")
+        self.assertEqual(devices[0]["num_qubits"], 127)
+        self.assertFalse(devices[0]["is_simulator"])
+        self.assertTrue(devices[0]["is_operational"])
+        self.assertEqual(devices[0]["pending_jobs"], 5)
+        
+        # Check Basis Gates (Detailed)
+        self.assertIsInstance(devices[0]["basis_gates"], list)
+        self.assertEqual(len(devices[0]["basis_gates"]), 5)
+        self.assertEqual(devices[0]["basis_gates"][0]["qiskit_name"], "cx")
+        self.assertEqual(devices[0]["basis_gates"][0]["name"], "CNOT")
+        
+        # Check Coupling Map (Adjacency List)
+        # Expected: {0: [1], 1: [0, 2], 2: [1]}
+        coupling_map = devices[0]["coupling_map"]
+        self.assertIsInstance(coupling_map, dict)
+        self.assertEqual(coupling_map[0], [1])
+        self.assertEqual(coupling_map[1], [0, 2])
+        self.assertEqual(coupling_map[2], [1])
 
     @patch("app.providers.ibm_quantum.QiskitRuntimeService")
     def test_init_failure(self, mock_qiskit_runtime_service):

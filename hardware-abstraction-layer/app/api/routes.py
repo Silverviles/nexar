@@ -47,7 +47,13 @@ def execute_quantum_circuit(
         strategy=strategy
     )
     job_id = job_manager.submit_job(req)
-    return {"job_id": job_id}
+    return {
+        "job_id": job_id,
+        "status": "PENDING",
+        "type": "quantum",
+        "provider": provider_name,
+        "device": device_name
+    }
 
 
 # --- IBM Quantum Specific Endpoints ---
@@ -81,13 +87,22 @@ def execute_python_code(request: PythonCodeRequest):
             queue_if_unavailable=request.queue_if_unavailable
         )
 
-        response = {"job_id": job_id}
+        status = "PENDING"
+        response = {
+            "job_id": job_id,
+            "status": status,
+            "type": "quantum",
+            "provider": "ibm-quantum",
+            "device": request.device_name
+        }
         if request.scheduled_time:
+            response["status"] = "SCHEDULED"
             response["scheduled_for"] = request.scheduled_time.isoformat()
         if request.queue_if_unavailable:
             # Check if job was queued due to unavailability
-            status = job_manager.get_job_status(job_id)
-            if status == "QUEUED_UNAVAILABLE":
+            job_status = job_manager.get_job_status(job_id)
+            if job_status == "QUEUED_UNAVAILABLE":
+                response["status"] = "QUEUED_UNAVAILABLE"
                 response["queued_reason"] = "Device unavailable - job queued for later execution"
 
         return response
@@ -161,8 +176,10 @@ def schedule_quantum_job(
         return {
             "job_id": job_id,
             "status": "SCHEDULED",
-            "scheduled_for": scheduled_time.isoformat(),
-            "device": device_name
+            "type": "quantum",
+            "provider": "ibm-quantum",
+            "device": device_name,
+            "scheduled_for": scheduled_time.isoformat()
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -214,7 +231,7 @@ def get_quantum_job_status(provider_name: str, job_id: str):
     if status == "UNKNOWN":
         # Fallback to direct provider check (for legacy/provider IDs)
         status = compute_service.get_job_status(provider_name, job_id)
-    return {"status": status}
+    return {"job_id": job_id, "provider": provider_name, "status": status}
 
 
 @router.get("/quantum/jobs/{provider_name}/{job_id}/result")
@@ -222,7 +239,7 @@ def get_quantum_job_result(provider_name: str, job_id: str):
     result = job_manager.get_job_result(job_id)
     if not result:
         result = compute_service.get_job_result(provider_name, job_id)
-    return {"result": result}
+    return {"job_id": job_id, "provider": provider_name, "result": result}
 
 
 @router.get("/v1/hardware/status")
@@ -278,7 +295,13 @@ def execute_classical_task(
         strategy=strategy
     )
     job_id = job_manager.submit_job(req)
-    return {"job_id": job_id}
+    return {
+        "job_id": job_id,
+        "status": "PENDING",
+        "type": "classical",
+        "provider": provider_name,
+        "device": device_name
+    }
 
 
 # --- Generic Job Endpoints ---
@@ -288,7 +311,7 @@ def get_job_status(provider_name: str, job_id: str):
     status = job_manager.get_job_status(job_id)
     if status == "UNKNOWN":
         status = compute_service.get_job_status(provider_name, job_id)
-    return {"status": status}
+    return {"job_id": job_id, "provider": provider_name, "status": status}
 
 
 @router.get("/jobs/{provider_name}/{job_id}/result")
@@ -296,4 +319,4 @@ def get_job_result(provider_name: str, job_id: str):
     result = job_manager.get_job_result(job_id)
     if not result:
         result = compute_service.get_job_result(provider_name, job_id)
-    return {"result": result}
+    return {"job_id": job_id, "provider": provider_name, "result": result}

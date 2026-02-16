@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 const DECISION_ENGINE_URL = process.env.DECISION_ENGINE_URL || 'http://localhost:8083';
 const AI_CODE_CONVERTER_URL = process.env.AI_CODE_CONVERTER_URL || 'http://localhost:8000';
 const CODE_ANALYSIS_ENGINE_URL = process.env.CODE_ANALYSIS_ENGINE_URL || "http://localhost:8002";
-const HARDWARE_LAYER_URL = process.env.HARDWARE_LAYER_URL || 'http://localhost:8084';
+const HARDWARE_LAYER_URL = process.env.HARDWARE_LAYER_URL || 'http://localhost:8004';
 
 // CORS configuration
 app.use(cors(corsOptions));
@@ -44,7 +44,18 @@ app.get("/", (req: Request, res: Response) => {
       supportedLanguages: "/api/v1/code-analysis-engine/supported-languages",
         hardware: {
             base: '/api/v1/hardware',
-            status: '/api/v1/hardware/status'
+            status: '/api/v1/hardware/status',
+            devices: '/api/v1/hardware/devices',
+            providers: '/api/v1/hardware/providers',
+            health: '/api/v1/hardware/health',
+            quantumExecute: '/api/v1/hardware/quantum/:provider/execute',
+            quantumExecutePython: '/api/v1/hardware/quantum/execute-python',
+            classicalExecute: '/api/v1/hardware/classical/:provider/execute',
+            quantumSchedule: '/api/v1/hardware/quantum/schedule',
+            scheduledJobs: '/api/v1/hardware/quantum/scheduled-jobs',
+            deviceAvailability: '/api/v1/hardware/quantum/devices/:device/availability',
+            jobStatus: '/api/v1/hardware/jobs/:provider/:jobId',
+            jobResult: '/api/v1/hardware/jobs/:provider/:jobId/result',
         }
     },
   });

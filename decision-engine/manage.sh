@@ -37,7 +37,7 @@ case "$1" in
         echo "🧪 Testing health endpoint..."
         activate_venv
         sleep 2
-        curl -s http://localhost:8083/api/v1/decision-engine/health | python -m json.tool
+        curl -s http://localhost:8003/api/v1/decision-engine/health | python -m json.tool
         ;;
     "venv")
         echo "🐍 Creating virtual environment..."

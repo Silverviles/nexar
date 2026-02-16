@@ -433,7 +433,7 @@ print(f"Quantum Code: {result['is_quantum']}")
 
 This service integrates with:
 
-- **Decision Engine** (port 8083): Receives analysis results for hardware recommendations
+- **Decision Engine** (port 8003): Receives analysis results for hardware recommendations
 - **API Gateway**: Routes requests in microservice architecture
 - **Frontend**: Provides analysis data for user interfaces
 

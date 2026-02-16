@@ -23,7 +23,7 @@ class GooglePubSubClient(MessagingClient):
     def get_client_name(self) -> str:
         return "google_pubsub"
 
-    def publish_message(self, topic_name: str, message: Dict[str, Any]):
+    def publish_message(self, topic: str, message: Dict[str, Any]):
         if not self.publisher:
             print("Pub/Sub publisher not initialized. Cannot publish message.")
             return
@@ -32,7 +32,7 @@ class GooglePubSubClient(MessagingClient):
             print("Google Project ID not set. Cannot publish message.")
             return
             
-        topic_path = self.publisher.topic_path(self.project_id, topic_name)
+        topic_path = self.publisher.topic_path(self.project_id, topic)
         
         # Message data must be a bytestring.
         data = json.dumps(message, default=str).encode("utf-8")

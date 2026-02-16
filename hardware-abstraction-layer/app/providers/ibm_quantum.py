@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Union, Optional, Callable
+from typing import List, Dict, Any, Union, Optional
 import logging
 import signal
 
@@ -58,9 +58,13 @@ class IBMQuantumProvider(QuantumProvider):
         devices = []
         for backend in backends:
             try:
-                status = backend.status()
-                is_operational = getattr(status, 'operational', True)
-                pending_jobs = getattr(status, 'pending_jobs', 0)
+                status = getattr(backend, 'status', lambda: None)()
+                if status is None:
+                    is_operational = True
+                    pending_jobs = 0
+                else:
+                    is_operational = getattr(status, 'operational', True)
+                    pending_jobs = getattr(status, 'pending_jobs', 0)
             except Exception as e:
                 logger.debug(f"Could not fetch status for backend {backend.name}: {e}")
                 is_operational = True
@@ -77,7 +81,7 @@ class IBMQuantumProvider(QuantumProvider):
             coupling_map = getattr(backend, 'coupling_map', [])
             
             if hasattr(coupling_map, "get_edges"):
-                 coupling_map = list(coupling_map.get_edges())
+                 coupling_map = list(coupling_map.get_edges())  # pyright: ignore[reportAttributeAccessIssue]
             elif not isinstance(coupling_map, list) and coupling_map is not None:
                  try:
                      coupling_map = list(coupling_map)
@@ -119,7 +123,7 @@ class IBMQuantumProvider(QuantumProvider):
             device_name: str,
             shots: int,
             mode: Optional[Union[BackendV2, Session, Batch]] = None,
-    ) -> Callable[[], str]:
+    ) -> str:
         if not self.service:
             raise RuntimeError("IBM Quantum Service not initialized (missing credentials).")
         backend = self.service.backend(device_name)
@@ -131,13 +135,13 @@ class IBMQuantumProvider(QuantumProvider):
         if mode is not None:
             sampler = Sampler(mode=mode)
             job = sampler.run([transpiled_circuit], shots=shots)
-            return job.job_id
+            return job.job_id()
 
         # Default: session execution mode (keeps current behavior).
         with Session(backend=backend) as session:
             sampler = Sampler(mode=session)
             job = sampler.run([transpiled_circuit], shots=shots)
-            return job.job_id
+            return job.job_id()
 
     def execute_batch(self, tasks: List[QuantumCircuit], device_name: str, **kwargs) -> List[str]:
         if not self.service:
@@ -202,9 +206,9 @@ class IBMQuantumProvider(QuantumProvider):
 
         try:
             backend = self.service.backend(device_name)
-            status = backend.status()
-            is_operational = getattr(status, 'operational', True)
-            pending_jobs = getattr(status, 'pending_jobs', 0)
+            status = getattr(backend, 'status', lambda: None)()
+            is_operational = getattr(status, 'operational', True) if status else True
+            pending_jobs = getattr(status, 'pending_jobs', 0) if status else 0
 
             return DeviceAvailability(
                 device_name=device_name,
@@ -272,7 +276,7 @@ class IBMQuantumProvider(QuantumProvider):
         import math
 
         # Create restricted builtins
-        safe_builtins = {
+        safe_builtins: Dict[str, Any] = {
             'abs': builtins.abs,
             'all': builtins.all,
             'any': builtins.any,
@@ -322,7 +326,7 @@ class IBMQuantumProvider(QuantumProvider):
 
         # Import allowed modules
         allowed_modules = settings.SANDBOX_ALLOWED_MODULES.split(',')
-        namespace = {
+        namespace: Dict[str, Any] = {
             '__builtins__': safe_builtins,
         }
 

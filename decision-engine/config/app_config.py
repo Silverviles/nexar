@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     HOST: str = "0.0.0.0"
-    PORT: int = 8083
+    PORT: int = 8003
     
     # ML Model Paths (relative to project root)
     MODEL_PATH: str = str(Path(__file__).parent.parent / "ml_models" / "decision_engine_model.pkl")

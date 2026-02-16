@@ -84,7 +84,7 @@ The service uses environment variables defined in `.env`. Key settings:
 ```properties
 # Server Configuration
 HOST=0.0.0.0           # Server host (0.0.0.0 for all interfaces)
-PORT=8083              # Server port
+PORT=8003              # Server port
 DEBUG=False            # Enable debug mode for development
 
 # ML Models
@@ -117,9 +117,9 @@ python scripts/run.py
 ```
 
 The service will be available at:
-- **API Docs**: http://localhost:8083/docs
-- **ReDoc**: http://localhost:8083/redoc  
-- **Health Check**: http://localhost:8083/api/v1/decision-engine/health
+- **API Docs**: http://localhost:8003/docs
+- **ReDoc**: http://localhost:8003/redoc  
+- **Health Check**: http://localhost:8003/api/v1/decision-engine/health
 
 ### 4. Production Deployment
 
@@ -127,10 +127,10 @@ For production, run with a WSGI server:
 
 ```bash
 # Using uvicorn directly
-uvicorn main:app --host 0.0.0.0 --port 8083 --workers 4
+uvicorn main:app --host 0.0.0.0 --port 8003 --workers 4
 
 # Using gunicorn with uvicorn workers
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8083
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8003
 ```
 
 ## API Endpoints
@@ -144,7 +144,7 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8083
 ### Example Request
 
 ```bash
-curl -X POST "http://localhost:8083/api/v1/decision-engine/predict" \
+curl -X POST "http://localhost:8003/api/v1/decision-engine/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "problem_type": "optimization",
@@ -241,10 +241,10 @@ The `manage.sh` script provides convenient shortcuts for common tasks and automa
 # Edit test_main.http with your test cases
 
 # Check service health
-curl http://localhost:8083/api/v1/decision-engine/health
+curl http://localhost:8003/api/v1/decision-engine/health
 
 # Validate API with built-in docs
-open http://localhost:8083/docs
+open http://localhost:8003/docs
 ```
 
 ## Machine Learning Models
@@ -290,7 +290,7 @@ python scripts/setup.py
 **Port Already in Use**
 ```bash
 # Change PORT in .env file or kill existing process
-lsof -ti:8083 | xargs kill -9
+lsof -ti:8003 | xargs kill -9
 ```
 
 **CORS Issues**

@@ -46,12 +46,9 @@ class BaseProvider(ABC):
         Executes a batch of tasks. Default implementation loops through tasks.
         Providers can override this for optimized batch execution.
         """
-        job_ids = []
-        for task in tasks:
-            # determining which execute method to call is tricky here because 
-            # we are in the base class and don't know if it is quantum or classical.
-            # We will rely on subclasses to implement this or the specific intermediate classes.
-            raise NotImplementedError("Batch execution not implemented for this provider type.")
+        # Subclasses (QuantumProvider, ClassicalProvider) provide real implementations.
+        # Base class raises because it cannot determine which execute method to call.
+        raise NotImplementedError("Batch execution not implemented for this provider type.")
 
     @property
     def max_batch_size(self) -> int:

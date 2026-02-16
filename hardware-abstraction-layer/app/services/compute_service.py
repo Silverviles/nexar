@@ -1,6 +1,7 @@
 from typing import List, Dict, Any
 
 from app.models.classical_models import ClassicalTask
+from app.models.execution import DeviceAvailability
 from app.providers.base import BaseProvider, QuantumProvider, ClassicalProvider
 
 
@@ -56,6 +57,58 @@ class ComputeService:
         """
         provider = self._get_provider(provider_name)
         return provider.execute_batch(tasks, device_name, **kwargs)
+
+    def execute_python_code(self, provider_name: str, code: str, device_name: str, shots: int = 1024) -> str:
+        """
+        Executes user-submitted Python code on a quantum provider.
+
+        The code must define a 'circuit' variable that is a QuantumCircuit.
+        Currently only supported by IBM Quantum provider.
+
+        Args:
+            provider_name: Name of the quantum provider (e.g., "ibm-quantum")
+            code: Python code string
+            device_name: Backend device name
+            shots: Number of measurement shots
+
+        Returns:
+            job_id: The provider job ID
+        """
+        provider = self._get_provider(provider_name)
+        if not isinstance(provider, QuantumProvider):
+            raise ValueError(f"Provider '{provider_name}' is not a QuantumProvider.")
+
+        # Check if provider supports Python code execution
+        if not hasattr(provider, 'execute_python_code'):
+            raise ValueError(f"Provider '{provider_name}' does not support Python code execution.")
+
+        return provider.execute_python_code(code, device_name, shots)
+
+    def check_device_availability(self, provider_name: str, device_name: str) -> DeviceAvailability:
+        """
+        Check if a specific device is available for job submission.
+
+        Args:
+            provider_name: Name of the provider
+            device_name: Name of the device/backend
+
+        Returns:
+            DeviceAvailability with operational status and queue info
+        """
+        provider = self._get_provider(provider_name)
+
+        # Check if provider supports availability checking
+        if not hasattr(provider, 'check_device_availability'):
+            # Return a default availability for providers that don't support this
+            from app.core.config import settings
+            return DeviceAvailability(
+                device_name=device_name,
+                is_operational=True,
+                pending_jobs=0,
+                queue_threshold=settings.DEVICE_QUEUE_THRESHOLD
+            )
+
+        return provider.check_device_availability(device_name)
 
     def get_job_status(self, provider_name: str, job_id: str) -> str:
         """

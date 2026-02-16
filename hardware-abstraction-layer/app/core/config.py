@@ -31,6 +31,16 @@ class Settings(BaseSettings):
     GOOGLE_PROJECT_ID: Optional[str] = None
     PUBSUB_TOPIC_NAME: str = "hal-job-updates"
 
+    # Redis for job persistence
+    REDIS_URL: Optional[str] = None  # e.g., "redis://localhost:6379/0"
+
+    # Device availability thresholds
+    DEVICE_QUEUE_THRESHOLD: int = 50  # Max pending jobs before device considered unavailable
+
+    # Python code execution
+    PYTHON_EXEC_TIMEOUT: int = 30  # Seconds timeout for sandboxed code execution
+    SANDBOX_ALLOWED_MODULES: str = "qiskit,numpy,math"  # Comma-separated allowed modules
+
     class Config:
         env_file = ".env"
 

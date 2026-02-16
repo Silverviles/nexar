@@ -1,5 +1,5 @@
 ## Decision Engine
-uvicorn main:app --host 0.0.0.0 --port 8083 --reload 
+uvicorn main:app --host 0.0.0.0 --port 8003 --reload 
 
 ## AI code converter
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload 

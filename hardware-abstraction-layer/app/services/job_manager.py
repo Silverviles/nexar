@@ -2,7 +2,7 @@ import time
 import threading
 import json
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, cast
 from collections import defaultdict
 import uuid
 from datetime import datetime
@@ -68,12 +68,12 @@ class RedisClient:
 
     def hget(self, name: str, key: str) -> Optional[str]:
         if self._redis:
-            return self._redis.hget(name, key)
+            return cast(Optional[str], self._redis.hget(name, key))
         return self._in_memory_fallback.get(name, {}).get(key)
 
     def hgetall(self, name: str) -> Dict[str, str]:
         if self._redis:
-            return self._redis.hgetall(name)
+            return cast(Dict[str, str], self._redis.hgetall(name))
         return self._in_memory_fallback.get(name, {})
 
     def hdel(self, name: str, key: str):
@@ -94,7 +94,7 @@ class RedisClient:
     def zrangebyscore(self, name: str, min_score: float, max_score: float) -> List[str]:
         """Get items from sorted set by score range."""
         if self._redis:
-            return self._redis.zrangebyscore(name, min_score, max_score)
+            return cast(List[str], self._redis.zrangebyscore(name, min_score, max_score))
         else:
             items = self._in_memory_fallback.get(name, {})
             return [k for k, v in items.items() if min_score <= v <= max_score]
@@ -205,7 +205,7 @@ class JobManager:
         except Exception as e:
             logger.error(f"Failed to remove scheduled job {job_id}: {e}")
 
-    def _publish_status_update(self, submission: JobSubmission, status: str, extra_data: Dict = None):
+    def _publish_status_update(self, submission: JobSubmission, status: str, extra_data: Optional[Dict] = None):
         if messaging_client:
             message = {
                 "job_id": submission.id,

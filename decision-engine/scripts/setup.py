@@ -161,8 +161,8 @@ def main():
     print("🎉 Setup completed successfully!")
     print("📚 Next steps:")
     print("1. Run the service: python scripts/run.py")
-    print("2. Visit API docs: http://localhost:8083/docs")
-    print("3. Test the health endpoint: curl http://localhost:8083/api/v1/decision-engine/health")
+    print("2. Visit API docs: http://localhost:8003/docs")
+    print("3. Test the health endpoint: curl http://localhost:8003/api/v1/decision-engine/health")
 
 if __name__ == "__main__":
     main()

@@ -582,7 +582,7 @@ fetch('http://localhost:8001/api/quantum/analyze', {
 This service integrates with:
 
 - **Code Analysis Engine** (port 8002): Complements with detailed complexity analysis
-- **Decision Engine** (port 8083): Receives suitability analysis for routing
+- **Decision Engine** (port 8003): Receives suitability analysis for routing
 - **Frontend**: Provides conversion and analysis UI
 - **API Gateway**: Routes requests in microservice architecture
 

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { logger } from '@config/logger.js';
 
 const router = Router();
-const DECISION_ENGINE_URL = process.env.DECISION_ENGINE_URL || 'http://localhost:8083';
+const DECISION_ENGINE_URL = process.env.DECISION_ENGINE_URL || 'http://localhost:8003';
 
 // Handler function for forwarding requests
 const forwardRequest = async (req: Request, res: Response) => {

@@ -860,7 +860,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 ### Health Check Endpoint
 ```bash
-curl http://localhost:8083/api/v1/decision-engine/health
+curl http://localhost:8003/api/v1/decision-engine/health
 ```
 
 Response:

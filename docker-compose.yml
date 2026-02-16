@@ -1,0 +1,131 @@
+services:
+  # ── Redis ──────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexar-network
+
+  # ── API Gateway (Node.js / Express) ───────────────────────────────
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - DECISION_ENGINE_URL=http://decision-engine:8003
+      - AI_CODE_CONVERTER_URL=http://ai-code-converter:8001
+      - CODE_ANALYSIS_ENGINE_URL=http://code-analysis-engine:8002
+      - HARDWARE_LAYER_URL=http://hardware-abstraction-layer:8004
+    depends_on:
+      ai-code-converter:
+        condition: service_started
+      code-analysis-engine:
+        condition: service_started
+      decision-engine:
+        condition: service_started
+      hardware-abstraction-layer:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - nexar-network
+
+  # ── Frontend (React + Vite → nginx) ──────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - nexar-network
+
+  # ── AI Code Converter (Python / FastAPI) ──────────────────────────
+  ai-code-converter:
+    build: ./ai-code-converter
+    restart: unless-stopped
+    environment:
+      - MODEL_PATH=/app/models
+    volumes:
+      - ai-models:/app/models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - nexar-network
+
+  # ── Code Analysis Engine (Python / FastAPI) ───────────────────────
+  code-analysis-engine:
+    build: ./code-analysis-engine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - nexar-network
+
+  # ── Decision Engine (Python / FastAPI) ────────────────────────────
+  decision-engine:
+    build: ./decision-engine
+    restart: unless-stopped
+    environment:
+      - PORT=8003
+      - HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/api/v1/decision-engine/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - nexar-network
+
+  # ── Hardware Abstraction Layer (Python / FastAPI) ─────────────────
+  hardware-abstraction-layer:
+    build: ./hardware-abstraction-layer
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - ./hardware-abstraction-layer/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8004/')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - nexar-network
+
+volumes:
+  redis-data:
+  ai-models:
+
+networks:
+  nexar-network:
+    driver: bridge

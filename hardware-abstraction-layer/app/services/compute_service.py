@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, cast
 
 from app.models.classical_models import ClassicalTask
 from app.models.execution import DeviceAvailability
@@ -82,7 +82,7 @@ class ComputeService:
         if not hasattr(provider, 'execute_python_code'):
             raise ValueError(f"Provider '{provider_name}' does not support Python code execution.")
 
-        return provider.execute_python_code(code, device_name, shots)
+        return cast(Any, provider).execute_python_code(code, device_name, shots)
 
     def check_device_availability(self, provider_name: str, device_name: str) -> DeviceAvailability:
         """
@@ -108,7 +108,7 @@ class ComputeService:
                 queue_threshold=settings.DEVICE_QUEUE_THRESHOLD
             )
 
-        return provider.check_device_availability(device_name)
+        return cast(Any, provider).check_device_availability(device_name)
 
     def get_job_status(self, provider_name: str, job_id: str) -> str:
         """

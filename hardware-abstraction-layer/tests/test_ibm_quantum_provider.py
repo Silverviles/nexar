@@ -94,7 +94,7 @@ class TestIbmQuantumProvider(unittest.TestCase):
         mock_session_instance = mock_session.return_value.__enter__.return_value
         mock_sampler_instance = mock_sampler.return_value
         mock_job = MagicMock()
-        mock_job.job_id = "job_123"
+        mock_job.job_id.return_value = "job_123"
         mock_sampler_instance.run.return_value = mock_job
 
         provider = IBMQuantumProvider()

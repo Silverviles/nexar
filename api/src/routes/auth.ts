@@ -22,6 +22,8 @@ import { sendVerificationEmail } from '@/services/email-service.js';
 
 const router = Router();
 const SALT_ROUNDS = 12;
+// Requires min 8 chars, at least one uppercase, one lowercase, one digit, and one special character (!@#$%^&*()_+-=[]{};':"\\|,.<>/?)
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
@@ -43,8 +45,11 @@ router.post('/register', async (req: Request, res: Response) => {
       return;
     }
 
-    if (password.length < 6) {
-      res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (!PASSWORD_REGEX.test(password)) {
+      res.status(400).json({
+        error:
+          'Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character (!@#$%^&* etc.)',
+      });
       return;
     }
 

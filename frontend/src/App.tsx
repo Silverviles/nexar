@@ -8,6 +8,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
+import VerifyEmail from "./pages/auth/VerifyEmail";
+import VerifyEmailNotice from "./pages/auth/VerifyEmailNotice";
+import GoogleCallback from "./pages/auth/GoogleCallback";
 import Index from "./pages/Index";
 import CodeAnalysis from "./pages/CodeAnalysis";
 import DecisionEngine from "./pages/decision-engine/DecisionEngine";
@@ -36,6 +39,9 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
             {/* Protected routes */}
             <Route

@@ -1,79 +1,80 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockConfig } from '@/config/mock';
-
-interface User {
-  email: string;
-  name: string;
-  role: string;
-}
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import {
+  loginUser,
+  googleAuth,
+  getMe,
+  registerUser,
+  resendVerification as resendVerificationApi,
+  type AuthUser,
+} from '@/services/auth-service';
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<{ message: string }>;
+  loginWithGoogle: (code: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is already logged in on mount
+  // Validate existing token on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('authToken');
-    
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
+    if (!token) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+
+    getMe()
+      .then((userData) => {
+        setUser(userData);
+      })
+      .catch(() => {
+        // Token is invalid or expired
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
-  const login = async (email: string, password: string) => {
-    // Mock authentication - in production, this would be an API call
-    if (email === mockConfig.mockUser.email && password === mockConfig.mockUser.password) {
-      const userData = {
-        email: mockConfig.mockUser.email,
-        name: mockConfig.mockUser.name,
-        role: mockConfig.mockUser.role,
-      };
-      
-      // Generate mock token
-      const mockToken = btoa(`${email}:${Date.now()}`);
-      
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-    } else {
-      throw new Error('Invalid email or password');
-    }
-  };
+  const login = useCallback(async (email: string, password: string) => {
+    const response = await loginUser(email, password);
+    localStorage.setItem('authToken', response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+    setUser(response.user);
+  }, []);
 
-  const signup = async (email: string, password: string, name: string) => {
-    // Mock signup - in production, this would be an API call
-    // For now, just accept any signup and log them in
-    const userData = {
-      email,
-      name,
-      role: 'user',
-    };
-    
-    const mockToken = btoa(`${email}:${Date.now()}`);
-    
-    localStorage.setItem('authToken', mockToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-  };
+  const signup = useCallback(async (email: string, password: string, name: string) => {
+    const response = await registerUser(email, password, name);
+    return response;
+  }, []);
 
-  const logout = () => {
+  const loginWithGoogle = useCallback(async (code: string) => {
+    const response = await googleAuth(code);
+    localStorage.setItem('authToken', response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+    setUser(response.user);
+  }, []);
+
+  const resendVerification = useCallback(async (email: string) => {
+    await resendVerificationApi(email);
+  }, []);
+
+  const logout = useCallback(() => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     setUser(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -83,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         signup,
+        loginWithGoogle,
+        resendVerification,
         logout,
       }}
     >

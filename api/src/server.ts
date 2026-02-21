@@ -1,13 +1,14 @@
+import "dotenv/config";
 import express from 'express';
 import type { Request, Response } from 'express';
 import cors from 'cors';
 import { logger } from '@config/logger.js';
 import { corsOptions } from '@config/cors.js';
+import { authMiddleware } from '@middleware/auth.js';
+import authRoutes from '@routes/auth.js';
 import decisionEngineRoutes from '@routes/decision-engine.js';
 import aiCodeConverterRoutes from '@routes/ai-code-converter.js';
 import codeAnalysisRoutes from "@routes/code-analysis.js";
-import dotenv from "dotenv";
-dotenv.config();
 import hardwareRoutes from '@routes/hardware.js';
 
 const app = express();
@@ -21,19 +22,27 @@ const HARDWARE_LAYER_URL = process.env.HARDWARE_LAYER_URL || 'http://localhost:8
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// API Gateway routes for decision engine
-app.use("/api/v1/decision-engine", decisionEngineRoutes);
-app.use("/api/v1/code-analysis-engine", codeAnalysisRoutes);
-app.use('/api/v1/hardware', hardwareRoutes);
+// Auth routes (public)
+app.use('/api/v1/auth', authRoutes);
 
-
-// API Gateway routes for AI code converter
-app.use('/api', aiCodeConverterRoutes);
+// Protected API Gateway routes
+app.use("/api/v1/decision-engine", authMiddleware, decisionEngineRoutes);
+app.use("/api/v1/code-analysis-engine", authMiddleware, codeAnalysisRoutes);
+app.use('/api/v1/hardware', authMiddleware, hardwareRoutes);
+app.use('/api', authMiddleware, aiCodeConverterRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
     message: "Welcome to my modern TypeScript + Node.js API 🚀",
     endpoints: {
+      auth: {
+        register: "/api/v1/auth/register",
+        login: "/api/v1/auth/login",
+        google: "/api/v1/auth/google",
+        verifyEmail: "/api/v1/auth/verify-email",
+        resendVerification: "/api/v1/auth/resend-verification",
+        me: "/api/v1/auth/me",
+      },
       decisionEngine: "/api/v1/decision-engine",
       health: "/api/v1/decision-engine/health",
       predict: "/api/v1/decision-engine/predict",

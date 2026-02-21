@@ -7,6 +7,15 @@ import { resendVerification } from '@/services/auth-service';
 
 type VerifyStatus = 'loading' | 'success' | 'already-verified' | 'expired' | 'error';
 
+const VALID_STATUSES = ['success', 'already-verified', 'expired', 'error'] as const;
+type ValidQueryStatus = typeof VALID_STATUSES[number];
+
+function isValidStatus(value: string | null): value is ValidQueryStatus {
+  return VALID_STATUSES.includes(value as ValidQueryStatus);
+}
+
+const MAX_MESSAGE_LENGTH = 200;
+
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<VerifyStatus>('loading');
@@ -20,6 +29,12 @@ const VerifyEmail: React.FC = () => {
     const messageParam = searchParams.get('message');
     const emailParam = searchParams.get('email');
 
+    if (!isValidStatus(statusParam)) {
+      setStatus('error');
+      setMessage('Invalid verification link');
+      return;
+    }
+
     if (statusParam === 'success') {
       setStatus('success');
     } else if (statusParam === 'already-verified') {
@@ -29,11 +44,10 @@ const VerifyEmail: React.FC = () => {
       if (emailParam) setExpiredEmail(emailParam);
     } else if (statusParam === 'error') {
       setStatus('error');
-      setMessage(messageParam || 'Verification failed');
-    } else {
-      // No status param means direct page load without verification
-      setStatus('error');
-      setMessage('Invalid verification link');
+      const safeMessage = messageParam
+        ? messageParam.slice(0, MAX_MESSAGE_LENGTH)
+        : 'Verification failed';
+      setMessage(safeMessage);
     }
   }, [searchParams]);
 

@@ -5,6 +5,10 @@ import { logger } from '@config/logger.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const JWT_EXPIRES_IN = '7d';
 
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'dev-secret-change-me') {
+  logger.error('Insecure default JWT_SECRET is being used in production. Set a strong JWT_SECRET environment variable.');
+  throw new Error('JWT_SECRET must be configured with a strong value in production.');
+}
 export interface JwtPayload {
   userId: string;
   email: string;

@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getGoogleOAuthUrl } from '@/services/auth-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Lock, Mail, User, ArrowRight, Check } from 'lucide-react';
 import AuthLayout from '@/components/layout/AuthLayout';
+import GoogleIcon from '@/components/ui/GoogleIcon';
 
 const SignUp: React.FC = () => {
   const [name, setName] = useState('');
@@ -24,7 +27,6 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -44,12 +46,19 @@ const SignUp: React.FC = () => {
 
     try {
       await signup(email, password, name);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign up');
+      navigate('/verify-email-notice', { state: { email } });
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { error?: string } }; message?: string };
+      setError(
+        axiosError.response?.data?.error || axiosError.message || 'Failed to sign up'
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleSignup = () => {
+    window.location.href = getGoogleOAuthUrl();
   };
 
   const passwordStrength = password.length === 0 ? null : password.length < 6 ? 'weak' : password.length < 10 ? 'medium' : 'strong';
@@ -65,6 +74,25 @@ const SignUp: React.FC = () => {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full h-11"
+          onClick={handleGoogleSignup}
+        >
+          <GoogleIcon className="mr-2 h-4 w-4" />
+          Sign up with Google
+        </Button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+          </div>
+        </div>
 
         <div className="space-y-4">
           <div className="space-y-2">

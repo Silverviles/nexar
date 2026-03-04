@@ -5,15 +5,15 @@ from qiskit_aer import Aer
 from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
 from typing import Dict, Any
-
+from qiskit_aer import AerSimulator
 from utils.circuit_generator import circuit_generator
 from services.visualization_service import visualization_service
 from config.config import CIRCUIT_STYLE
+from qiskit import transpile
 
 class QuantumService:
     def __init__(self):
-        self.simulator = Aer.get_backend('aer_simulator')
-    
+        self.simulator = AerSimulator()
     def safe_execute_qc(self, qc_code: str, gate_type: str = "xor", shots: int = 1024) -> Dict[str, Any]:
         """Safely execute quantum code with fallback mechanism"""
         try:
@@ -36,8 +36,10 @@ class QuantumService:
             
             # Check if circuit has measurements
             if len(qc.data) == 0 or not any(gate[0].name == 'measure' for gate in qc.data):
-                qc.measure_all()
+                qc.measure(list(range(qc.num_qubits)), list(range(qc.num_clbits)))
             
+            qc = transpile(qc, self.simulator)
+
             return self._execute_and_analyze(qc, shots, used_generated_code=True)
             
         except Exception as e:
@@ -58,7 +60,9 @@ class QuantumService:
         counts = result.get_counts(qc)
         
         # Check if circuit is trivial
-        if len(counts) <= 1:
+        total_shots = sum(counts.values())
+        max_prob = max(counts.values()) / total_shots
+        if max_prob < 0.25:  # threshold for “non-trivial” circuit
             raise ValueError("Circuit produced trivial results")
         
         # Get circuit metrics

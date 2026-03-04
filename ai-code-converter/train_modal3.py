@@ -9,6 +9,7 @@ from transformers import (
     TrainingArguments,
     DataCollatorForSeq2Seq
 )
+import os
 
 MODEL = "C:/Users/black/OneDrive/Desktop/research/nexar/ai-code-converter/codet5-quantum-best"
 DATA = "better_datasets/python_to_quantum3.jsonl"
@@ -16,6 +17,23 @@ DATA = "better_datasets/python_to_quantum3.jsonl"
 # Set device (GPU if available, else CPU)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
+
+# Ask permission to continue on CPU
+if device.type == 'cpu':
+    response = input("⚠️  GPU not detected! Train on CPU anyway? (y/N): ")
+    if response.lower() != 'y':
+        raise SystemExit("Training cancelled. Install CUDA PyTorch first.")
+    print("⚠️  Training on CPU - this will be SLOW...")
+
+# 2. Dataset Check
+if not os.path.exists(DATA):
+    raise FileNotFoundError(f"❌ Dataset not found at: {DATA}\nPlease check the path and try again.")
+print(f"✅ Dataset found: {DATA}")
+
+# 3. Model Check (optional but nice)
+if not os.path.exists(MODEL):
+    raise FileNotFoundError(f"❌ Model not found at: {MODEL}\nPlease check the path and try again.")
+print(f"✅ Model found: {MODEL}")
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 model = T5ForConditionalGeneration.from_pretrained(MODEL)
@@ -64,7 +82,7 @@ args = TrainingArguments(
     output_dir="codet5-quantum2",
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
-    num_train_epochs=10,
+    num_train_epochs=6,
     logging_steps=10,
     save_strategy="epoch",  
     eval_strategy="epoch",

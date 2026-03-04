@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getGoogleOAuthUrl } from '@/services/auth-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,28 +9,59 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 import AuthLayout from '@/components/layout/AuthLayout';
+import GoogleIcon from '@/components/ui/GoogleIcon';
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showResend, setShowResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, resendVerification } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setShowResend(false);
+    setResendMessage('');
     setIsLoading(true);
 
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { error?: string; code?: string } }; message?: string };
+      const errorCode = axiosError.response?.data?.code;
+      const errorMessage = axiosError.response?.data?.error || axiosError.message || 'Failed to sign in';
+
+      setError(errorMessage);
+
+      if (errorCode === 'EMAIL_NOT_VERIFIED') {
+        setShowResend(true);
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendMessage('');
+    try {
+      await resendVerification(email);
+      setResendMessage('Verification email sent. Please check your inbox.');
+    } catch {
+      setResendMessage('Failed to resend. Please try again.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = getGoogleOAuthUrl();
   };
 
   return (
@@ -40,7 +72,26 @@ const SignIn: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>
+              {error}
+              {showResend && (
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="text-xs"
+                  >
+                    {resendLoading ? 'Sending...' : 'Resend verification email'}
+                  </Button>
+                </div>
+              )}
+              {resendMessage && (
+                <p className="mt-2 text-xs">{resendMessage}</p>
+              )}
+            </AlertDescription>
           </Alert>
         )}
 
@@ -52,7 +103,7 @@ const SignIn: React.FC = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@mail.com"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10 h-11"
@@ -102,17 +153,19 @@ const SignIn: React.FC = () => {
             <Separator />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Demo Credentials</span>
+            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
           </div>
         </div>
 
-        <div className="text-center space-y-1">
-          <p className="text-sm text-muted-foreground">Use these credentials to test:</p>
-          <div className="inline-flex flex-col items-start bg-muted/50 rounded-lg px-4 py-2">
-            <p className="font-mono text-xs"><span className="text-muted-foreground">Email:</span> admin@mail.com</p>
-            <p className="font-mono text-xs"><span className="text-muted-foreground">Password:</span> admin123</p>
-          </div>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full h-11"
+          onClick={handleGoogleLogin}
+        >
+          <GoogleIcon className="mr-2 h-4 w-4" />
+          Continue with Google
+        </Button>
 
         <div className="text-center text-sm">
           <span className="text-muted-foreground">Don't have an account? </span>

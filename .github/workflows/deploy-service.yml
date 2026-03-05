@@ -1,0 +1,88 @@
+name: Deploy Single Service to Cloud Run
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      service_dir:
+        required: true
+        type: string
+      port:
+        required: true
+        type: string
+      needs_models:
+        required: true
+        type: boolean
+      models_gcs_path:
+        required: false
+        type: string
+        default: ""
+      models_dest_path:
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GAR
+        run: |
+          gcloud auth configure-docker \
+            "${{ secrets.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: Download ML models from GCS
+        if: inputs.needs_models
+        run: |
+          echo "📦 Downloading models from ${{ secrets.GCS_MODELS_BUCKET }}/${{ inputs.models_gcs_path }} ..."
+          mkdir -p "${{ inputs.service_dir }}/${{ inputs.models_dest_path }}"
+          gsutil -m cp -r \
+            "${{ secrets.GCS_MODELS_BUCKET }}/${{ inputs.models_gcs_path }}/*" \
+            "${{ inputs.service_dir }}/${{ inputs.models_dest_path }}/"
+          echo "✅ Models downloaded:"
+          ls -lhR "${{ inputs.service_dir }}/${{ inputs.models_dest_path }}/"
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nexar/${{ inputs.service_name }}"
+          TAG="${IMAGE}:${{ github.sha }}"
+          TAG_LATEST="${IMAGE}:latest"
+
+          echo "🐳 Building ${TAG} ..."
+          docker build \
+            -t "${TAG}" \
+            -t "${TAG_LATEST}" \
+            "${{ inputs.service_dir }}"
+
+          echo "📤 Pushing images ..."
+          docker push "${TAG}"
+          docker push "${TAG_LATEST}"
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: nexar-${{ inputs.service_name }}
+          region: ${{ secrets.GCP_REGION }}
+          image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nexar/${{ inputs.service_name }}:${{ github.sha }}
+          flags: |
+            --port=${{ inputs.port }}
+            --allow-unauthenticated

@@ -1,10 +1,12 @@
 # Nexar — Cloud Run Deployment Guide
 
 This guide walks you through deploying all 6 Nexar micro-services to
-**Google Cloud Run** with **automatic deployment on every push to `main`**.
+**Google Cloud Run** with **automatic deployment on every push to `main`** and
+**manual deployment from any branch** via GitHub's workflow dispatch UI.
 
-Only the services whose source files actually changed in a push are rebuilt and
-deployed, so CI stays fast and cheap.
+On push, only the services whose source files actually changed are rebuilt and
+deployed, so CI stays fast and cheap. Manual runs let you pick a branch and
+choose which service(s) to deploy — including an "all" option.
 
 ---
 
@@ -20,29 +22,42 @@ deployed, so CI stays fast and cheap.
 8. [Step 6 — Add GitHub Secrets](#step-6--add-github-secrets)
 9. [Step 7 — Add the GitHub Actions Workflows](#step-7--add-the-github-actions-workflows)
 10. [Step 8 — Push to main and Watch it Deploy](#step-8--push-to-main-and-watch-it-deploy)
-11. [Step 9 — Wire Up Service-to-Service URLs](#step-9--post-deploy-wire-up-service-to-service-urls)
-12. [Step 10 — Set Up Redis](#step-10--set-up-redis-for-hardware-abstraction-layer)
-13. [Appendix A — Full Workflow Files](#appendix-a--full-workflow-files)
-14. [Appendix B — Rollback](#appendix-b--rollback)
-15. [Troubleshooting](#troubleshooting)
+11. [Step 8b — Manual Deployment from Any Branch](#step-8b--manual-deployment-from-any-branch)
+12. [Step 9 — Wire Up Service-to-Service URLs](#step-9--post-deploy-wire-up-service-to-service-urls)
+13. [Step 10 — Set Up Redis](#step-10--set-up-redis-for-hardware-abstraction-layer)
+14. [Appendix A — Full Workflow Files](#appendix-a--full-workflow-files)
+15. [Appendix B — Rollback](#appendix-b--rollback)
+16. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## 1. Architecture Overview
 
 ```
-GitHub (push to main)
-        │
-        ▼
-GitHub Actions ─── detect which service dirs changed
-        │
-        ├── api/                        → Cloud Run: nexar-api
-        ├── frontend/                   → Cloud Run: nexar-frontend
-        ├── ai-code-converter/          → Cloud Run: nexar-ai-code-converter      (+ GCS models)
-        ├── code-analysis-engine/       → Cloud Run: nexar-code-analysis-engine   (+ GCS models)
-        ├── decision-engine/            → Cloud Run: nexar-decision-engine
-        └── hardware-abstraction-layer/ → Cloud Run: nexar-hardware-abstraction-layer
+GitHub (push to main)                GitHub (manual dispatch — any branch)
+        │                                       │
+        ▼                                       ▼
+GitHub Actions ── paths-filter ──┐   GitHub Actions ── user picks service(s) ──┐
+                                 │                                              │
+                                 └──────────────────┬───────────────────────────┘
+                                                    │
+                                                    ▼
+                                          deploy-service.yml
+                                                    │
+        ┌───────────────────────────────────────────┼──────────────────────────────────┐
+        │                    │                      │                │                  │
+        ▼                    ▼                      ▼                ▼                  ▼
+  nexar-api        nexar-frontend     nexar-ai-code-converter   nexar-code-      nexar-decision-
+  (Cloud Run)      (Cloud Run)        (Cloud Run + GCS models)  analysis-engine  engine (Cloud Run)
+                                                                (Cloud Run +        ...
+                                                                 GCS models)   nexar-hardware-
+                                                                               abstraction-layer
 ```
+
+| Trigger | Branch | Services deployed |
+|---|---|---|
+| `push` | `main` only | Auto-detected from changed files |
+| `workflow_dispatch` | Any branch (user picks in UI) | User picks from dropdown (`all` or a single service) |
 
 | Service | Language | Port | Needs ML Models from GCS? |
 |---|---|---|---|
@@ -340,7 +355,7 @@ Create these two files in your repository. Full contents are in
 your-repo/
 ├── .github/
 │   └── workflows/
-│       ├── deploy-cloudrun.yml    ← main orchestrator
+│       ├── deploy-cloudrun.yml    ← main orchestrator (push + manual dispatch)
 │       └── deploy-service.yml     ← reusable per-service builder/deployer
 ├── api/
 ├── frontend/
@@ -351,11 +366,15 @@ your-repo/
 ```
 
 **`deploy-cloudrun.yml`** (orchestrator):
-- Triggers only on pushes to `main`.
-- Uses [`dorny/paths-filter`](https://github.com/dorny/paths-filter) to detect
-  which service directories had file changes.
-- For each changed service, calls `deploy-service.yml`.
-- Unchanged services are skipped entirely — no wasted build time or money.
+- **Automatic (push):** Triggers on pushes to `main`. Uses
+  [`dorny/paths-filter`](https://github.com/dorny/paths-filter) to detect
+  which service directories had file changes. Only changed services are deployed.
+- **Manual (workflow_dispatch):** Can be triggered from any branch via the
+  GitHub Actions UI. The user selects which service to deploy from a dropdown
+  (or picks `all` to deploy everything). No paths-filter is used — the
+  selected services are deployed unconditionally from the chosen branch.
+- Unchanged / unselected services are skipped entirely — no wasted build time.
+- Writes a summary table to the Actions run showing which services will be deployed.
 
 **`deploy-service.yml`** (reusable, called once per changed service):
 1. Checks out the code.
@@ -385,6 +404,52 @@ Go to your repository → **Actions** tab. You should see the
 
 If a service is skipped, its job will be greyed out with
 "Skipping — condition not met".
+
+---
+
+## Step 8b — Manual Deployment from Any Branch
+
+You can trigger a deployment manually from **any branch** — useful for testing
+feature branches, force-redeploying after config changes, or deploying hotfixes
+without merging to `main` first.
+
+### How to trigger a manual deployment
+
+1. Go to your repository on GitHub.
+2. Click the **Actions** tab.
+3. In the left sidebar, click **"Deploy to Cloud Run"**.
+4. Click the **"Run workflow"** button (top-right).
+5. In the dialog that appears:
+   - **Use workflow from:** select the branch you want to deploy.
+   - **Services to deploy:** pick a single service or `all`.
+6. Click **"Run workflow"**.
+
+![Manual dispatch UI](https://docs.github.com/assets/cb-29573/mw-1440/images/help/actions/actions-manually-run-workflow.webp)
+
+### Available options
+
+| Option | Deploys |
+|--------|---------|
+| `all` | All 6 services from the selected branch |
+| `api` | Only the `api` service |
+| `frontend` | Only the `frontend` service |
+| `ai-code-converter` | Only `ai-code-converter` (downloads models from GCS) |
+| `code-analysis-engine` | Only `code-analysis-engine` (downloads models from GCS) |
+| `decision-engine` | Only the `decision-engine` service |
+| `hardware-abstraction-layer` | Only the `hardware-abstraction-layer` service |
+
+### Behavior differences from automatic deployment
+
+| | Push to `main` | Manual dispatch |
+|---|---|---|
+| **Branch** | Always `main` | Any branch you choose |
+| **Service selection** | Auto-detected from changed files | You choose from dropdown |
+| **Paths filter** | Active — only changed dirs deploy | Skipped — your selection always deploys |
+| **Models download** | Yes, for services that need them | Yes, for services that need them |
+
+> **Tip:** The run summary (visible in the Actions UI) shows a table of which
+> services are targeted for deployment, so you can confirm before watching the
+> build logs.
 
 ---
 
@@ -497,6 +562,26 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Services to deploy (comma-separated, or 'all')"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - api
+          - frontend
+          - ai-code-converter
+          - code-analysis-engine
+          - decision-engine
+          - hardware-abstraction-layer
+
+permissions:
+  contents: read
+  id-token: write
+
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
@@ -508,17 +593,19 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      api: ${{ steps.changes.outputs.api }}
-      frontend: ${{ steps.changes.outputs.frontend }}
-      ai-code-converter: ${{ steps.changes.outputs.ai-code-converter }}
-      code-analysis-engine: ${{ steps.changes.outputs.code-analysis-engine }}
-      decision-engine: ${{ steps.changes.outputs.decision-engine }}
-      hardware-abstraction-layer: ${{ steps.changes.outputs.hardware-abstraction-layer }}
+      api: ${{ steps.set-outputs.outputs.api }}
+      frontend: ${{ steps.set-outputs.outputs.frontend }}
+      ai-code-converter: ${{ steps.set-outputs.outputs.ai-code-converter }}
+      code-analysis-engine: ${{ steps.set-outputs.outputs.code-analysis-engine }}
+      decision-engine: ${{ steps.set-outputs.outputs.decision-engine }}
+      hardware-abstraction-layer: ${{ steps.set-outputs.outputs.hardware-abstraction-layer }}
     steps:
       - uses: actions/checkout@v4
 
+      # Path-based detection for push events
       - uses: dorny/paths-filter@v3
         id: changes
+        if: github.event_name == 'push'
         with:
           filters: |
             api:
@@ -533,6 +620,47 @@ jobs:
               - 'decision-engine/**'
             hardware-abstraction-layer:
               - 'hardware-abstraction-layer/**'
+
+      # Merge push detection + manual dispatch into unified outputs
+      - name: Set outputs
+        id: set-outputs
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            SELECTED="${{ github.event.inputs.services }}"
+            echo "🔧 Manual dispatch — selected services: ${SELECTED}"
+
+            ALL_SERVICES="api frontend ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer"
+
+            for svc in ${ALL_SERVICES}; do
+              if [[ "${SELECTED}" == "all" || "${SELECTED}" == "${svc}" ]]; then
+                echo "${svc}=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "${svc}=false" >> "$GITHUB_OUTPUT"
+              fi
+            done
+          else
+            echo "🔍 Push event — using paths-filter results"
+            echo "api=${{ steps.changes.outputs.api }}" >> "$GITHUB_OUTPUT"
+            echo "frontend=${{ steps.changes.outputs.frontend }}" >> "$GITHUB_OUTPUT"
+            echo "ai-code-converter=${{ steps.changes.outputs.ai-code-converter }}" >> "$GITHUB_OUTPUT"
+            echo "code-analysis-engine=${{ steps.changes.outputs.code-analysis-engine }}" >> "$GITHUB_OUTPUT"
+            echo "decision-engine=${{ steps.changes.outputs.decision-engine }}" >> "$GITHUB_OUTPUT"
+            echo "hardware-abstraction-layer=${{ steps.changes.outputs.hardware-abstraction-layer }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "### Deployment targets" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Service | Deploy |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| api | \`${{ steps.set-outputs.outputs.api }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| frontend | \`${{ steps.set-outputs.outputs.frontend }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ai-code-converter | \`${{ steps.set-outputs.outputs.ai-code-converter }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| code-analysis-engine | \`${{ steps.set-outputs.outputs.code-analysis-engine }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| decision-engine | \`${{ steps.set-outputs.outputs.decision-engine }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| hardware-abstraction-layer | \`${{ steps.set-outputs.outputs.hardware-abstraction-layer }}\` |" >> "$GITHUB_STEP_SUMMARY"
 
   # ─── Deploy each changed service ─────────────────────────────────
 
@@ -797,10 +925,15 @@ Check that:
 
 ### Nothing deployed — "condition not met" on all jobs
 
-This means no files changed inside any of the 6 service directories. This is
-expected if you only changed the README, deployment docs, or `docker-compose.yml`.
+**On push:** This means no files changed inside any of the 6 service
+directories. This is expected if you only changed the README, deployment docs,
+or `docker-compose.yml`.
 
-To force a manual redeploy:
+**Fix:** Use the manual dispatch to deploy the services you need — no code
+changes required. See
+[Step 8b — Manual Deployment from Any Branch](#step-8b--manual-deployment-from-any-branch).
+
+Alternatively, you can still deploy a single service via `gcloud` directly:
 
 ```bash
 gcloud run deploy nexar-api \
@@ -810,18 +943,27 @@ gcloud run deploy nexar-api \
 
 ### How to redeploy ALL services at once
 
-If you need to force-redeploy everything (e.g., after changing a shared secret),
-trigger the workflow manually by making a trivial change in each service dir:
+The easiest way is to use the **manual dispatch**:
 
-```bash
-for dir in api frontend ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer; do
-  touch "$dir/.deploy-trigger"
-done
-git add -A
-git commit -m "ci: force redeploy all services"
-git push origin main
-```
+1. Go to **Actions** → **"Deploy to Cloud Run"** → **"Run workflow"**.
+2. Select the branch (e.g., `main`).
+3. Select **`all`** from the services dropdown.
+4. Click **"Run workflow"**.
 
-> **Tip:** Add `.deploy-trigger` to your `.gitignore` if you don't want it
-> permanently tracked, but note that `.gitignore`d files won't trigger the
-> paths-filter. A better approach is to keep these files tracked but empty.
+This will deploy all 6 services from the selected branch without needing any
+code changes or dummy commits.
+
+> **Alternative (push-based):** If you prefer triggering via a push, you can
+> still touch a file in each service directory:
+>
+> ```bash
+> for dir in api frontend ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer; do
+>   touch "$dir/.deploy-trigger"
+> done
+> git add -A
+> git commit -m "ci: force redeploy all services"
+> git push origin main
+> ```
+>
+> Keep these `.deploy-trigger` files tracked but empty so paths-filter picks
+> them up.

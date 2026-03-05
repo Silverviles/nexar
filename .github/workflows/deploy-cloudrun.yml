@@ -5,6 +5,22 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Services to deploy (comma-separated, or 'all')"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - api
+          - frontend
+          - ai-code-converter
+          - code-analysis-engine
+          - decision-engine
+          - hardware-abstraction-layer
+
 permissions:
   contents: read
   id-token: write
@@ -20,17 +36,19 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      api: ${{ steps.changes.outputs.api }}
-      frontend: ${{ steps.changes.outputs.frontend }}
-      ai-code-converter: ${{ steps.changes.outputs.ai-code-converter }}
-      code-analysis-engine: ${{ steps.changes.outputs.code-analysis-engine }}
-      decision-engine: ${{ steps.changes.outputs.decision-engine }}
-      hardware-abstraction-layer: ${{ steps.changes.outputs.hardware-abstraction-layer }}
+      api: ${{ steps.set-outputs.outputs.api }}
+      frontend: ${{ steps.set-outputs.outputs.frontend }}
+      ai-code-converter: ${{ steps.set-outputs.outputs.ai-code-converter }}
+      code-analysis-engine: ${{ steps.set-outputs.outputs.code-analysis-engine }}
+      decision-engine: ${{ steps.set-outputs.outputs.decision-engine }}
+      hardware-abstraction-layer: ${{ steps.set-outputs.outputs.hardware-abstraction-layer }}
     steps:
       - uses: actions/checkout@v4
 
+      # Path-based detection for push events
       - uses: dorny/paths-filter@v3
         id: changes
+        if: github.event_name == 'push'
         with:
           filters: |
             api:
@@ -45,6 +63,47 @@ jobs:
               - 'decision-engine/**'
             hardware-abstraction-layer:
               - 'hardware-abstraction-layer/**'
+
+      # Merge push detection + manual dispatch into unified outputs
+      - name: Set outputs
+        id: set-outputs
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            SELECTED="${{ github.event.inputs.services }}"
+            echo "🔧 Manual dispatch — selected services: ${SELECTED}"
+
+            ALL_SERVICES="api frontend ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer"
+
+            for svc in ${ALL_SERVICES}; do
+              if [[ "${SELECTED}" == "all" || "${SELECTED}" == "${svc}" ]]; then
+                echo "${svc}=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "${svc}=false" >> "$GITHUB_OUTPUT"
+              fi
+            done
+          else
+            echo "🔍 Push event — using paths-filter results"
+            echo "api=${{ steps.changes.outputs.api }}" >> "$GITHUB_OUTPUT"
+            echo "frontend=${{ steps.changes.outputs.frontend }}" >> "$GITHUB_OUTPUT"
+            echo "ai-code-converter=${{ steps.changes.outputs.ai-code-converter }}" >> "$GITHUB_OUTPUT"
+            echo "code-analysis-engine=${{ steps.changes.outputs.code-analysis-engine }}" >> "$GITHUB_OUTPUT"
+            echo "decision-engine=${{ steps.changes.outputs.decision-engine }}" >> "$GITHUB_OUTPUT"
+            echo "hardware-abstraction-layer=${{ steps.changes.outputs.hardware-abstraction-layer }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "### Deployment targets" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Service | Deploy |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| api | \`${{ steps.set-outputs.outputs.api }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| frontend | \`${{ steps.set-outputs.outputs.frontend }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ai-code-converter | \`${{ steps.set-outputs.outputs.ai-code-converter }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| code-analysis-engine | \`${{ steps.set-outputs.outputs.code-analysis-engine }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| decision-engine | \`${{ steps.set-outputs.outputs.decision-engine }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| hardware-abstraction-layer | \`${{ steps.set-outputs.outputs.hardware-abstraction-layer }}\` |" >> "$GITHUB_STEP_SUMMARY"
 
   # ─── Deploy each changed service ─────────────────────────────────
 

@@ -1,0 +1,115 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  GAR_REPOSITORY: nexar
+  MODELS_BUCKET: ${{ secrets.GCS_MODELS_BUCKET }}
+
+jobs:
+  # ─── Detect which service directories changed ────────────────────
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.changes.outputs.api }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      ai-code-converter: ${{ steps.changes.outputs.ai-code-converter }}
+      code-analysis-engine: ${{ steps.changes.outputs.code-analysis-engine }}
+      decision-engine: ${{ steps.changes.outputs.decision-engine }}
+      hardware-abstraction-layer: ${{ steps.changes.outputs.hardware-abstraction-layer }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            api:
+              - 'api/**'
+            frontend:
+              - 'frontend/**'
+            ai-code-converter:
+              - 'ai-code-converter/**'
+            code-analysis-engine:
+              - 'code-analysis-engine/**'
+            decision-engine:
+              - 'decision-engine/**'
+            hardware-abstraction-layer:
+              - 'hardware-abstraction-layer/**'
+
+  # ─── Deploy each changed service ─────────────────────────────────
+
+  deploy-api:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true'
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service_name: api
+      service_dir: api
+      port: "3000"
+      needs_models: false
+    secrets: inherit
+
+  deploy-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service_name: frontend
+      service_dir: frontend
+      port: "80"
+      needs_models: false
+    secrets: inherit
+
+  deploy-ai-code-converter:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ai-code-converter == 'true'
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service_name: ai-code-converter
+      service_dir: ai-code-converter
+      port: "8001"
+      needs_models: true
+      models_gcs_path: "ai-code-converter/models"
+      models_dest_path: "models"
+    secrets: inherit
+
+  deploy-code-analysis-engine:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code-analysis-engine == 'true'
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service_name: code-analysis-engine
+      service_dir: code-analysis-engine
+      port: "8002"
+      needs_models: true
+      models_gcs_path: "code-analysis-engine/models/trained"
+      models_dest_path: "models/trained"
+    secrets: inherit
+
+  deploy-decision-engine:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.decision-engine == 'true'
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service_name: decision-engine
+      service_dir: decision-engine
+      port: "8003"
+      needs_models: false
+    secrets: inherit
+
+  deploy-hardware-abstraction-layer:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.hardware-abstraction-layer == 'true'
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service_name: hardware-abstraction-layer
+      service_dir: hardware-abstraction-layer
+      port: "8004"
+      needs_models: false
+    secrets: inherit

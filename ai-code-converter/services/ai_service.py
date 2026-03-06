@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoTokenizer, T5ForConditionalGeneration
 
-MODEL_PATH = "C:/Users/black/OneDrive/Desktop/research/nexar/ai-code-converter/codet5-quantum-best"
+MODEL_PATH = "C:/Users/black/OneDrive/Desktop/research/nexar/ai-code-converter/codet5-quantum-best-version2"
 
 class AIService:
     def __init__(self):

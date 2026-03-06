@@ -27,6 +27,11 @@ on:
         description: "Directory containing the service source and Dockerfile"
         required: true
         type: string
+      build_args:
+        description: "Newline-separated Docker build args (e.g. VITE_GOOGLE_CLIENT_ID=xxx)"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   build-and-push:
@@ -92,6 +97,7 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ steps.vars.outputs.short_sha }}
+          build-args: ${{ inputs.build_args }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}

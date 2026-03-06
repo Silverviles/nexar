@@ -169,8 +169,6 @@ jobs:
     with:
       service_name: frontend
       service_dir: frontend
-      build_args: |
-        VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
     secrets: inherit
     permissions:
       contents: read

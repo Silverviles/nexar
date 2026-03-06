@@ -1,0 +1,269 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Build & Push Docker Images to GCP Artifact Registry
+#
+# Triggers:
+#   1. Push to main → auto-detect changed services and build only those
+#   2. Manual dispatch → select individual services or all
+#
+# Images are pushed to:
+#   <region>-docker.pkg.dev/<project_id>/nexar/<service>
+#
+# Authentication uses Workload Identity Federation (keyless).
+#
+# Prerequisites (GitHub Secrets):
+#   GCP_PROJECT_ID      — GCP project ID
+#   GCP_REGION          — GCP region (e.g. asia-south1)
+#   WIF_PROVIDER        — Workload Identity Federation provider resource name
+#   WIF_SERVICE_ACCOUNT — Deploy service account email
+#
+# Terraform is applied locally — this workflow only handles image builds.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Build & Push Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "api/**"
+      - "frontend/**"
+      - "ai-code-converter/**"
+      - "code-analysis-engine/**"
+      - "decision-engine/**"
+      - "hardware-abstraction-layer/**"
+
+  workflow_dispatch:
+    inputs:
+      build_api:
+        description: "Build api"
+        type: boolean
+        default: false
+      build_frontend:
+        description: "Build frontend"
+        type: boolean
+        default: false
+      build_ai_code_converter:
+        description: "Build ai-code-converter"
+        type: boolean
+        default: false
+      build_code_analysis_engine:
+        description: "Build code-analysis-engine"
+        type: boolean
+        default: false
+      build_decision_engine:
+        description: "Build decision-engine"
+        type: boolean
+        default: false
+      build_hardware_abstraction_layer:
+        description: "Build hardware-abstraction-layer"
+        type: boolean
+        default: false
+      build_all:
+        description: "Build ALL services (overrides individual selections)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # ─── Detect which services changed ───────────────────────────────────────
+  detect-changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.set-outputs.outputs.api }}
+      frontend: ${{ steps.set-outputs.outputs.frontend }}
+      ai-code-converter: ${{ steps.set-outputs.outputs.ai-code-converter }}
+      code-analysis-engine: ${{ steps.set-outputs.outputs.code-analysis-engine }}
+      decision-engine: ${{ steps.set-outputs.outputs.decision-engine }}
+      hardware-abstraction-layer: ${{ steps.set-outputs.outputs.hardware-abstraction-layer }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
+        id: changes
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            api:
+              - 'api/**'
+            frontend:
+              - 'frontend/**'
+            ai-code-converter:
+              - 'ai-code-converter/**'
+            code-analysis-engine:
+              - 'code-analysis-engine/**'
+            decision-engine:
+              - 'decision-engine/**'
+            hardware-abstraction-layer:
+              - 'hardware-abstraction-layer/**'
+
+      - name: Set outputs
+        id: set-outputs
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            BUILD_ALL="${{ github.event.inputs.build_all }}"
+            if [[ "${BUILD_ALL}" == "true" ]]; then
+              echo "api=true"                         >> "$GITHUB_OUTPUT"
+              echo "frontend=true"                    >> "$GITHUB_OUTPUT"
+              echo "ai-code-converter=true"           >> "$GITHUB_OUTPUT"
+              echo "code-analysis-engine=true"        >> "$GITHUB_OUTPUT"
+              echo "decision-engine=true"             >> "$GITHUB_OUTPUT"
+              echo "hardware-abstraction-layer=true"  >> "$GITHUB_OUTPUT"
+            else
+              echo "api=${{ github.event.inputs.build_api }}"                                       >> "$GITHUB_OUTPUT"
+              echo "frontend=${{ github.event.inputs.build_frontend }}"                             >> "$GITHUB_OUTPUT"
+              echo "ai-code-converter=${{ github.event.inputs.build_ai_code_converter }}"           >> "$GITHUB_OUTPUT"
+              echo "code-analysis-engine=${{ github.event.inputs.build_code_analysis_engine }}"     >> "$GITHUB_OUTPUT"
+              echo "decision-engine=${{ github.event.inputs.build_decision_engine }}"               >> "$GITHUB_OUTPUT"
+              echo "hardware-abstraction-layer=${{ github.event.inputs.build_hardware_abstraction_layer }}" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "api=${{ steps.changes.outputs.api }}"                                       >> "$GITHUB_OUTPUT"
+            echo "frontend=${{ steps.changes.outputs.frontend }}"                             >> "$GITHUB_OUTPUT"
+            echo "ai-code-converter=${{ steps.changes.outputs.ai-code-converter }}"           >> "$GITHUB_OUTPUT"
+            echo "code-analysis-engine=${{ steps.changes.outputs.code-analysis-engine }}"     >> "$GITHUB_OUTPUT"
+            echo "decision-engine=${{ steps.changes.outputs.decision-engine }}"               >> "$GITHUB_OUTPUT"
+            echo "hardware-abstraction-layer=${{ steps.changes.outputs.hardware-abstraction-layer }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "### 🔍 Build Targets" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Service | Build |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| api | \`${{ steps.set-outputs.outputs.api }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| frontend | \`${{ steps.set-outputs.outputs.frontend }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ai-code-converter | \`${{ steps.set-outputs.outputs.ai-code-converter }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| code-analysis-engine | \`${{ steps.set-outputs.outputs.code-analysis-engine }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| decision-engine | \`${{ steps.set-outputs.outputs.decision-engine }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| hardware-abstraction-layer | \`${{ steps.set-outputs.outputs.hardware-abstraction-layer }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Trigger:** \`${{ github.event_name }}\` | **Ref:** \`${{ github.ref }}\` | **Actor:** @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
+
+  # ─── Build & push each changed service ───────────────────────────────────
+  build-api:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true'
+    uses: ./.github/workflows/build-service.yml
+    with:
+      service_name: api
+      service_dir: api
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  build-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/build-service.yml
+    with:
+      service_name: frontend
+      service_dir: frontend
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  build-ai-code-converter:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ai-code-converter == 'true'
+    uses: ./.github/workflows/build-service.yml
+    with:
+      service_name: ai-code-converter
+      service_dir: ai-code-converter
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  build-code-analysis-engine:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code-analysis-engine == 'true'
+    uses: ./.github/workflows/build-service.yml
+    with:
+      service_name: code-analysis-engine
+      service_dir: code-analysis-engine
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  build-decision-engine:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.decision-engine == 'true'
+    uses: ./.github/workflows/build-service.yml
+    with:
+      service_name: decision-engine
+      service_dir: decision-engine
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  build-hardware-abstraction-layer:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.hardware-abstraction-layer == 'true'
+    uses: ./.github/workflows/build-service.yml
+    with:
+      service_name: hardware-abstraction-layer
+      service_dir: hardware-abstraction-layer
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  # ─── Summary ─────────────────────────────────────────────────────────────
+  summary:
+    name: Build summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - detect-changes
+      - build-api
+      - build-frontend
+      - build-ai-code-converter
+      - build-code-analysis-engine
+      - build-decision-engine
+      - build-hardware-abstraction-layer
+    steps:
+      - name: Write summary
+        shell: bash
+        run: |
+          echo "### 📋 Build Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Service | Selected | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|----------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| api | \`${{ needs.detect-changes.outputs.api }}\` | \`${{ needs.build-api.result }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| frontend | \`${{ needs.detect-changes.outputs.frontend }}\` | \`${{ needs.build-frontend.result }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ai-code-converter | \`${{ needs.detect-changes.outputs.ai-code-converter }}\` | \`${{ needs.build-ai-code-converter.result }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| code-analysis-engine | \`${{ needs.detect-changes.outputs.code-analysis-engine }}\` | \`${{ needs.build-code-analysis-engine.result }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| decision-engine | \`${{ needs.detect-changes.outputs.decision-engine }}\` | \`${{ needs.build-decision-engine.result }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| hardware-abstraction-layer | \`${{ needs.detect-changes.outputs.hardware-abstraction-layer }}\` | \`${{ needs.build-hardware-abstraction-layer.result }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Registry:** \`${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nexar\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Ref:** \`${{ github.ref }}\` | **SHA:** \`${{ github.sha }}\` | **Actor:** @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
+
+          FAILED="false"
+          if [[ "${{ needs.build-api.result }}" == "failure" ]]; then FAILED="true"; fi
+          if [[ "${{ needs.build-frontend.result }}" == "failure" ]]; then FAILED="true"; fi
+          if [[ "${{ needs.build-ai-code-converter.result }}" == "failure" ]]; then FAILED="true"; fi
+          if [[ "${{ needs.build-code-analysis-engine.result }}" == "failure" ]]; then FAILED="true"; fi
+          if [[ "${{ needs.build-decision-engine.result }}" == "failure" ]]; then FAILED="true"; fi
+          if [[ "${{ needs.build-hardware-abstraction-layer.result }}" == "failure" ]]; then FAILED="true"; fi
+
+          if [[ "${FAILED}" == "true" ]]; then
+            echo "❌ One or more image builds failed!" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          else
+            echo "✅ All selected images built and pushed successfully (or were skipped)." >> "$GITHUB_STEP_SUMMARY"
+          fi

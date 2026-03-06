@@ -1,0 +1,126 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Build & Push Single Service Image to GCP Artifact Registry — Reusable Workflow
+#
+# Called by build-images.yml for each service that needs to be built.
+# Images are pushed to:
+#   <region>-docker.pkg.dev/<project_id>/nexar/<service>
+#
+# Authentication uses Workload Identity Federation (keyless).
+#
+# Required secrets (inherited from caller):
+#   GCP_PROJECT_ID      — GCP project ID
+#   GCP_REGION          — GCP region (e.g. asia-south1)
+#   WIF_PROVIDER        — Workload Identity Federation provider resource name
+#   WIF_SERVICE_ACCOUNT — Deploy service account email
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Build Single Service Image
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        description: "Service name (used as the image name)"
+        required: true
+        type: string
+      service_dir:
+        description: "Directory containing the service source and Dockerfile"
+        required: true
+        type: string
+
+jobs:
+  build-and-push:
+    name: "Build ${{ inputs.service_name }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      GAR_REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev
+      IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nexar/${{ inputs.service_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log build info
+        shell: bash
+        run: |
+          echo "## 🐳 Building ${{ inputs.service_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Key | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Service | \`${{ inputs.service_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Directory | \`${{ inputs.service_dir }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Image | \`${{ env.IMAGE }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit SHA | \`${{ github.sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+      # ── Authenticate to GCP via Workload Identity Federation ───────────────
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # ── Configure Docker to push to Artifact Registry ──────────────────────
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ env.GAR_REGISTRY }}" --quiet
+
+      # ── Set up Docker Buildx for better caching ────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── Compute image tags ─────────────────────────────────────────────────
+      - name: Compute tags
+        id: tags
+        shell: bash
+        run: |
+          FULL_SHA="${{ github.sha }}"
+          SHORT_SHA=$(echo "${FULL_SHA}" | cut -c1-7)
+
+          TAG_FULL="${{ env.IMAGE }}:${FULL_SHA}"
+          TAG_SHORT="${{ env.IMAGE }}:${SHORT_SHA}"
+          TAG_LATEST="${{ env.IMAGE }}:latest"
+
+          # docker/build-push-action expects a comma-separated or newline-separated list
+          TAGS="${TAG_FULL},${TAG_SHORT},${TAG_LATEST}"
+
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+          echo "tag_full=${TAG_FULL}" >> "$GITHUB_OUTPUT"
+          echo "tag_short=${TAG_SHORT}" >> "$GITHUB_OUTPUT"
+          echo "tag_latest=${TAG_LATEST}" >> "$GITHUB_OUTPUT"
+
+          echo "📦 Tags: ${TAG_FULL}, ${TAG_SHORT}, ${TAG_LATEST}"
+
+      # ── Build and push Docker image ────────────────────────────────────────
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.service_dir }}
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Log result
+        if: always()
+        shell: bash
+        run: |
+          echo "### ✅ ${{ inputs.service_name }} image pushed to Artifact Registry" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Image:** \`${{ env.IMAGE }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Tags:**" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.tags.outputs.tag_full }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.tags.outputs.tag_short }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.tags.outputs.tag_latest }}\`" >> "$GITHUB_STEP_SUMMARY"

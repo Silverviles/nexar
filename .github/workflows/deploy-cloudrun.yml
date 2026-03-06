@@ -125,7 +125,7 @@ jobs:
     with:
       service_name: frontend
       service_dir: frontend
-      port: "80"
+      port: "8080"
       needs_models: false
     secrets: inherit
 

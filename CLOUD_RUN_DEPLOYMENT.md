@@ -62,7 +62,7 @@ GitHub Actions ── paths-filter ──┐   GitHub Actions ── user picks 
 | Service | Language | Port | Needs ML Models from GCS? |
 |---|---|---|---|
 | `api` | Node.js / Express | 3000 | No |
-| `frontend` | React + Vite → nginx | 80 | No |
+| `frontend` | React + Vite → nginx | 8080 | No |
 | `ai-code-converter` | Python / FastAPI | 8001 | **Yes** — CodeT5 model weights |
 | `code-analysis-engine` | Python / FastAPI | 8002 | **Yes** — sklearn `.pkl` files |
 | `decision-engine` | Python / FastAPI | 8003 | No (models committed in repo) |
@@ -116,6 +116,11 @@ echo "Project number: $PROJECT_NUMBER"
 
 ## Step 2 — Enable Required GCP APIs
 
+> **⚠️ Do NOT skip this step!** Every API below is required. If any are
+> missing, the GitHub Actions workflow will fail at different stages with
+> confusing `PERMISSION_DENIED` / `API has not been used` errors — even though
+> authentication itself succeeds.
+
 ```bash
 gcloud services enable \
   run.googleapis.com \
@@ -126,6 +131,25 @@ gcloud services enable \
   storage.googleapis.com \
   --project="$PROJECT_ID"
 ```
+
+| API | What breaks without it |
+|-----|------------------------|
+| `run.googleapis.com` | `gcloud run deploy` fails — *"Cloud Run Admin API has not been used in project"* |
+| `artifactregistry.googleapis.com` | `docker push` to Artifact Registry fails |
+| `cloudbuild.googleapis.com` | Remote builds fail (used internally by some deploy actions) |
+| `iam.googleapis.com` | Service account and IAM operations fail |
+| `iamcredentials.googleapis.com` | WIF token impersonation fails — *"Unable to acquire impersonated credentials"* |
+| `storage.googleapis.com` | `gsutil` model downloads fail |
+
+**Verify all 6 are enabled:**
+
+```bash
+gcloud services list --enabled --project="$PROJECT_ID" \
+  --filter="name:(run.googleapis.com OR artifactregistry.googleapis.com OR cloudbuild.googleapis.com OR iam.googleapis.com OR iamcredentials.googleapis.com OR storage.googleapis.com)" \
+  --format="table(name, title)"
+```
+
+You should see all 6 listed. If any are missing, re-run the `gcloud services enable` command above.
 
 Wait a minute or two for the APIs to propagate.
 
@@ -263,6 +287,14 @@ gcloud iam workload-identity-pools create "github-pool" \
 > it you will get the error:
 > `INVALID_ARGUMENT: The attribute condition must reference one of the provider's claims`
 
+> **⚠️ Case-sensitive!** The `attribute.repository` value must match your
+> GitHub `owner/repo` **exactly**, including capitalization. For example,
+> `Silverviles/nexar` is not the same as `silverviles/nexar`. If the casing
+> is wrong, the workflow will authenticate but Google will reject the token
+> with: `The given credential is rejected by the attribute condition.`
+>
+> Check the exact casing on your GitHub repository page's URL or header.
+
 ```bash
 gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --project="$PROJECT_ID" \
@@ -272,6 +304,16 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
   --attribute-condition="attribute.repository == '${GITHUB_ORG}/${GITHUB_REPO}'" \
   --issuer-uri="https://token.actions.githubusercontent.com"
+```
+
+If you need to fix the condition later (e.g., wrong casing), you can update it
+without recreating the provider:
+
+```bash
+gcloud iam workload-identity-pools providers update-oidc github-provider \
+  --workload-identity-pool="github-pool" \
+  --location="global" \
+  --attribute-condition="attribute.repository == '${GITHUB_ORG}/${GITHUB_REPO}'"
 ```
 
 ### 5d. Create a Service Account for deployments
@@ -489,15 +531,30 @@ HARDWARE_LAYER_URL=https://nexar-hardware-abstraction-layer-XXXXX-uc.a.run.app"
 
 ### 9c. Frontend → API connection
 
-The frontend's `VITE_API_BASE_URL` is baked in at build time via the
-Dockerfile's `ARG`. You have two options:
+The frontend uses nginx as a reverse proxy. At container startup, the
+`API_URL` environment variable is substituted into the nginx config via
+`envsubst`, so `/api/*` requests are proxied to whatever URL you set.
 
-**Option A — Build arg in CI:** Add a `--build-arg` to the `docker build`
-command for the frontend service in the workflow.
+Set `API_URL` to the deployed API service URL:
 
-**Option B — Nginx reverse proxy (recommended):** Configure the frontend's
-`nginx.conf` to proxy `/api` requests to the Cloud Run API URL. This avoids
-CORS issues and keeps the frontend build generic.
+```bash
+gcloud run services update nexar-frontend \
+  --region="$REGION" \
+  --set-env-vars="API_URL=https://nexar-api-XXXXX-uc.a.run.app"
+```
+
+Replace `https://nexar-api-XXXXX-uc.a.run.app` with the actual URL from
+step 9a.
+
+> **How it works:** The frontend Dockerfile uses `envsubst` at startup to
+> render `nginx.conf` with only `$PORT` and `$API_URL` (nginx's own variables
+> like `$host`, `$uri`, `$scheme` are left untouched). Cloud Run sets `PORT`
+> automatically. This means the frontend build artifact is generic — the API
+> target is configured at deploy time, not build time.
+>
+> **Local development:** In `docker-compose.yml`, the frontend service sets
+> `API_URL=http://api:3000` and `PORT=80`, so the reverse proxy points to the
+> local API container — no changes needed.
 
 ---
 
@@ -682,7 +739,7 @@ jobs:
     with:
       service_name: frontend
       service_dir: frontend
-      port: "80"
+      port: "8080"
       needs_models: false
     secrets: inherit
 
@@ -870,6 +927,79 @@ command includes:
 
 The value must exactly match `owner/repo` as it appears on GitHub
 (case-sensitive).
+
+### "The given credential is rejected by the attribute condition"
+
+The full error from `google-github-actions/auth` looks like:
+
+```
+failed to generate Google Cloud federated token: {"error":"unauthorized_client",
+"error_description":"The given credential is rejected by the attribute condition."}
+```
+
+This means the OIDC token from GitHub was sent to Google successfully, but your
+Workload Identity Provider's attribute condition doesn't match. The most common
+cause is **wrong casing** — the comparison is case-sensitive.
+
+**Check your current condition:**
+
+```bash
+gcloud iam workload-identity-pools providers describe github-provider \
+  --workload-identity-pool="github-pool" \
+  --location="global" \
+  --format="value(attributeCondition)"
+```
+
+**Fix it** (make sure the owner name matches GitHub's exact casing):
+
+```bash
+gcloud iam workload-identity-pools providers update-oidc github-provider \
+  --workload-identity-pool="github-pool" \
+  --location="global" \
+  --attribute-condition="attribute.repository == 'YourOrg/nexar'"
+```
+
+> **Note:** The `google-github-actions/auth` action always creates a temporary
+> credentials JSON file (e.g., `gha-creds-*.json`) — this is normal and does
+> **not** mean it's looking for a service account key. That file holds the
+> federated token reference for Application Default Credentials.
+
+### "… API has not been used in project … or it is disabled"
+
+The auth step succeeds but a later step fails with a `PERMISSION_DENIED` error
+mentioning a specific API. Common variants:
+
+| Error message mentions | Missing API |
+|------------------------|-------------|
+| *IAM Service Account Credentials API* / *Unable to acquire impersonated credentials* | `iamcredentials.googleapis.com` |
+| *Cloud Run Admin API* | `run.googleapis.com` |
+| *Artifact Registry API* | `artifactregistry.googleapis.com` |
+| *Cloud Storage* | `storage.googleapis.com` |
+
+**Fix:** Enable whichever API is missing (or just enable all of them at once):
+
+```bash
+gcloud services enable \
+  run.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  iam.googleapis.com \
+  iamcredentials.googleapis.com \
+  storage.googleapis.com \
+  --project="$PROJECT_ID"
+```
+
+Then verify all 6 are active:
+
+```bash
+gcloud services list --enabled --project="$PROJECT_ID" \
+  --filter="name:(run.googleapis.com OR artifactregistry.googleapis.com OR cloudbuild.googleapis.com OR iam.googleapis.com OR iamcredentials.googleapis.com OR storage.googleapis.com)" \
+  --format="table(name, title)"
+```
+
+Wait 1–2 minutes for propagation, then re-run the workflow. See
+[Step 2](#step-2--enable-required-gcp-apis) for the full list and what each API
+is used for.
 
 ### "Permission denied" during gsutil cp
 

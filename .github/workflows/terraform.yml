@@ -1,0 +1,243 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Terraform CI/CD — Plan on PR, Apply on push to main
+#
+# Triggers:
+#   1. Push to main that touches terraform/** files → auto-apply
+#   2. Pull request that touches terraform/** files → plan only (comment on PR)
+#   3. Manual dispatch → choose plan or apply
+#
+# Prerequisites (GitHub Secrets):
+#   TF_STATE_BUCKET       — GCS bucket name for Terraform remote state
+#   GCP_PROJECT_ID        — GCP project ID
+#   GCP_REGION            — GCP region (e.g. us-central1)
+#   WIF_PROVIDER          — Workload Identity Federation provider resource name
+#   WIF_SERVICE_ACCOUNT   — Deploy service account email
+#   GCS_MODELS_BUCKET     — GCS models bucket (may include gs:// prefix — stripped automatically)
+#   TF_VAR_GITHUB_ORG     — GitHub org/owner (case-sensitive)
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: "Terraform"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform action to run"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write          # Needed to comment plan output on PRs
+
+env:
+  TF_DIR: terraform
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+
+    # Only one Terraform job at a time to prevent state conflicts
+    concurrency:
+      group: terraform-${{ github.ref }}
+      cancel-in-progress: false
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      # ── Checkout (always from main for apply, PR branch for plan) ──────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+
+      # ── Authenticate to GCP via Workload Identity Federation ───────────────
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # ── Install Terraform ──────────────────────────────────────────────────
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+          terraform_wrapper: false      # Wrapper causes false exit code 1 issues
+
+      # ── Terraform Init ─────────────────────────────────────────────────────
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
+
+      # ── Terraform Validate ─────────────────────────────────────────────────
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      # ── Strip gs:// prefix from models bucket if present ───────────────────
+      - name: Resolve models bucket name
+        id: bucket
+        shell: bash
+        run: |
+          # Write secret to a temp file to avoid masking issues with shell substitution
+          printf '%s' "${{ secrets.GCS_MODELS_BUCKET }}" > /tmp/raw_bucket.txt
+          # Strip gs:// prefix and trailing slashes using sed
+          BUCKET_NAME=$(sed 's|^gs://||; s|/$||' /tmp/raw_bucket.txt)
+          rm -f /tmp/raw_bucket.txt
+          echo "name=${BUCKET_NAME}" >> "$GITHUB_OUTPUT"
+          echo "📦 Models bucket name: ${BUCKET_NAME}"
+
+      # ── Terraform Plan ─────────────────────────────────────────────────────
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -no-color \
+            -input=false \
+            -out=tfplan \
+            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var="region=${{ secrets.GCP_REGION }}" \
+            -var="github_org=${{ secrets.TF_VAR_GITHUB_ORG }}" \
+            -var="models_bucket_name=${{ steps.bucket.outputs.name }}" \
+            2>&1 | tee /tmp/plan_output.txt
+          PLAN_EXIT=${PIPESTATUS[0]}
+          echo "exitcode=${PLAN_EXIT}" >> "$GITHUB_OUTPUT"
+          exit ${PLAN_EXIT}
+        continue-on-error: true
+
+      # ── Comment Plan on Pull Request ───────────────────────────────────────
+      - name: Comment Plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let planOutput = '';
+            try {
+              planOutput = fs.readFileSync('/tmp/plan_output.txt', 'utf8');
+            } catch (e) {
+              planOutput = 'Could not read plan output file.';
+            }
+            const planExitCode = '${{ steps.plan.outputs.exitcode }}';
+            const planOutcome = '${{ steps.plan.outcome }}';
+
+            const maxLength = 60000;
+            const truncatedPlan = planOutput.length > maxLength
+              ? planOutput.substring(0, maxLength) + '\n\n... (truncated — see Actions log for full output)'
+              : planOutput;
+
+            const icon = planOutcome === 'success' ? '✅' : '❌';
+
+            const body = `### Terraform Plan ${icon}
+
+**Result:** \`${planOutcome}\` (exit code \`${planExitCode}\`)
+
+<details>
+<summary>Show Plan Output</summary>
+
+\`\`\`
+${truncatedPlan}
+\`\`\`
+
+</details>
+
+*Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // Find existing bot comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(
+              (c) => c.user.type === 'Bot' && c.body.includes('### Terraform Plan')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
+      # ── Fail if Plan Failed ────────────────────────────────────────────────
+      - name: Fail on plan error
+        if: steps.plan.outcome == 'failure'
+        run: |
+          echo "❌ Terraform plan failed. Check the plan output above for details."
+          exit 1
+
+      # ── Determine if Apply Should Run ──────────────────────────────────────
+      - name: Determine apply eligibility
+        id: should-apply
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "apply=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Push to main — will apply"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.action }}" == "apply" ]]; then
+            echo "apply=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Manual dispatch (apply) — will apply"
+          else
+            echo "apply=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  Plan only — skipping apply"
+          fi
+
+      # ── Terraform Apply ────────────────────────────────────────────────────
+      - name: Terraform Apply
+        if: steps.should-apply.outputs.apply == 'true'
+        run: terraform apply -auto-approve tfplan
+
+      # ── Job Summary ────────────────────────────────────────────────────────
+      - name: Write job summary
+        if: always()
+        run: |
+          echo "### Terraform Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Step | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Init | \`${{ steps.init.outcome }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Validate | \`${{ steps.validate.outcome }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Plan | \`${{ steps.plan.outcome }}\` (exit code: \`${{ steps.plan.outputs.exitcode }}\`) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Apply Eligible | \`${{ steps.should-apply.outputs.apply }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Models Bucket | \`${{ steps.bucket.outputs.name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Event:** \`${{ github.event_name }}\` | **Ref:** \`${{ github.ref }}\` | **Actor:** @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"

@@ -27,7 +27,8 @@ choose which service(s) to deploy — including an "all" option.
 13. [Step 10 — Set Up Redis](#step-10--set-up-redis-for-hardware-abstraction-layer)
 14. [Appendix A — Full Workflow Files](#appendix-a--full-workflow-files)
 15. [Appendix B — Rollback](#appendix-b--rollback)
-16. [Troubleshooting](#troubleshooting)
+16. [Appendix C — Terraform (Infrastructure as Code)](#appendix-c--terraform-infrastructure-as-code)
+17. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -910,6 +911,166 @@ gcloud run deploy nexar-api \
   --image="$REGION-docker.pkg.dev/$PROJECT_ID/nexar/api:PREVIOUS_COMMIT_SHA" \
   --region="$REGION"
 ```
+
+---
+
+## Appendix C — Terraform (Infrastructure as Code)
+
+Instead of running `gcloud` commands manually, you can manage **all** GCP
+infrastructure and Cloud Run service configuration with Terraform. The
+`terraform/` directory in this repo contains a complete setup.
+
+### What Terraform manages
+
+| Resource | Terraform file |
+|----------|---------------|
+| Provider, data sources, GCP API enablement | `main.tf` |
+| Artifact Registry repository | `artifact_registry.tf` |
+| GCS models bucket | `storage.tf` |
+| Deploy service account + project IAM roles | `iam.tf` |
+| Workload Identity Federation (pool + provider + binding) | `iam.tf` |
+| VPC connector (optional, for Memorystore) | `main.tf` |
+| All 6 Cloud Run services (via reusable module) | `cloudrun.tf` |
+| Per-service public access IAM bindings | `modules/cloudrun-service/` |
+
+### Key benefits over `gcloud` commands
+
+- **Env vars are declarative** — change a value in `terraform.tfvars`, run
+  `terraform apply`, and the service is updated. No need to remember
+  `--set-env-vars` vs `--update-env-vars`.
+- **Service-to-service URLs are auto-wired** — the API service automatically
+  gets the URLs of the backend services as env vars. The frontend's `API_URL`
+  is auto-wired to the API service URL. No manual copy-paste.
+- **WIF casing can't go wrong** — `var.github_org` is used in both the
+  attribute condition and the IAM binding, so they always match.
+- **Modular** — each Cloud Run service is created via a reusable
+  `modules/cloudrun-service/` module. Adding a new service is a single
+  `module` block in `cloudrun.tf` — no duplicated boilerplate.
+- **Reproducible** — tear down and recreate the entire stack in one command.
+- **State tracking** — Terraform knows what exists, so `apply` is idempotent.
+
+### Quick start
+
+```bash
+cd terraform
+
+# 1. Copy and fill in your values
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project ID, GitHub org, bucket name, etc.
+
+# 2. Initialize Terraform (downloads the Google provider)
+terraform init
+
+# 3. Preview what will be created
+terraform plan
+
+# 4. Apply — creates all resources
+terraform apply
+```
+
+### After `terraform apply`
+
+Terraform outputs everything you need for GitHub Secrets:
+
+```bash
+terraform output github_secrets_summary
+```
+
+This prints:
+
+```
+{
+  GCP_PROJECT_ID      = "your-project-id"
+  GCP_REGION          = "us-central1"
+  GCS_MODELS_BUCKET   = "gs://your-project-nexar-models"
+  WIF_PROVIDER        = "projects/123456789/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+  WIF_SERVICE_ACCOUNT = "github-deploy@your-project-id.iam.gserviceaccount.com"
+}
+```
+
+Copy these into your GitHub repository secrets (Settings → Secrets and
+variables → Actions).
+
+You can also get all deployed service URLs:
+
+```bash
+terraform output all_service_urls
+```
+
+### File structure
+
+```
+terraform/
+├── main.tf                       # Provider, data sources, GCP APIs, VPC connector
+├── iam.tf                        # Deploy service account, IAM roles, WIF pool/provider/binding
+├── storage.tf                    # GCS bucket for ML model artifacts
+├── artifact_registry.tf          # Artifact Registry Docker repository
+├── cloudrun.tf                   # All 6 Cloud Run services (uses the module below)
+├── variables.tf                  # All input variable definitions
+├── outputs.tf                    # Service URLs, WIF values, GitHub Secrets summary
+├── terraform.tfvars.example      # Example values — copy to terraform.tfvars
+└── modules/
+    └── cloudrun-service/         # Reusable module for a single Cloud Run service
+        ├── main.tf               #   Service resource + public access IAM
+        ├── variables.tf          #   Module inputs (image, port, env_vars, scaling, etc.)
+        └── outputs.tf            #   Module outputs (uri, service_name, revision)
+```
+
+> **⚠️ `terraform.tfvars` is in `.gitignore`** — it may contain sensitive
+> values like `redis_url`. Never commit it. The `.example` file is safe to
+> commit.
+
+### Updating environment variables
+
+To change an env var (e.g., add Redis to hardware-abstraction-layer):
+
+```bash
+# Edit terraform.tfvars
+redis_url = "redis://10.0.0.3:6379"
+
+# Apply the change
+terraform apply
+```
+
+Terraform will update only the `nexar-hardware-abstraction-layer` Cloud Run
+service — everything else is left untouched.
+
+### Deploying a new image tag
+
+When GitHub Actions pushes a new image (tagged with the Git SHA), you can
+update Terraform to deploy it:
+
+```bash
+# Deploy a specific commit across all services
+terraform apply -var="image_tag=abc123def456"
+
+# Or deploy a specific commit for just one service
+terraform apply -var='image_tags={"frontend":"abc123def456"}'
+```
+
+> **Note:** The GitHub Actions workflow already deploys images to Cloud Run
+> directly. Terraform is primarily for managing **infrastructure and
+> configuration** (env vars, scaling, resources, IAM). You don't need to use
+> Terraform for every image deploy — the CI workflow handles that. Use
+> Terraform when you need to change service configuration.
+
+### Importing existing resources
+
+If you already created resources via `gcloud` (following this guide), you can
+import them into Terraform state instead of recreating:
+
+```bash
+# Example: import the existing WIF pool
+terraform import google_iam_workload_identity_pool.github \
+  "projects/YOUR_PROJECT_ID/locations/global/workloadIdentityPools/github-pool"
+
+# Example: import an existing Cloud Run service
+terraform import google_cloud_run_v2_service.api \
+  "projects/YOUR_PROJECT_ID/locations/us-central1/services/nexar-api"
+```
+
+See the [Terraform Google provider docs](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
+for import syntax for each resource type.
 
 ---
 

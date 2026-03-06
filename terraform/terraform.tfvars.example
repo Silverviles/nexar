@@ -1,0 +1,125 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Nexar — Terraform Variable Values
+#
+# Copy this file to terraform.tfvars and fill in your actual values:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# NEVER commit terraform.tfvars to version control — it may contain secrets.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ─── Required ─────────────────────────────────────────────────────────────────
+
+project_id        = "your-gcp-project-id"       # e.g. "nexar-prod-123456"
+github_org        = "YourGitHubOrg"              # Case-sensitive! e.g. "Silverviles"
+github_repo       = "nexar"                      # Repository name
+models_bucket_name = "your-project-nexar-models" # Globally unique GCS bucket name
+
+# ─── Region ───────────────────────────────────────────────────────────────────
+
+region                 = "us-central1"           # GCP region for all resources
+# models_bucket_location = "us-central1"         # Defaults to var.region if empty
+
+# ─── Terraform Remote State ──────────────────────────────────────────────────
+#
+# The GCS backend bucket is NOT configured here — it is passed at init time:
+#
+#   terraform init -backend-config="bucket=YOUR_PROJECT_ID-terraform-state"
+#
+# Create the state bucket ONCE before first init:
+#
+#   gcloud storage buckets create gs://YOUR_PROJECT_ID-terraform-state \
+#     --location=us-central1 \
+#     --uniform-bucket-level-access \
+#     --project=YOUR_PROJECT_ID
+#
+#   gcloud storage buckets update gs://YOUR_PROJECT_ID-terraform-state \
+#     --versioning \
+#     --project=YOUR_PROJECT_ID
+#
+# Then grant the deploy service account access:
+#
+#   gcloud storage buckets add-iam-policy-binding \
+#     gs://YOUR_PROJECT_ID-terraform-state \
+#     --member="serviceAccount:github-deploy@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+#     --role="roles/storage.objectAdmin"
+#
+# In GitHub Actions, set the TF_STATE_BUCKET secret to the bucket name
+# (without the gs:// prefix).
+
+# ─── Container Images ─────────────────────────────────────────────────────────
+
+image_tag = "latest"                             # Default tag for all services
+
+# Per-service tag overrides (optional — falls back to image_tag):
+# image_tags = {
+#   api                        = "abc123def"
+#   frontend                   = "abc123def"
+#   ai-code-converter          = "abc123def"
+#   code-analysis-engine       = "abc123def"
+#   decision-engine            = "abc123def"
+#   hardware-abstraction-layer = "abc123def"
+# }
+
+# ─── Cloud Run Settings ──────────────────────────────────────────────────────
+
+allow_unauthenticated = true                     # Set to false to require IAM auth
+max_instances         = 1                         # Max instances per service
+min_instances         = 0                         # 0 = scale to zero (saves cost)
+timeout_seconds       = 300                       # Request timeout
+
+# ─── Per-Service Resource Limits ──────────────────────────────────────────────
+# Uncomment and adjust if the defaults don't fit your workload.
+
+# service_resources = {
+#   api = {
+#     cpu    = "1"
+#     memory = "512Mi"
+#   }
+#   frontend = {
+#     cpu    = "1"
+#     memory = "256Mi"
+#   }
+#   ai-code-converter = {
+#     cpu    = "2"
+#     memory = "4Gi"
+#   }
+#   code-analysis-engine = {
+#     cpu    = "1"
+#     memory = "1Gi"
+#   }
+#   decision-engine = {
+#     cpu    = "1"
+#     memory = "512Mi"
+#   }
+#   hardware-abstraction-layer = {
+#     cpu    = "1"
+#     memory = "512Mi"
+#   }
+# }
+
+# ─── Workload Identity Federation ─────────────────────────────────────────────
+# These defaults match the names used in the deployment guide.
+# Only change if you used different names.
+
+# wif_pool_id               = "github-pool"
+# wif_provider_id           = "github-provider"
+# deploy_service_account_id = "github-deploy"
+# artifact_registry_repository = "nexar"
+
+# ─── Frontend ─────────────────────────────────────────────────────────────────
+# Leave empty to auto-wire API_URL to the deployed nexar-api Cloud Run URL.
+# Set explicitly only if the API is hosted elsewhere.
+
+# frontend_api_url_override = "https://your-custom-api.example.com"
+
+# ─── GitHub Secrets Checklist ─────────────────────────────────────────────────
+#
+# After running `terraform apply`, set these GitHub repository secrets:
+#
+#   GCP_PROJECT_ID      = (your GCP project ID)
+#   GCP_REGION          = (your GCP region, e.g. us-central1)
+#   GCS_MODELS_BUCKET   = (models bucket name, WITHOUT gs:// prefix)
+#   WIF_PROVIDER        = (output: wif_provider)
+#   WIF_SERVICE_ACCOUNT = (output: wif_service_account)
+#   TF_STATE_BUCKET     = (your Terraform state GCS bucket name)
+#   TF_VAR_GITHUB_ORG   = (your GitHub org/owner, case-sensitive)

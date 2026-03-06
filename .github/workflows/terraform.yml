@@ -105,12 +105,13 @@ jobs:
       # ── Strip gs:// prefix from models bucket if present ───────────────────
       - name: Resolve models bucket name
         id: bucket
+        shell: bash
         run: |
-          RAW="${{ secrets.GCS_MODELS_BUCKET }}"
-          # Strip gs:// prefix if present so Terraform gets a plain bucket name
-          BUCKET_NAME="${RAW#gs://}"
-          # Also strip any trailing slash
-          BUCKET_NAME="${BUCKET_NAME%/}"
+          # Write secret to a temp file to avoid masking issues with shell substitution
+          printf '%s' "${{ secrets.GCS_MODELS_BUCKET }}" > /tmp/raw_bucket.txt
+          # Strip gs:// prefix and trailing slashes using sed
+          BUCKET_NAME=$(sed 's|^gs://||; s|/$||' /tmp/raw_bucket.txt)
+          rm -f /tmp/raw_bucket.txt
           echo "name=${BUCKET_NAME}" >> "$GITHUB_OUTPUT"
           echo "📦 Models bucket name: ${BUCKET_NAME}"
 

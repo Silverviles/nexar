@@ -28,3 +28,4 @@ pillow
 pylatexenc
 accelerate>=0.26.0
 astor
+google-cloud-storage

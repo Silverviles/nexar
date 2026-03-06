@@ -84,7 +84,7 @@ variable "service_resources" {
     }
     frontend = {
       cpu    = "1"
-      memory = "256Mi"
+      memory = "512Mi"
     }
     ai-code-converter = {
       cpu    = "2"
@@ -151,6 +151,12 @@ variable "models_bucket_location" {
   description = "GCS bucket location (defaults to var.region)"
   type        = string
   default     = ""
+}
+
+variable "ai_code_converter_model_gcs_path" {
+  description = "GCS path (relative to the models bucket) for the AI Code Converter model folder (e.g. ai-code-converter/codet5-quantum-best-version2)"
+  type        = string
+  default     = "ai-code-converter/codet5-quantum-best-version2"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

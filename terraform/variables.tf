@@ -166,8 +166,28 @@ variable "code_analysis_engine_model_gcs_path" {
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Google OAuth
+# ──────────────────────────────────────────────────────────────────────────────
+
+variable "google_oauth_client_id" {
+  description = "Google OAuth 2.0 Client ID for user authentication"
+  type        = string
+}
+
+variable "google_oauth_client_secret" {
+  description = "Google OAuth 2.0 Client Secret for user authentication"
+  type        = string
+  sensitive   = true
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Frontend
 # ──────────────────────────────────────────────────────────────────────────────
+
+variable "frontend_url" {
+  description = "Deployed frontend Cloud Run URL (used by the API for OAuth redirects, email verification links, etc.)"
+  type        = string
+}
 
 variable "frontend_api_url_override" {
   description = "Override the API_URL env var on the frontend. If empty, it is auto-wired to the deployed nexar-api Cloud Run URL."

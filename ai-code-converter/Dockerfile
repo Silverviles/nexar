@@ -15,9 +15,12 @@ RUN pip install --no-cache-dir torch --extra-index-url https://download.pytorch.
 
 COPY . .
 
-# Default model path inside container (mount your model here)
+# Make entrypoint script executable
+RUN chmod +x entrypoint.sh
+
+# Default model path inside container
 ENV MODEL_PATH=/app/models
 
 EXPOSE 8001
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+ENTRYPOINT ["./entrypoint.sh"]

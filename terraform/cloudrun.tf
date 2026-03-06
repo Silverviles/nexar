@@ -45,7 +45,6 @@ module "api" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
-    PORT                     = "3000"
     DECISION_ENGINE_URL      = module.decision_engine.uri
     AI_CODE_CONVERTER_URL    = module.ai_code_converter.uri
     CODE_ANALYSIS_ENGINE_URL = module.code_analysis_engine.uri
@@ -78,7 +77,6 @@ module "frontend" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
-    PORT    = "8080"
     API_URL = local.frontend_api_url
   }
 }
@@ -108,7 +106,8 @@ module "ai_code_converter" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
-    MODEL_PATH = "/app/models"
+    MODEL_PATH    = "/app/models"
+    GCS_MODEL_URI = "gs://${var.models_bucket_name}/${var.ai_code_converter_model_gcs_path}"
   }
 }
 
@@ -135,6 +134,11 @@ module "code_analysis_engine" {
   timeout_seconds = var.timeout_seconds
 
   allow_unauthenticated = var.allow_unauthenticated
+
+  env_vars = {
+    ML_MODELS_DIR = "models/trained"
+    GCS_MODEL_URI = "gs://${var.models_bucket_name}/${var.code_analysis_engine_model_gcs_path}"
+  }
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -162,7 +166,6 @@ module "decision_engine" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
-    PORT = "8003"
     HOST = "0.0.0.0"
   }
 }

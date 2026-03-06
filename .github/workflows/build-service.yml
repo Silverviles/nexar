@@ -76,35 +76,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ── Compute image tags ─────────────────────────────────────────────────
-      - name: Compute tags
-        id: tags
-        shell: bash
-        run: |
-          FULL_SHA="${{ github.sha }}"
-          SHORT_SHA=$(echo "${FULL_SHA}" | cut -c1-7)
-
-          TAG_FULL="${{ env.IMAGE }}:${FULL_SHA}"
-          TAG_SHORT="${{ env.IMAGE }}:${SHORT_SHA}"
-          TAG_LATEST="${{ env.IMAGE }}:latest"
-
-          # docker/build-push-action expects a comma-separated or newline-separated list
-          TAGS="${TAG_FULL},${TAG_SHORT},${TAG_LATEST}"
-
-          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
-          echo "tag_full=${TAG_FULL}" >> "$GITHUB_OUTPUT"
-          echo "tag_short=${TAG_SHORT}" >> "$GITHUB_OUTPUT"
-          echo "tag_latest=${TAG_LATEST}" >> "$GITHUB_OUTPUT"
-
-          echo "📦 Tags: ${TAG_FULL}, ${TAG_SHORT}, ${TAG_LATEST}"
-
       # ── Build and push Docker image ────────────────────────────────────────
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: ${{ inputs.service_dir }}
           push: true
-          tags: ${{ steps.tags.outputs.tags }}
+          tags: ${{ env.IMAGE }}:latest
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -118,9 +96,4 @@ jobs:
         run: |
           echo "### ✅ ${{ inputs.service_name }} image pushed to Artifact Registry" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Image:** \`${{ env.IMAGE }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Tags:**" >> "$GITHUB_STEP_SUMMARY"
-          echo "- \`${{ steps.tags.outputs.tag_full }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- \`${{ steps.tags.outputs.tag_short }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- \`${{ steps.tags.outputs.tag_latest }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Image:** \`${{ env.IMAGE }}:latest\`" >> "$GITHUB_STEP_SUMMARY"

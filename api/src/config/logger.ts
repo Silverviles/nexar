@@ -14,8 +14,20 @@ export const logger = winston.createLogger({
         new winston.transports.Console({
             format: winston.format.combine(
                 winston.format.colorize(),
-                winston.format.printf(({ level, message, timestamp, service }) => {
-                    return `${timestamp} [${service}] ${level}: ${message}`;
+                winston.format.printf(({ level, message, timestamp, service, error, ...meta }) => {
+                    let log = `${timestamp} [${service}] ${level}: ${message}`;
+                    if (error instanceof Error) {
+                        log += `\n  ${error.stack || error.message}`;
+                    } else if (error) {
+                        const errMsg = typeof error === 'object' && error !== null
+                            ? (error as Record<string, unknown>).message || JSON.stringify(error)
+                            : String(error);
+                        log += `\n  ${errMsg}`;
+                    }
+                    if (Object.keys(meta).length > 0) {
+                        log += ` ${JSON.stringify(meta)}`;
+                    }
+                    return log;
                 })
             )
         })

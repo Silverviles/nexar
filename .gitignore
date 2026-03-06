@@ -13,3 +13,4 @@ terraform/terraform.tfvars
 terraform/*.auto.tfvars
 terraform/crash.log
 terraform/.terraform.tfstate.lock.info
+.DS_Store

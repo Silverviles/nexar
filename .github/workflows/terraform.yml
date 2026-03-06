@@ -12,7 +12,7 @@
 #   GCP_REGION            — GCP region (e.g. us-central1)
 #   WIF_PROVIDER          — Workload Identity Federation provider resource name
 #   WIF_SERVICE_ACCOUNT   — Deploy service account email
-#   GCS_MODELS_BUCKET     — GCS bucket name for ML models (without gs:// prefix)
+#   GCS_MODELS_BUCKET     — GCS models bucket (may include gs:// prefix — stripped automatically)
 #   TF_VAR_GITHUB_ORG     — GitHub org/owner (case-sensitive)
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "~> 1.5"
-          terraform_wrapper: true       # Enables stdout capture for plan output
+          terraform_wrapper: false      # Wrapper causes false exit code 1 issues
 
       # ── Terraform Init ─────────────────────────────────────────────────────
       - name: Terraform Init
@@ -102,17 +102,34 @@ jobs:
         id: validate
         run: terraform validate -no-color
 
+      # ── Strip gs:// prefix from models bucket if present ───────────────────
+      - name: Resolve models bucket name
+        id: bucket
+        run: |
+          RAW="${{ secrets.GCS_MODELS_BUCKET }}"
+          # Strip gs:// prefix if present so Terraform gets a plain bucket name
+          BUCKET_NAME="${RAW#gs://}"
+          # Also strip any trailing slash
+          BUCKET_NAME="${BUCKET_NAME%/}"
+          echo "name=${BUCKET_NAME}" >> "$GITHUB_OUTPUT"
+          echo "📦 Models bucket name: ${BUCKET_NAME}"
+
       # ── Terraform Plan ─────────────────────────────────────────────────────
       - name: Terraform Plan
         id: plan
         run: |
           terraform plan \
             -no-color \
+            -input=false \
             -out=tfplan \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="region=${{ secrets.GCP_REGION }}" \
             -var="github_org=${{ secrets.TF_VAR_GITHUB_ORG }}" \
-            -var="models_bucket_name=${{ secrets.GCS_MODELS_BUCKET }}"
+            -var="models_bucket_name=${{ steps.bucket.outputs.name }}" \
+            2>&1 | tee /tmp/plan_output.txt
+          PLAN_EXIT=${PIPESTATUS[0]}
+          echo "exitcode=${PLAN_EXIT}" >> "$GITHUB_OUTPUT"
+          exit ${PLAN_EXIT}
         continue-on-error: true
 
       # ── Comment Plan on Pull Request ───────────────────────────────────────
@@ -122,31 +139,37 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const planOutput = `${{ steps.plan.outputs.stdout }}`;
-            const planError = `${{ steps.plan.outputs.stderr }}`;
-            const planExitCode = '${{ steps.plan.outcome }}';
+            const fs = require('fs');
+            let planOutput = '';
+            try {
+              planOutput = fs.readFileSync('/tmp/plan_output.txt', 'utf8');
+            } catch (e) {
+              planOutput = 'Could not read plan output file.';
+            }
+            const planExitCode = '${{ steps.plan.outputs.exitcode }}';
+            const planOutcome = '${{ steps.plan.outcome }}';
 
             const maxLength = 60000;
             const truncatedPlan = planOutput.length > maxLength
               ? planOutput.substring(0, maxLength) + '\n\n... (truncated — see Actions log for full output)'
               : planOutput;
 
-            const body = `### Terraform Plan 📖
+            const icon = planOutcome === 'success' ? '✅' : '❌';
 
-            **Result:** \`${planExitCode}\`
+            const body = `### Terraform Plan ${icon}
 
-            <details>
-            <summary>Show Plan Output</summary>
+**Result:** \`${planOutcome}\` (exit code \`${planExitCode}\`)
 
-            \`\`\`hcl
-            ${truncatedPlan}
-            \`\`\`
+<details>
+<summary>Show Plan Output</summary>
 
-            </details>
+\`\`\`
+${truncatedPlan}
+\`\`\`
 
-            ${planError ? `<details><summary>Errors</summary>\n\n\`\`\`\n${planError}\n\`\`\`\n\n</details>` : ''}
+</details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
+*Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             // Find existing bot comment
             const { data: comments } = await github.rest.issues.listComments({
@@ -178,7 +201,9 @@ jobs:
       # ── Fail if Plan Failed ────────────────────────────────────────────────
       - name: Fail on plan error
         if: steps.plan.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo "❌ Terraform plan failed. Check the plan output above for details."
+          exit 1
 
       # ── Determine if Apply Should Run ──────────────────────────────────────
       - name: Determine apply eligibility
@@ -210,7 +235,8 @@ jobs:
           echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
           echo "| Init | \`${{ steps.init.outcome }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Validate | \`${{ steps.validate.outcome }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Plan | \`${{ steps.plan.outcome }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Plan | \`${{ steps.plan.outcome }}\` (exit code: \`${{ steps.plan.outputs.exitcode }}\`) |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Apply Eligible | \`${{ steps.should-apply.outputs.apply }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Models Bucket | \`${{ steps.bucket.outputs.name }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**Event:** \`${{ github.event_name }}\` | **Ref:** \`${{ github.ref }}\` | **Actor:** @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"

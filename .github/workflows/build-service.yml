@@ -41,8 +41,6 @@ on:
         required: true
       WIF_SERVICE_ACCOUNT:
         required: true
-      GOOGLE_CLIENT_ID:
-        required: false
 
 jobs:
   build-and-push:
@@ -100,21 +98,6 @@ jobs:
         run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       # ── Build and push Docker image ────────────────────────────────────────
-      - name: Prepare build args
-        id: build-args
-        shell: bash
-        run: |
-          ARGS="${{ inputs.build_args }}"
-          if [[ -n "${{ secrets.GOOGLE_CLIENT_ID }}" ]]; then
-            ARGS="${ARGS:+${ARGS}$'\n'}VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
-          fi
-          # Use a heredoc to safely pass multi-line args via GITHUB_OUTPUT
-          {
-            echo "args<<ARGS_EOF"
-            echo "$ARGS"
-            echo "ARGS_EOF"
-          } >> "$GITHUB_OUTPUT"
-
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -123,7 +106,9 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ steps.vars.outputs.short_sha }}
-          build-args: ${{ steps.build-args.outputs.args }}
+          build-args: |
+            ${{ inputs.build_args }}
+            VITE_GOOGLE_CLIENT_ID=621270570060-bd87cpj1ka941lo79kbbhlrqipssl2o5.apps.googleusercontent.com
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}

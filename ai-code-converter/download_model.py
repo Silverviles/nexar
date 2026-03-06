@@ -12,6 +12,7 @@ On Cloud Run, authentication happens automatically via the default service accou
 Locally, set GOOGLE_APPLICATION_CREDENTIALS or run `gcloud auth application-default login`.
 """
 
+import json
 import logging
 import os
 import sys
@@ -84,6 +85,15 @@ def download_model_from_gcs(gcs_uri: str, local_dir: str) -> None:
 
     logger.info("Downloaded %d file(s) to %s", downloaded, local_dir)
 
+    # List all downloaded files for diagnostics
+    logger.info("Files in %s:", local_dir)
+    for root, _dirs, files in os.walk(local_dir):
+        for fname in sorted(files):
+            fpath = os.path.join(root, fname)
+            size = os.path.getsize(fpath)
+            rel = os.path.relpath(fpath, local_dir)
+            logger.info("  • %s (%s bytes)", rel, size)
+
 
 def main() -> None:
     gcs_uri = os.getenv("GCS_MODEL_URI", "")
@@ -108,7 +118,53 @@ def main() -> None:
         logger.exception("Failed to download model from GCS")
         sys.exit(1)
 
+    # Patch _name_or_path in config files so Hugging Face doesn't try to
+    # treat the original save path (e.g. a Windows path) as a Hub repo ID
+    # when it can't find a file locally.
+    _patch_name_or_path(model_path)
+
     logger.info("Model download complete.")
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+_CONFIG_FILES = ("config.json", "tokenizer_config.json", "generation_config.json")
+
+
+def _patch_name_or_path(model_dir: str) -> None:
+    """
+    Rewrite ``_name_or_path`` in Hugging Face JSON config files so that it
+    points to the local *model_dir* instead of whatever path was used when
+    the model was originally saved (often a Windows-local path like
+    ``C:/Users/…``).
+
+    Without this fix, ``from_pretrained(model_dir)`` may fall back to
+    downloading missing files from the Hub using ``_name_or_path`` as a repo
+    ID, which fails with ``HFValidationError`` when that value is a local
+    filesystem path rather than a valid Hub identifier.
+    """
+    for cfg_name in _CONFIG_FILES:
+        cfg_path = os.path.join(model_dir, cfg_name)
+        if not os.path.isfile(cfg_path):
+            continue
+
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+
+            old_value = data.get("_name_or_path")
+            if old_value and old_value != model_dir:
+                logger.info(
+                    "Patching %s: _name_or_path %r → %r",
+                    cfg_name,
+                    old_value,
+                    model_dir,
+                )
+                data["_name_or_path"] = model_dir
+                with open(cfg_path, "w", encoding="utf-8") as fh:
+                    json.dump(data, fh, indent=2, ensure_ascii=False)
+        except Exception:
+            logger.warning("Could not patch %s — skipping", cfg_name, exc_info=True)
 
 
 if __name__ == "__main__":

@@ -26,8 +26,8 @@ class SearchAlgorithmRequest(BaseModel):
 
 
 MODEL_PATH = os.getenv("MODEL_PATH", "/app/models")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-model = T5ForConditionalGeneration.from_pretrained(MODEL_PATH)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+model = T5ForConditionalGeneration.from_pretrained(MODEL_PATH, local_files_only=True)
 model.eval()
 
 

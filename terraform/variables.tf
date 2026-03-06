@@ -156,7 +156,13 @@ variable "models_bucket_location" {
 variable "ai_code_converter_model_gcs_path" {
   description = "GCS path (relative to the models bucket) for the AI Code Converter model folder (e.g. ai-code-converter/codet5-quantum-best-version2)"
   type        = string
-  default     = "ai-code-converter/codet5-quantum-best-version2"
+  default     = "ai-code-converter/version1"
+}
+
+variable "code_analysis_engine_model_gcs_path" {
+  description = "GCS path (relative to the models bucket) for the Code Analysis Engine model folder (e.g. code-analysis-engine/trained)"
+  type        = string
+  default     = "code-analysis-engine/version1"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

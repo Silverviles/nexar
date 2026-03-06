@@ -134,6 +134,11 @@ module "code_analysis_engine" {
   timeout_seconds = var.timeout_seconds
 
   allow_unauthenticated = var.allow_unauthenticated
+
+  env_vars = {
+    ML_MODELS_DIR = "models/trained"
+    GCS_MODEL_URI = "gs://${var.models_bucket_name}/${var.code_analysis_engine_model_gcs_path}"
+  }
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

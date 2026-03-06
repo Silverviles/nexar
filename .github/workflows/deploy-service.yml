@@ -1,40 +1,79 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Deploy Single Service to Cloud Run — Reusable Workflow
+#
+# Called by deploy-cloudrun.yml for each service that needs to be deployed.
+# Always checks out from the specified ref (defaults to main) to ensure
+# deployments are consistent with the main branch.
+# ──────────────────────────────────────────────────────────────────────────────
+
 name: Deploy Single Service to Cloud Run
 
 on:
   workflow_call:
     inputs:
       service_name:
+        description: "Service name (used as Cloud Run service suffix and image name)"
         required: true
         type: string
       service_dir:
+        description: "Directory containing the service source and Dockerfile"
         required: true
         type: string
       port:
+        description: "Port the container listens on"
         required: true
         type: string
       needs_models:
+        description: "Whether to download ML models from GCS before building"
         required: true
         type: boolean
       models_gcs_path:
+        description: "GCS path (relative to bucket) to download models from"
         required: false
         type: string
         default: ""
       models_dest_path:
+        description: "Local path (relative to service_dir) to place downloaded models"
         required: false
         type: string
         default: ""
+      ref:
+        description: "Git ref to checkout (branch, tag, or SHA). Defaults to main."
+        required: false
+        type: string
+        default: "main"
 
 jobs:
   build-and-deploy:
+    name: "Deploy ${{ inputs.service_name }}"
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Checkout code
+      # ── Checkout code from the specified ref (always main in production) ───
+      - name: Checkout code (${{ inputs.ref }})
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
+      - name: Log deployment info
+        shell: bash
+        run: |
+          echo "## 🚀 Deploying ${{ inputs.service_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Key | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Service | \`${{ inputs.service_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Directory | \`${{ inputs.service_dir }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Port | \`${{ inputs.port }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Ref | \`${{ inputs.ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Needs Models | \`${{ inputs.needs_models }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit SHA | \`$(git rev-parse HEAD)\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+      # ── Authenticate to GCP via Workload Identity Federation ───────────────
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
@@ -45,44 +84,87 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for GAR
+      - name: Configure Docker for Artifact Registry
         run: |
           gcloud auth configure-docker \
             "${{ secrets.GCP_REGION }}-docker.pkg.dev" --quiet
 
+      # ── Download ML models from GCS (only for services that need them) ─────
       - name: Download ML models from GCS
         if: inputs.needs_models
         run: |
-          echo "📦 Downloading models from ${{ secrets.GCS_MODELS_BUCKET }}/${{ inputs.models_gcs_path }} ..."
+          echo "📦 Downloading models..."
+          echo "   Source: ${{ secrets.GCS_MODELS_BUCKET }}/${{ inputs.models_gcs_path }}"
+          echo "   Dest:   ${{ inputs.service_dir }}/${{ inputs.models_dest_path }}"
+
           mkdir -p "${{ inputs.service_dir }}/${{ inputs.models_dest_path }}"
           gsutil -m cp -r \
             "${{ secrets.GCS_MODELS_BUCKET }}/${{ inputs.models_gcs_path }}/*" \
             "${{ inputs.service_dir }}/${{ inputs.models_dest_path }}/"
+
+          echo ""
           echo "✅ Models downloaded:"
           ls -lhR "${{ inputs.service_dir }}/${{ inputs.models_dest_path }}/"
 
+      # ── Build and push Docker image ────────────────────────────────────────
       - name: Build and push Docker image
+        id: build
         run: |
           IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nexar/${{ inputs.service_name }}"
-          TAG="${IMAGE}:${{ github.sha }}"
+          # Use the actual HEAD commit SHA of the checked-out ref for the tag
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          FULL_SHA=$(git rev-parse HEAD)
+          TAG="${IMAGE}:${FULL_SHA}"
+          TAG_SHORT="${IMAGE}:${COMMIT_SHA}"
           TAG_LATEST="${IMAGE}:latest"
 
-          echo "🐳 Building ${TAG} ..."
+          echo "🐳 Building Docker image..."
+          echo "   Image:  ${IMAGE}"
+          echo "   Tags:   ${FULL_SHA}, ${COMMIT_SHA}, latest"
+          echo ""
+
           docker build \
             -t "${TAG}" \
+            -t "${TAG_SHORT}" \
             -t "${TAG_LATEST}" \
+            --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            --label "org.opencontainers.image.revision=${FULL_SHA}" \
+            --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             "${{ inputs.service_dir }}"
 
-          echo "📤 Pushing images ..."
+          echo ""
+          echo "📤 Pushing images..."
           docker push "${TAG}"
+          docker push "${TAG_SHORT}"
           docker push "${TAG_LATEST}"
 
+          echo "✅ Image pushed successfully"
+
+          # Export image URI for deploy step
+          echo "image=${TAG}" >> "$GITHUB_OUTPUT"
+
+      # ── Deploy to Cloud Run ────────────────────────────────────────────────
       - name: Deploy to Cloud Run
+        id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: nexar-${{ inputs.service_name }}
           region: ${{ secrets.GCP_REGION }}
-          image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/nexar/${{ inputs.service_name }}:${{ github.sha }}
+          image: ${{ steps.build.outputs.image }}
           flags: |
             --port=${{ inputs.port }}
             --allow-unauthenticated
+
+      - name: Log deployment result
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.deploy.outcome }}" == "success" ]]; then
+            echo "### ✅ ${{ inputs.service_name }} deployed successfully" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "**URL:** ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ❌ ${{ inputs.service_name }} deployment failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Check the logs above for details." >> "$GITHUB_STEP_SUMMARY"
+          fi

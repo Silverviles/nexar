@@ -57,6 +57,7 @@ module "api" {
     CODE_ANALYSIS_ENGINE_URL = local.service_urls["code-analysis-engine"]
     HARDWARE_LAYER_URL       = local.service_urls["hardware-abstraction-layer"]
     FRONTEND_URL             = local.service_urls["frontend"]
+    FRONT_END_ORIGINS        = local.service_urls["frontend"]
     GOOGLE_CLIENT_ID         = var.google_oauth_client_id
     GOOGLE_CLIENT_SECRET     = var.google_oauth_client_secret
   }

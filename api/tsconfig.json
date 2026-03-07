@@ -40,7 +40,8 @@
       "@/*": ["./*"],
       "@config/*": ["./config/*"],
       "@middleware/*": ["./middleware/*"],
-      "@routes/*": ["./routes/*"]
+      "@routes/*": ["./routes/*"],
+      "@services/*": ["./services/*"]
     }
   }
 }

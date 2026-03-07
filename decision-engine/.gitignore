@@ -5,3 +5,4 @@
 # Build
 *.iml
 .env
+__pycache__

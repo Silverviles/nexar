@@ -7,10 +7,16 @@ variable "project_id" {
   type        = string
 }
 
+variable "project_name" {
+  description = "Project name used as a prefix for Cloud Run service names and URLs (e.g. 'nexar')"
+  type        = string
+  default     = "nexar"
+}
+
 variable "region" {
   description = "GCP region for all resources"
   type        = string
-  default     = "us-central1"
+  default     = "asia-south1"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -183,11 +189,6 @@ variable "google_oauth_client_secret" {
 # ──────────────────────────────────────────────────────────────────────────────
 # Frontend
 # ──────────────────────────────────────────────────────────────────────────────
-
-variable "frontend_url" {
-  description = "Deployed frontend Cloud Run URL (used by the API for OAuth redirects, email verification links, etc.)"
-  type        = string
-}
 
 variable "frontend_api_url_override" {
   description = "Override the API_URL env var on the frontend. If empty, it is auto-wired to the deployed nexar-api Cloud Run URL."

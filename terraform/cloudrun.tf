@@ -12,12 +12,19 @@ locals {
   # Base image URI prefix
   image_prefix = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_repository}"
 
-  # Frontend API_URL: use override if set, otherwise auto-wire to the deployed API service URL
+  # Frontend API_URL: use override if set, otherwise construct from project number + region
   frontend_api_url = (
     var.frontend_api_url_override != ""
     ? var.frontend_api_url_override
-    : module.api.uri
+    : local.service_urls["api"]
   )
+
+  # Deterministic Cloud Run URLs (constructed from service name + project number + region)
+  # Pattern: https://{project_name}-{service}-{project-number}.{region}.run.app
+  service_urls = {
+    for svc in ["api", "frontend", "ai-code-converter", "code-analysis-engine", "decision-engine", "hardware-abstraction-layer"] :
+    svc => "https://${var.project_name}-${svc}-${local.project_number}.${var.region}.run.app"
+  }
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -30,7 +37,7 @@ locals {
 module "api" {
   source = "./modules/cloudrun-service"
 
-  service_name   = "nexar-api"
+  service_name   = "${var.project_name}-api"
   location       = var.region
   image          = "${local.image_prefix}/api:${local.image_tag_for["api"]}"
   container_port = 3000
@@ -45,11 +52,11 @@ module "api" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
-    DECISION_ENGINE_URL      = module.decision_engine.uri
-    AI_CODE_CONVERTER_URL    = module.ai_code_converter.uri
-    CODE_ANALYSIS_ENGINE_URL = module.code_analysis_engine.uri
-    HARDWARE_LAYER_URL       = module.hardware_abstraction_layer.uri
-    FRONTEND_URL             = module.frontend.uri
+    DECISION_ENGINE_URL      = local.service_urls["decision-engine"]
+    AI_CODE_CONVERTER_URL    = local.service_urls["ai-code-converter"]
+    CODE_ANALYSIS_ENGINE_URL = local.service_urls["code-analysis-engine"]
+    HARDWARE_LAYER_URL       = local.service_urls["hardware-abstraction-layer"]
+    FRONTEND_URL             = local.service_urls["frontend"]
     GOOGLE_CLIENT_ID         = var.google_oauth_client_id
     GOOGLE_CLIENT_SECRET     = var.google_oauth_client_secret
   }
@@ -65,7 +72,7 @@ module "api" {
 module "frontend" {
   source = "./modules/cloudrun-service"
 
-  service_name   = "nexar-frontend"
+  service_name   = "${var.project_name}-frontend"
   location       = var.region
   image          = "${local.image_prefix}/frontend:${local.image_tag_for["frontend"]}"
   container_port = 8080
@@ -79,12 +86,13 @@ module "frontend" {
 
   allow_unauthenticated = var.allow_unauthenticated
 
-  # NOTE: GOOGLE_REDIRECT_URI uses var.frontend_url because a Cloud Run service
-  # cannot reference its own URI in its own env_vars (circular dependency).
+  # NOTE: GOOGLE_REDIRECT_URI uses local.service_urls (constructed from project
+  # number + region) because a Cloud Run service cannot reference its own URI
+  # in its own env_vars (circular dependency).
   env_vars = {
     API_URL             = local.frontend_api_url
     GOOGLE_CLIENT_ID    = var.google_oauth_client_id
-    GOOGLE_REDIRECT_URI = "${var.frontend_url}/auth/google/callback"
+    GOOGLE_REDIRECT_URI = "${local.service_urls["frontend"]}/auth/google/callback"
   }
 }
 
@@ -98,7 +106,7 @@ module "frontend" {
 module "ai_code_converter" {
   source = "./modules/cloudrun-service"
 
-  service_name   = "nexar-ai-code-converter"
+  service_name   = "${var.project_name}-ai-code-converter"
   location       = var.region
   image          = "${local.image_prefix}/ai-code-converter:${local.image_tag_for["ai-code-converter"]}"
   container_port = 8001
@@ -128,7 +136,7 @@ module "ai_code_converter" {
 module "code_analysis_engine" {
   source = "./modules/cloudrun-service"
 
-  service_name   = "nexar-code-analysis-engine"
+  service_name   = "${var.project_name}-code-analysis-engine"
   location       = var.region
   image          = "${local.image_prefix}/code-analysis-engine:${local.image_tag_for["code-analysis-engine"]}"
   container_port = 8002
@@ -158,7 +166,7 @@ module "code_analysis_engine" {
 module "decision_engine" {
   source = "./modules/cloudrun-service"
 
-  service_name   = "nexar-decision-engine"
+  service_name   = "${var.project_name}-decision-engine"
   location       = var.region
   image          = "${local.image_prefix}/decision-engine:${local.image_tag_for["decision-engine"]}"
   container_port = 8003
@@ -187,7 +195,7 @@ module "decision_engine" {
 module "hardware_abstraction_layer" {
   source = "./modules/cloudrun-service"
 
-  service_name   = "nexar-hardware-abstraction-layer"
+  service_name   = "${var.project_name}-hardware-abstraction-layer"
   location       = var.region
   image          = "${local.image_prefix}/hardware-abstraction-layer:${local.image_tag_for["hardware-abstraction-layer"]}"
   container_port = 8004

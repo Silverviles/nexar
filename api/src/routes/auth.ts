@@ -30,6 +30,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 const GOOGLE_REDIRECT_URI = `${FRONTEND_URL}/auth/google/callback`;
 
+console.log("Frontend URL: ", FRONTEND_URL);
 console.log("Client ID:", GOOGLE_CLIENT_ID);
 console.log("Client Secret:", GOOGLE_CLIENT_SECRET);
 console.log("Redirect URI:", GOOGLE_REDIRECT_URI);

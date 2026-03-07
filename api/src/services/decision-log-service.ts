@@ -167,40 +167,41 @@ export async function getDecisionHistory(
 
   const startTime = Date.now();
 
-  // Build query
-  let query = db
+  // Query by userId only (avoids composite index requirement)
+  const snapshot = await db
     .collection(DECISION_LOGS_COLLECTION)
     .where("userId", "==", userId)
-    .orderBy("createdAt", "desc");
-
-  // Apply filters
-  if (filters?.hardware) {
-    query = query.where(
-      "prediction.recommended_hardware",
-      "==",
-      filters.hardware,
-    );
-  }
-  if (filters?.status) {
-    query = query.where("status", "==", filters.status);
-  }
-
-  // Get total count (separate query for count)
-  const countSnapshot = await db
-    .collection(DECISION_LOGS_COLLECTION)
-    .where("userId", "==", userId)
-    .count()
     .get();
-  const total = countSnapshot.data().count;
 
-  // Apply pagination
-  const snapshot = await query.offset(offset).limit(limit).get();
-
-  const durationMs = Date.now() - startTime;
-  const decisions = snapshot.docs.map((doc) => ({
+  // Convert to typed array
+  let decisions = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as DecisionLogDocument[];
+
+  // Apply filters client-side
+  if (filters?.hardware) {
+    decisions = decisions.filter(
+      (d) => d.prediction.recommended_hardware === filters.hardware,
+    );
+  }
+  if (filters?.status) {
+    decisions = decisions.filter((d) => d.status === filters.status);
+  }
+
+  const total = decisions.length;
+
+  // Sort by createdAt descending (client-side)
+  decisions.sort((a, b) => {
+    const aTime = a.createdAt?.toDate?.() ? a.createdAt.toDate().getTime() : 0;
+    const bTime = b.createdAt?.toDate?.() ? b.createdAt.toDate().getTime() : 0;
+    return bTime - aTime;
+  });
+
+  // Apply pagination
+  decisions = decisions.slice(offset, offset + limit);
+
+  const durationMs = Date.now() - startTime;
 
   logger.debug("Decision history fetched", {
     userId,

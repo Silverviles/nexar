@@ -182,7 +182,7 @@ const forwardRequest = async (req: Request, res: Response) => {
 router.post("/predict", async (req: Request, res: Response) => {
   const requestId = req.requestId;
   const targetUrl = `${DECISION_ENGINE_URL}/api/v1/decision-engine/predict`;
-  const userId = (req as any).user?.id || "anonymous";
+  const userId = (req as any).user?.userId || "anonymous";
   const budgetLimitUsd = req.query.budget_limit_usd
     ? parseFloat(req.query.budget_limit_usd as string)
     : undefined;
@@ -271,7 +271,7 @@ router.post("/predict", async (req: Request, res: Response) => {
 // ─────────────────────────────────────────────
 
 router.get("/history", async (req: Request, res: Response) => {
-  const userId = (req as any).user?.id;
+  const userId = (req as any).user?.userId;
   if (!userId) {
     return res.status(401).json({ error: "Authentication required" });
   }
@@ -331,7 +331,7 @@ router.get("/history", async (req: Request, res: Response) => {
 // ─────────────────────────────────────────────
 
 router.get("/history/:id", async (req: Request, res: Response) => {
-  const userId = (req as any).user?.id;
+  const userId = (req as any).user?.userId;
   if (!userId) {
     return res.status(401).json({ error: "Authentication required" });
   }
@@ -371,7 +371,7 @@ router.get("/history/:id", async (req: Request, res: Response) => {
 // ─────────────────────────────────────────────
 
 router.post("/feedback/:id", async (req: Request, res: Response) => {
-  const userId = (req as any).user?.id;
+  const userId = (req as any).user?.userId;
   if (!userId) {
     return res.status(401).json({ error: "Authentication required" });
   }
@@ -433,7 +433,7 @@ router.post("/feedback/:id", async (req: Request, res: Response) => {
 // ─────────────────────────────────────────────
 
 router.get("/accuracy", async (req: Request, res: Response) => {
-  const userId = (req as any).user?.id;
+  const userId = (req as any).user?.userId;
   if (!userId) {
     return res.status(401).json({ error: "Authentication required" });
   }

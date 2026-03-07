@@ -68,7 +68,7 @@ logger.info("Mounting route group: /api/v1/hardware (protected)");
 app.use('/api/v1/hardware', authMiddleware, hardwareRoutes);
 
 logger.info("Mounting route group: /api (ai-code-converter, protected)");
-app.use('/api', authMiddleware, aiCodeConverterRoutes);
+app.use('/api/v1/ai-code-converter', authMiddleware, aiCodeConverterRoutes);
 
 // ---------------------------------------------------------------------------
 // Root endpoint

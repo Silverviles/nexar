@@ -52,6 +52,7 @@ module "api" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
+    LOG_LEVEL                = "debug"
     DECISION_ENGINE_URL      = local.service_urls["decision-engine"]
     AI_CODE_CONVERTER_URL    = local.service_urls["ai-code-converter"]
     CODE_ANALYSIS_ENGINE_URL = local.service_urls["code-analysis-engine"]

@@ -2,9 +2,12 @@
 Accurate Space Complexity Analysis through Memory Allocation Tracking
 """
 import ast
+import logging
 from typing import Dict, Set, List, Optional, Tuple
 from dataclasses import dataclass
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class Variable:
@@ -48,8 +51,11 @@ class AccurateSpaceComplexityAnalyzer:
         try:
             tree = ast.parse(code)
             self._analyze_tree(tree)
-            return self._calculate_total_complexity()
+            result = self._calculate_total_complexity()
+            logger.debug("Space complexity analysis result: %s", result)
+            return result
         except SyntaxError:
+            logger.warning("SyntaxError during space complexity analysis, defaulting to O(1)")
             return "O(1)"  # Default fallback
     
     def _analyze_tree(self, tree: ast.AST):
@@ -447,6 +453,6 @@ def binary_search(arr, x, low, high):
     for i, code in enumerate(test_cases, 1):
         analyzer = AccurateSpaceComplexityAnalyzer()  # Fresh instance
         result = analyzer.analyze(code)
-        print(f"\nTest Case {i}:")
-        print(f"Space Complexity: {result}")
-        print(f"Details: {analyzer.get_detailed_report()}")
+        logger.info("Test Case %d:", i)
+        logger.info("Space Complexity: %s", result)
+        logger.info("Details: %s", analyzer.get_detailed_report())

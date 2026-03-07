@@ -2,10 +2,13 @@
 Quantum State Simulator for Accurate Superposition and Entanglement Scores
 Uses state vector simulation to track actual quantum state evolution
 """
+import logging
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 from models.unified_ast import UnifiedAST, QuantumGateNode, GateType
 from scipy.stats import entropy
+
+logger = logging.getLogger(__name__)
 
 class QuantumStateSimulator:
     """
@@ -43,6 +46,10 @@ class QuantumStateSimulator:
         # Check if circuit is too large to simulate
         if self.num_qubits > self.max_qubits:
             # Fall back to heuristic for large circuits
+            logger.warning(
+                "Circuit has %d qubits (max=%d), falling back to heuristic analysis",
+                self.num_qubits, self.max_qubits,
+            )
             return self._heuristic_analysis(unified_ast)
         
         # Initialize state to |00...0⟩
@@ -63,6 +70,11 @@ class QuantumStateSimulator:
             self._normalize_entropy(e) for e in entropy_history
         )
         entanglement_score = max(entanglement_history)
+        
+        logger.debug(
+            "Simulation complete: %d qubits, %d gates — superposition=%.3f, entanglement=%.3f",
+            self.num_qubits, len(unified_ast.gates), superposition_score, entanglement_score,
+        )
         
         return {
             'superposition_score': round(superposition_score, 3),
@@ -128,6 +140,9 @@ class QuantumStateSimulator:
         elif gate_type == GateType.TOFFOLI:
             if len(controls) >= 2 and targets:
                 self._apply_toffoli(controls[0], controls[1], targets[0])
+        
+        else:
+            logger.debug("Unrecognized gate type %s, skipping", gate_type)
     
     # Single-qubit gate implementations
     
@@ -399,8 +414,8 @@ if __name__ == "__main__":
     simulator = QuantumStateSimulator()
     result = simulator.simulate(bell_ast)
     
-    print("Bell State Analysis:")
-    print(f"Superposition Score: {result['superposition_score']}")
-    print(f"Entanglement Score: {result['entanglement_score']}")
-    print(f"State Entropy: {result['state_entropy']}")
-    print(f"Expected: High superposition and entanglement (~1.0)")
+    logger.info("Bell State Analysis:")
+    logger.info("Superposition Score: %s", result['superposition_score'])
+    logger.info("Entanglement Score: %s", result['entanglement_score'])
+    logger.info("State Entropy: %s", result['state_entropy'])
+    logger.info("Expected: High superposition and entanglement (~1.0)")

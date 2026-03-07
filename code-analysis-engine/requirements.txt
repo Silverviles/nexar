@@ -1,33 +1,34 @@
 # FastAPI & Web
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-pydantic==1.10.14
-python-multipart==0.0.6
+pydantic==2.5.0
+python-multipart
 
 # Parsing & AST
-tree-sitter==0.20.4
-pygments==2.17.2
-astor==0.8.1
-radon==6.0.1  # For cyclomatic complexity
+tree-sitter
+pygments
+astor
+radon
 
 # Quantum Libraries
-matplotlib==3.8.0
-qiskit==0.45.1
-cirq==1.3.0
+matplotlib
+qiskit
+cirq
 #pyquil==4.1.1
-pennylane==0.33.1
+pennylane
 
 # Data Processing
-numpy==1.26.2
+numpy
 networkx  # For control flow graphs
 
 # Testing
-pytest==7.4.3
+pytest
 
 # ML
-pandas>=1.3.0
-scikit-learn>=1.0.0
-joblib>=1.1.0
-seaborn>=0.11.0
-scipy>=1.7.0
+pandas
+scikit-learn
+joblib
+seaborn
+scipy
 google-cloud-storage
+google-cloud-logging

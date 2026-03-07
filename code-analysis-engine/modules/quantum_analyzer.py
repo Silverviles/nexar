@@ -2,12 +2,15 @@
 Quantum Complexity Analyzer
 Calculates quantum-specific metrics
 """
+import logging
 import math
 from typing import Dict, Any
 from models.unified_ast import UnifiedAST, GateType
 from models.analysis_result import QuantumComplexity
 from modules.accurate_circuit_depth import AccurateCircuitDepthCalculator
 from modules.quantum_state_simulator import QuantumStateSimulator
+
+logger = logging.getLogger(__name__)
 
 class QuantumAnalyzer:
     """Analyzes quantum circuit complexity"""
@@ -63,6 +66,14 @@ class QuantumAnalyzer:
         # Runtime estimation (simplified)
         estimated_runtime = self.estimate_runtime(unified_ast)
         sim_results = self.simulator.simulate(unified_ast)
+        
+        logger.info(
+            "Quantum analysis: %d qubits, %d gates (single=%d, two=%d), "
+            "depth=%d, volume=%.1f, superposition=%.3f, entanglement=%.3f",
+            unified_ast.total_qubits, total_gates, single_qubit_gates,
+            two_qubit_gates, circuit_depth, quantum_volume,
+            sim_results['superposition_score'], sim_results['entanglement_score'],
+        )
         
         return QuantumComplexity(
             qubits_required=unified_ast.total_qubits,
@@ -185,5 +196,11 @@ class QuantumAnalyzer:
         
         # Convert to MB
         mb_required = bytes_required / (1024 ** 2)
+        
+        if mb_required > 1024:
+            logger.warning(
+                "Large simulation memory requirement: %.1f MB for %d qubits",
+                mb_required, n_qubits,
+            )
         
         return round(mb_required, 3)

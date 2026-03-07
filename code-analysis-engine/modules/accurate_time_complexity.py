@@ -2,8 +2,11 @@
 Accurate Time Complexity Analysis using AST and Data Flow
 """
 import ast
+import logging
 from typing import Dict, Set, Optional
 from models.analysis_result import TimeComplexity
+
+logger = logging.getLogger(__name__)
 
 class AccurateTimeComplexityAnalyzer:
     """Analyzes time complexity through AST traversal and loop bound analysis"""
@@ -19,8 +22,11 @@ class AccurateTimeComplexityAnalyzer:
         try:
             tree = ast.parse(code)
             complexity = self._analyze_node(tree)
-            return self._complexity_to_enum(complexity)
+            result = self._complexity_to_enum(complexity)
+            logger.debug("Time complexity analysis result: %s (raw=%s)", result.value, complexity)
+            return result
         except SyntaxError:
+            logger.warning("SyntaxError during time complexity analysis, returning UNKNOWN")
             return TimeComplexity.UNKNOWN
     
     def _analyze_node(self, node: ast.AST, depth: int = 0) -> str:

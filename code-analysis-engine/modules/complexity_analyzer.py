@@ -3,12 +3,15 @@ Classical Complexity Analyzer
 Calculates cyclomatic complexity, time complexity, space complexity
 """
 import ast
+import logging
 import re
 from typing import Dict, Any
 from radon.complexity import cc_visit
 from models.analysis_result import ClassicalComplexity, TimeComplexity
 from modules.accurate_time_complexity import AccurateTimeComplexityAnalyzer
 from modules.space_complexity_analyzer import AccurateSpaceComplexityAnalyzer
+
+logger = logging.getLogger(__name__)
 
 class ComplexityAnalyzer:
     """Analyzes classical code complexity"""
@@ -32,6 +35,11 @@ class ComplexityAnalyzer:
         cognitive = self.calculate_cognitive_complexity(code)
         time_complexity = self.time_analyzer.analyze(code)
         space_complexity = self.space_analyzer.analyze(code)
+        
+        logger.info(
+            "Classical complexity: cyclomatic=%d, cognitive=%d, time=%s, space=%s",
+            cyclomatic, cognitive, time_complexity.value if hasattr(time_complexity, 'value') else time_complexity, space_complexity,
+        )
         
         return ClassicalComplexity(
             cyclomatic_complexity=cyclomatic,
@@ -58,7 +66,8 @@ class ComplexityAnalyzer:
                 total = sum(item.complexity for item in complexity_results)
                 return total // max(len(complexity_results), 1)
             return 1  # Base complexity
-        except:
+        except Exception:
+            logger.warning("cc_visit failed for cyclomatic complexity, using manual fallback", exc_info=True)
             # Fallback: manual calculation
             return self._calculate_complexity_manual(code)
         
@@ -74,7 +83,8 @@ class ComplexityAnalyzer:
                     cc = 0
                 total += cc
             return max(total, 1)  # ensure at least 1
-        except:
+        except Exception:
+            logger.warning("cc_visit failed for cognitive complexity, defaulting to 1", exc_info=True)
             return 1
     
     def _calculate_complexity_manual(self, code: str) -> int:
@@ -172,7 +182,8 @@ class ComplexityAnalyzer:
                         if isinstance(child, ast.Call):
                             if isinstance(child.func, ast.Name) and child.func.id == func_name:
                                 return True
-        except:
+        except Exception:
+            logger.debug("AST parsing failed for recursion detection, falling back to regex", exc_info=True)
             # Fallback regex
             pattern = r'def\s+(\w+)\s*\([^)]*\):.*\1\s*\('
             return bool(re.search(pattern, code, re.DOTALL))

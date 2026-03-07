@@ -1,28 +1,28 @@
 // Decision Engine Types
 
 export enum ProblemType {
-  FACTORIZATION = 'factorization', // RW Ex: RSA encryption cracking
-  SEARCH = 'search', // RW Ex: 
-  SIMULATION = 'simulation', // RW Ex: Drug molecule analysis
-  OPTIMIZATION = 'optimization', // RW Ex: Supply chain logistics
-  SORTING = 'sorting', // RW Ex: Organizing customer data
-  DYNAMIC_PROGRAMMING = 'dynamic_programming', // RW Ex: Fibonacci sequence
-  MATRIX_OPS = 'matrix_ops', // RW Ex: Image processing
-  RANDOM_CIRCUIT = 'random_circuit' // RW Ex:
+  FACTORIZATION = "factorization", // RW Ex: RSA encryption cracking
+  SEARCH = "search", // RW Ex:
+  SIMULATION = "simulation", // RW Ex: Drug molecule analysis
+  OPTIMIZATION = "optimization", // RW Ex: Supply chain logistics
+  SORTING = "sorting", // RW Ex: Organizing customer data
+  DYNAMIC_PROGRAMMING = "dynamic_programming", // RW Ex: Fibonacci sequence
+  MATRIX_OPS = "matrix_ops", // RW Ex: Image processing
+  RANDOM_CIRCUIT = "random_circuit", // RW Ex:
 }
 
 export enum TimeComplexity {
-  EXPONENTIAL = 'exponential',
-  POLYNOMIAL = 'polynomial',
-  QUADRATIC_SPEEDUP = 'quadratic_speedup',
-  POLYNOMIAL_SPEEDUP = 'polynomial_speedup',
-  NLOGN = 'nlogn'
+  EXPONENTIAL = "exponential",
+  POLYNOMIAL = "polynomial",
+  QUADRATIC_SPEEDUP = "quadratic_speedup",
+  POLYNOMIAL_SPEEDUP = "polynomial_speedup",
+  NLOGN = "nlogn",
 }
 
 export enum HardwareType {
-  QUANTUM = 'Quantum',
-  CLASSICAL = 'Classical',
-  HYBRID = 'Hybrid'
+  QUANTUM = "Quantum",
+  CLASSICAL = "Classical",
+  HYBRID = "Hybrid",
 }
 
 export interface CodeAnalysisInput {
@@ -66,4 +66,61 @@ export interface HealthCheckResponse {
   model_loaded: boolean;
   model_type: string | null;
   model_accuracy: number | null;
+}
+
+// ── Decision History & Feedback Types ──
+
+export interface DecisionLogEntry {
+  id: string;
+  userId: string;
+  input: CodeAnalysisInput;
+  prediction: {
+    recommended_hardware: string;
+    confidence: number;
+    quantum_probability: number;
+    classical_probability: number;
+    rationale: string;
+  };
+  estimated_execution_time_ms: number | null;
+  estimated_cost_usd: number | null;
+  alternatives: Alternative[] | null;
+  budget_limit_usd: number | null;
+  status: "predicted" | "executed" | "failed";
+  feedback: {
+    actual_hardware_used: string | null;
+    actual_execution_time_ms: number | null;
+    actual_cost_usd: number | null;
+    prediction_correct: boolean | null;
+    notes: string | null;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DecisionHistoryResponse {
+  decisions: DecisionLogEntry[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+export interface FeedbackInput {
+  actual_hardware_used: string;
+  actual_execution_time_ms: number;
+  actual_cost_usd: number;
+  notes?: string;
+}
+
+export interface AccuracyStats {
+  totalPredictions: number;
+  totalWithFeedback: number;
+  correctPredictions: number;
+  accuracy: number;
+  hardwareBreakdown: Record<
+    string,
+    { total: number; correct: number; accuracy: number }
+  >;
+  averageCostSavings: number;
+  averageTimeDelta: number;
 }

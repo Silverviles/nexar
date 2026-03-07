@@ -85,28 +85,28 @@ variable "service_resources" {
   }))
   default = {
     api = {
-      cpu    = "1"
-      memory = "512Mi"
+      cpu    = "0.5"
+      memory = "128Mi"
     }
     frontend = {
-      cpu    = "1"
-      memory = "512Mi"
+      cpu    = "0.5"
+      memory = "128Mi"
     }
     ai-code-converter = {
-      cpu    = "2"
-      memory = "4Gi"
+      cpu    = "0.5"
+      memory = "128Mi"
     }
     code-analysis-engine = {
-      cpu    = "1"
-      memory = "1Gi"
+      cpu    = "0.5"
+      memory = "128Mi"
     }
     decision-engine = {
-      cpu    = "1"
-      memory = "512Mi"
+      cpu    = "0.5"
+      memory = "128Mi"
     }
     hardware-abstraction-layer = {
-      cpu    = "1"
-      memory = "512Mi"
+      cpu    = "0.5"
+      memory = "128Mi"
     }
   }
 }

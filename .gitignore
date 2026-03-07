@@ -16,3 +16,8 @@ terraform/*.auto.tfvars
 terraform/crash.log
 terraform/.terraform.tfstate.lock.info
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class

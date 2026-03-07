@@ -103,13 +103,6 @@ def main() -> None:
         logger.info("GCS_MODEL_URI is not set — skipping model download.")
         return
 
-    # If the model directory already has files (e.g. baked into the image), skip
-    if os.path.isdir(model_path) and os.listdir(model_path):
-        logger.info(
-            "Model directory %s already has files — skipping download.", model_path
-        )
-        return
-
     os.makedirs(model_path, exist_ok=True)
 
     try:

@@ -49,7 +49,7 @@ module "api" {
     AI_CODE_CONVERTER_URL    = module.ai_code_converter.uri
     CODE_ANALYSIS_ENGINE_URL = module.code_analysis_engine.uri
     HARDWARE_LAYER_URL       = module.hardware_abstraction_layer.uri
-    FRONTEND_URL             = var.frontend_url
+    FRONTEND_URL             = module.frontend.uri
     GOOGLE_CLIENT_ID         = var.google_oauth_client_id
     GOOGLE_CLIENT_SECRET     = var.google_oauth_client_secret
   }
@@ -79,8 +79,12 @@ module "frontend" {
 
   allow_unauthenticated = var.allow_unauthenticated
 
+  # NOTE: GOOGLE_REDIRECT_URI uses var.frontend_url because a Cloud Run service
+  # cannot reference its own URI in its own env_vars (circular dependency).
   env_vars = {
-    API_URL = local.frontend_api_url
+    API_URL             = local.frontend_api_url
+    GOOGLE_CLIENT_ID    = var.google_oauth_client_id
+    GOOGLE_REDIRECT_URI = "${var.frontend_url}/auth/google/callback"
   }
 }
 

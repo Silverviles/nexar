@@ -9,10 +9,11 @@
 
 # ─── Required ─────────────────────────────────────────────────────────────────
 
-project_id        = "your-gcp-project-id"       # e.g. "nexar-prod-123456"
-github_org        = "YourGitHubOrg"              # Case-sensitive! e.g. "Silverviles"
-github_repo       = "nexar"                      # Repository name
+project_id         = "your-gcp-project-id"       # e.g. "nexar-prod-123456"
+github_org         = "YourGitHubOrg"              # Case-sensitive! e.g. "Silverviles"
+github_repo        = "nexar"                      # Repository name
 models_bucket_name = "your-project-nexar-models" # Globally unique GCS bucket name
+# state_bucket_name = "your-project-terraform-state" # Used in backend.tf
 
 # ─── Region ───────────────────────────────────────────────────────────────────
 
@@ -21,9 +22,14 @@ region                 = "us-central1"           # GCP region for all resources
 
 # ─── Terraform Remote State ──────────────────────────────────────────────────
 #
-# The GCS backend bucket is NOT configured here — it is passed at init time:
+# IMPORTANT: The state bucket MUST be configured in backend.tf before running
+# terraform init. Edit the bucket name in backend.tf or pass it at init time:
 #
-#   terraform init -backend-config="bucket=YOUR_PROJECT_ID-terraform-state"
+#   Option 1 (edit backend.tf):
+#     Edit backend.tf and change: bucket = "your-project-terraform-state"
+#
+#   Option 2 (pass at init time):
+#     terraform init -backend-config="bucket=your-project-terraform-state"
 #
 # Create the state bucket ONCE before first init:
 #

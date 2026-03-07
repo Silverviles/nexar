@@ -18,9 +18,6 @@ COPY . .
 # Make entrypoint script executable
 RUN chmod +x entrypoint.sh
 
-# Default model path inside container
-ENV MODEL_PATH=/app/models
-
 EXPOSE 8001
 
 ENTRYPOINT ["./entrypoint.sh"]

@@ -53,7 +53,7 @@ const cloudFormat = winston.format.printf(
     if (error) {
       if (error instanceof Error) {
         entry.error = { message: error.message, stack: error.stack };
-      } else if (typeof error === "object" && error !== null) {
+      } else if (typeof error === "object") {
         entry.error = error;
       } else {
         entry.error = String(error);

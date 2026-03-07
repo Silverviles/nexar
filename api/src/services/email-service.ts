@@ -6,6 +6,13 @@ const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || 'noreply@nexar.com'
 const BREVO_SENDER_NAME = process.env.BREVO_SENDER_NAME || 'Nexar';
 const API_URL = (process.env.API_URL || 'http://localhost:3000') + '/api/v1/auth';
 
+logger.debug("Email service initialized", {
+  senderEmail: BREVO_SENDER_EMAIL,
+  senderName: BREVO_SENDER_NAME,
+  apiUrl: API_URL,
+  brevoKeyConfigured: !!BREVO_API_KEY,
+});
+
 const brevoClient = axios.create({
   baseURL: 'https://api.brevo.com/v3',
   headers: {
@@ -20,6 +27,13 @@ export async function sendVerificationEmail(
   verificationToken: string
 ): Promise<void> {
   const verificationUrl = `${API_URL}/verify-email?token=${verificationToken}`;
+
+  logger.debug("Preparing verification email", {
+    to,
+    name,
+    verificationUrlLength: verificationUrl.length,
+    sender: `${BREVO_SENDER_NAME} <${BREVO_SENDER_EMAIL}>`,
+  });
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -80,16 +94,60 @@ export async function sendVerificationEmail(
     </html>
   `;
 
+  logger.debug("Sending verification email via Brevo API", {
+    to,
+    subject: "Verify your email - Nexar",
+    htmlContentLength: htmlContent.length,
+  });
+
+  const startTime = Date.now();
+
   try {
-    await brevoClient.post('/smtp/email', {
+    const response = await brevoClient.post('/smtp/email', {
       sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
       to: [{ email: to, name }],
       subject: 'Verify your email - Nexar',
       htmlContent,
     });
-    logger.info(`Verification email sent to ${to}`);
-  } catch (error) {
-    logger.error('Failed to send verification email via Brevo', { error });
+
+    const durationMs = Date.now() - startTime;
+
+    logger.info("Verification email sent successfully", {
+      to,
+      durationMs,
+      brevoStatusCode: response.status,
+    });
+
+    logger.debug("Brevo API response details", {
+      to,
+      statusCode: response.status,
+      durationMs,
+      responseMessageId: response.data?.messageId,
+    });
+  } catch (error: any) {
+    const durationMs = Date.now() - startTime;
+
+    // Extract Brevo-specific error details if available
+    const brevoStatus = error.response?.status;
+    const brevoError = error.response?.data;
+
+    if (brevoStatus) {
+      logger.warn("Brevo API returned error status", {
+        to,
+        brevoStatusCode: brevoStatus,
+        brevoError: typeof brevoError === 'object' ? JSON.stringify(brevoError).substring(0, 500) : String(brevoError),
+        durationMs,
+      });
+    }
+
+    logger.error('Failed to send verification email via Brevo', {
+      to,
+      errorMessage: error.message,
+      errorCode: error.code,
+      brevoStatusCode: brevoStatus,
+      durationMs,
+    });
+
     throw new Error('Failed to send verification email');
   }
 }

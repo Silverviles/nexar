@@ -108,7 +108,6 @@ jobs:
             ${{ env.IMAGE }}:${{ steps.vars.outputs.short_sha }}
           build-args: |
             ${{ inputs.build_args }}
-            VITE_GOOGLE_CLIENT_ID=621270570060-bd87cpj1ka941lo79kbbhlrqipssl2o5.apps.googleusercontent.com
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}

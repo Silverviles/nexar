@@ -66,10 +66,8 @@ export async function getMe(): Promise<AuthUser> {
 }
 
 export function getGoogleOAuthUrl(): string {
-  const clientId =
-    "621270570060-bd87cpj1ka941lo79kbbhlrqipssl2o5.apps.googleusercontent.com";
-  const redirectUri =
-    "https://nexar-frontend-621270570060.asia-south1.run.app/auth/google/callback";
+  const clientId = window.__NEXAR_ENV__?.GOOGLE_CLIENT_ID || "";
+  const redirectUri = window.__NEXAR_ENV__?.GOOGLE_REDIRECT_URI || "";
   const scope = "openid email profile";
 
   const params = new URLSearchParams({

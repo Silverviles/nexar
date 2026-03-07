@@ -1,8 +1,10 @@
 # IDE
 .idea
 .vscode
+.opencode
 .venv/
 .env
+**/nul
 
 # Terraform
 terraform/.terraform/

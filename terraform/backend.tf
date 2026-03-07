@@ -37,10 +37,11 @@
 
 terraform {
   backend "gcs" {
-    # This placeholder is overridden at init time via:
-    #   terraform init -backend-config="bucket=<actual-bucket>"
-    # Set the TF_STATE_BUCKET GitHub secret and the CI workflow will handle it.
-    bucket = ""
+    # IMPORTANT: Change this to your own state bucket name before running terraform init.
+    # Example: bucket = "my-project-terraform-state"
+    #
+    # Or pass at init time: terraform init -backend-config="bucket=your-bucket-name"
+    bucket = "nexar_terraform_state"
     prefix = "nexar/terraform/state"
   }
 }

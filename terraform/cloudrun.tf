@@ -210,4 +210,8 @@ module "hardware_abstraction_layer" {
   timeout_seconds = var.timeout_seconds
 
   allow_unauthenticated = var.allow_unauthenticated
+
+  env_vars = {
+    IBM_QUANTUM_TOKEN = var.ibm_quantum_token
+  }
 }

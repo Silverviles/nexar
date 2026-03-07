@@ -1,6 +1,9 @@
 # accurate_depth.py
+import logging
 from typing import Dict, List, Set, Optional, Any
 from models.unified_ast import UnifiedAST, QuantumGateNode
+
+logger = logging.getLogger(__name__)
 
 class AccurateCircuitDepthCalculator:
     """
@@ -25,6 +28,7 @@ class AccurateCircuitDepthCalculator:
         """
         gates = unified_ast.gates if unified_ast and unified_ast.gates else []
         if not gates:
+            logger.debug("No gates in circuit, depth is 0")
             return 0
 
         # reset internal structures
@@ -40,7 +44,9 @@ class AccurateCircuitDepthCalculator:
         for gate in gates:
             self._calculate_gate_depth(gate)
 
-        return max(self.gate_depth.values()) if self.gate_depth else 0
+        depth = max(self.gate_depth.values()) if self.gate_depth else 0
+        logger.debug("Circuit depth calculated: %d from %d gates", depth, len(gates))
+        return depth
 
     def _build_dependency_graph(self, gates: List[QuantumGateNode]) -> None:
         """
@@ -88,6 +94,7 @@ class AccurateCircuitDepthCalculator:
             dep_gate = self._find_gate_by_id(dep_id)
             if dep_gate is None:
                 # defensive: if gate object not found, treat as depth 0 dependency
+                logger.warning("Dependency gate id=%d not found during depth calculation", dep_id)
                 continue
             dep_depth = self._calculate_gate_depth(dep_gate)
             if dep_depth > max_dep:

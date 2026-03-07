@@ -38,6 +38,7 @@ modules = [
     ('cirq', 'cirq'),
     ('pennylane', 'pennylane'),
     ('google.cloud.storage', 'google-cloud-storage'),
+    ('google.cloud.logging', 'google-cloud-logging'),
 ]
 
 for mod, pkg in modules:

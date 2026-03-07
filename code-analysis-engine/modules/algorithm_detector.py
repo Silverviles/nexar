@@ -2,9 +2,12 @@
 Quantum Algorithm Pattern Detection
 Identifies specific quantum algorithms from circuit structure
 """
+import logging
 from typing import Dict, List, Set
 from models.unified_ast import UnifiedAST, GateType
 from models.analysis_result import ProblemType
+
+logger = logging.getLogger(__name__)
 
 class QuantumAlgorithmDetector:
     """
@@ -52,6 +55,14 @@ class QuantumAlgorithmDetector:
         
         # Overall confidence (max of all detections)
         confidence = max([d['confidence'] for d in detected], default=0.0)
+        
+        if detected:
+            logger.info(
+                "Algorithm detection: found %s (confidence=%.2f, problem_type=%s)",
+                [d['algorithm'] for d in detected], confidence, problem_type.value,
+            )
+        else:
+            logger.debug("No algorithm pattern matched for circuit with %d gates", len(list(self.patterns)))
         
         return {
             'problem_type': problem_type,

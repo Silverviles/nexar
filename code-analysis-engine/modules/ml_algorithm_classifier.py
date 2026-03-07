@@ -6,6 +6,7 @@ Add this to modules/ml_algorithm_classifier.py
 """
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Dict, List
@@ -14,6 +15,8 @@ import joblib
 import numpy as np
 from models.analysis_result import ProblemType
 from models.unified_ast import UnifiedAST
+
+logger = logging.getLogger(__name__)
 
 
 class MLAlgorithmClassifier:
@@ -41,8 +44,7 @@ class MLAlgorithmClassifier:
         try:
             self.load_models()
         except Exception as e:
-            print(f"⚠️  ML models not loaded: {e}")
-            print("   Will use pattern matching fallback")
+            logger.warning("ML models not loaded: %s — will use pattern matching fallback", e)
 
     def load_models(self):
         """Load trained models and artifacts"""
@@ -56,7 +58,7 @@ class MLAlgorithmClassifier:
             self.feature_names = json.load(f)
 
         self.loaded = True
-        print("✅ ML models loaded successfully!")
+        logger.info("ML models loaded successfully from %s", self.models_dir)
 
     def extract_features_from_ast(
         self, unified_ast: UnifiedAST, quantum_metrics
@@ -208,8 +210,8 @@ class MLAlgorithmClassifier:
                 "method": "ml",
             }
 
-        except Exception as e:
-            print(f"ML classification error: {e}")
+        except Exception:
+            logger.exception("ML classification failed")
             return {
                 "algorithm": "unknown",
                 "problem_type": ProblemType.UNKNOWN,

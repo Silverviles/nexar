@@ -1,6 +1,7 @@
 """
 AST Builder - Constructs unified AST from parsed code
 """
+import logging
 from typing import Dict, Any
 from models.unified_ast import UnifiedAST
 from modules.language_detector import SupportedLanguage
@@ -8,6 +9,8 @@ from modules.parsers import (
     QiskitParser, CirqParser, OpenQASMParser,
     PythonParser, QSharpParser
 )
+
+logger = logging.getLogger(__name__)
 
 class ASTBuilder:
     """Builds unified AST from parsed code"""
@@ -33,6 +36,7 @@ class ASTBuilder:
             UnifiedAST object
         """
         if language not in self.parsers:
+            logger.error("Unsupported language for AST building: %s", language)
             raise ValueError(f"Unsupported language: {language}")
         
         # Parse code with appropriate parser
@@ -65,6 +69,10 @@ class ASTBuilder:
             total_gates=len(gates)
         )
         
+        logger.info(
+            "Built unified AST for %s: %d qubits, %d gates, %d measurements",
+            language.value, total_qubits, len(gates), len(measurements),
+        )
         return unified_ast
     
     def get_metadata(self, parsed_data: Dict[str, Any]) -> Dict[str, Any]:

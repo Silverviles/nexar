@@ -3,6 +3,25 @@ Code Analysis Engine - Complete Implementation with Accurate Analysis
 Port: 8002
 """
 import logging
+import os
+
+# ---------------------------------------------------------------------------
+# Logging bootstrap — must run before any other imports so that every module
+# that calls ``logging.getLogger(__name__)`` inherits the correct handler.
+# On Cloud Run the K_SERVICE env-var is set automatically; when present we
+# route all Python log records to Google Cloud Logging.  Locally we fall back
+# to a human-readable stderr format.
+# ---------------------------------------------------------------------------
+if os.getenv("K_SERVICE"):
+    import google.cloud.logging
+    _log_client = google.cloud.logging.Client()
+    _log_client.setup_logging()
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+
 from fastapi import FastAPI, HTTPException, APIRouter, Request
 from pydantic import BaseModel
 from typing import Optional
@@ -44,8 +63,7 @@ algorithm_detector = QuantumAlgorithmDetector()
 ml_classifier = MLAlgorithmClassifier()
 
 # Initialize logger
-logger = logging.getLogger("uvicorn")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Request Models
 class CodeSubmission(BaseModel):

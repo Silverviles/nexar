@@ -2,9 +2,12 @@
 Language Detector for Quantum Code Analysis Engine
 Identifies programming language of submitted code
 """
+import logging
 import re
 from enum import Enum
 from typing import Optional, Dict
+
+logger = logging.getLogger(__name__)
 
 class SupportedLanguage(str, Enum):
     PYTHON = "python"
@@ -184,6 +187,7 @@ class LanguageDetector:
     def detect(self, code: str) -> Dict[str, any]:
         # 0️⃣ Empty code check
         if not code or not code.strip():
+            logger.warning("Language detection called with empty code")
             return self._error("Empty code provided")
 
         sig_score = self._score_signatures(code)
@@ -252,6 +256,7 @@ class LanguageDetector:
         # ---------------------------------------------------------------
         # 6️⃣ UNKNOWN
         # ---------------------------------------------------------------
+        logger.warning("Unable to determine language for code snippet (%d chars)", len(code))
         return {
             "language": SupportedLanguage.UNKNOWN,
             "confidence": 0.0,
@@ -356,6 +361,6 @@ qc.cx(0, 1)
     """
     
     result = detector.detect(qiskit_code)
-    print(f"Language: {result['language']}")
-    print(f"Confidence: {result['confidence']:.2%}")
-    print(f"Details: {result['details']}")
+    logger.info("Language: %s", result['language'])
+    logger.info("Confidence: %.2f%%", result['confidence'] * 100)
+    logger.info("Details: %s", result['details'])

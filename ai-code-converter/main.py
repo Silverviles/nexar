@@ -1,3 +1,18 @@
+import logging
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+if os.getenv("K_SERVICE"):
+    import google.cloud.logging
+    client = google.cloud.logging.Client()
+    client.setup_logging()
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.api import router as api_router

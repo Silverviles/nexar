@@ -410,3 +410,163 @@ export async function getAccuracyStats(userId: string): Promise<{
       timeCount > 0 ? Math.round(totalTimeDelta / timeCount) : 0,
   };
 }
+
+// ─────────────────────────────────────────────
+//  DASHBOARD — Aggregated stats for main page
+// ─────────────────────────────────────────────
+
+export async function getDashboardStats(userId: string): Promise<{
+  metrics: {
+    decisionAccuracy: number;
+    totalDecisions: number;
+    totalWithFeedback: number;
+    costSavings: number;
+    avgResponseTime: number;
+  };
+  recentDecisions: Array<{
+    id: string;
+    hardware: string;
+    confidence: number;
+    status: string;
+    cost: number | null;
+    createdAt: string;
+  }>;
+  weeklyDistribution: Array<{
+    day: string;
+    quantum: number;
+    classical: number;
+    hybrid: number;
+  }>;
+}> {
+  logger.debug("Calculating dashboard stats", {
+    collection: DECISION_LOGS_COLLECTION,
+    userId,
+  });
+
+  const startTime = Date.now();
+  const snapshot = await db
+    .collection(DECISION_LOGS_COLLECTION)
+    .where("userId", "==", userId)
+    .get();
+
+  const decisions = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as DecisionLogDocument[];
+
+  // ── Metrics ──
+  const totalDecisions = decisions.length;
+  const withFeedback = decisions.filter(
+    (d) => d.feedback !== null && d.feedback !== undefined,
+  );
+  const totalWithFeedback = withFeedback.length;
+  const correctPredictions = withFeedback.filter(
+    (d) => d.feedback?.prediction_correct === true,
+  ).length;
+  const decisionAccuracy =
+    totalWithFeedback > 0
+      ? Math.round((correctPredictions / totalWithFeedback) * 1000) / 10
+      : 0;
+
+  // Cost savings
+  let totalCostSavings = 0;
+  for (const d of withFeedback) {
+    if (
+      d.estimated_cost_usd !== null &&
+      d.feedback &&
+      d.feedback.actual_cost_usd !== null
+    ) {
+      totalCostSavings += d.estimated_cost_usd - d.feedback.actual_cost_usd;
+    }
+  }
+
+  // Average response time from estimated_execution_time_ms
+  let totalExecTime = 0;
+  let execCount = 0;
+  for (const d of decisions) {
+    if (d.estimated_execution_time_ms !== null) {
+      totalExecTime += d.estimated_execution_time_ms;
+      execCount++;
+    }
+  }
+  const avgResponseTime =
+    execCount > 0 ? Math.round(totalExecTime / execCount) : 0;
+
+  // ── Recent Decisions (latest 5) ──
+  const sorted = [...decisions].sort((a, b) => {
+    const aTime = a.createdAt?.toDate?.() ? a.createdAt.toDate().getTime() : 0;
+    const bTime = b.createdAt?.toDate?.() ? b.createdAt.toDate().getTime() : 0;
+    return bTime - aTime;
+  });
+  const recentDecisions = sorted.slice(0, 5).map((d) => ({
+    id: d.id,
+    hardware: d.prediction.recommended_hardware.toLowerCase(),
+    confidence: Math.round(d.prediction.confidence * 100),
+    status: d.status,
+    cost: d.estimated_cost_usd,
+    createdAt: d.createdAt?.toDate?.()
+      ? d.createdAt.toDate().toISOString()
+      : "",
+  }));
+
+  // ── Weekly Distribution (last 7 days) ──
+  const now = new Date();
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weeklyDistribution: Array<{
+    day: string;
+    quantum: number;
+    classical: number;
+    hybrid: number;
+  }> = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dayName = dayNames[date.getDay()]!;
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const dayDecisions = decisions.filter((d) => {
+      const dTime = d.createdAt?.toDate?.()
+        ? d.createdAt.toDate().getTime()
+        : 0;
+      return dTime >= dayStart.getTime() && dTime <= dayEnd.getTime();
+    });
+
+    weeklyDistribution.push({
+      day: dayName,
+      quantum: dayDecisions.filter(
+        (d) => d.prediction.recommended_hardware.toLowerCase() === "quantum",
+      ).length,
+      classical: dayDecisions.filter(
+        (d) => d.prediction.recommended_hardware.toLowerCase() === "classical",
+      ).length,
+      hybrid: dayDecisions.filter(
+        (d) =>
+          d.prediction.recommended_hardware.toLowerCase() !== "quantum" &&
+          d.prediction.recommended_hardware.toLowerCase() !== "classical",
+      ).length,
+    });
+  }
+
+  const durationMs = Date.now() - startTime;
+  logger.debug("Dashboard stats calculated", {
+    userId,
+    totalDecisions,
+    queryDurationMs: durationMs,
+  });
+
+  return {
+    metrics: {
+      decisionAccuracy,
+      totalDecisions,
+      totalWithFeedback,
+      costSavings: Math.round(totalCostSavings * 100) / 100,
+      avgResponseTime,
+    },
+    recentDecisions,
+    weeklyDistribution,
+  };
+}

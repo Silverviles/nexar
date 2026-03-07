@@ -9,6 +9,7 @@ import {
   type FeedbackInput,
   type AccuracyStats,
   type DecisionLogEntry,
+  type DashboardStats,
 } from "@/types/decision-engine.tp";
 
 const API_BASE = "/v1/decision-engine";
@@ -91,6 +92,14 @@ export const decisionEngineService = {
    */
   async getAccuracyStats(): Promise<AccuracyStats> {
     const { data } = await api.get<AccuracyStats>(`${API_BASE}/accuracy`);
+    return data;
+  },
+
+  /**
+   * Get aggregated dashboard statistics
+   */
+  async getDashboardStats(): Promise<DashboardStats> {
+    const { data } = await api.get<DashboardStats>(`${API_BASE}/dashboard`);
     return data;
   },
 };

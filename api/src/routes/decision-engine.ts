@@ -7,6 +7,7 @@ import {
   getDecisionById,
   submitFeedback,
   getAccuracyStats,
+  getDashboardStats,
   type FeedbackInput,
 } from "@/services/decision-log-service.js";
 
@@ -453,6 +454,29 @@ router.get("/accuracy", async (req: Request, res: Response) => {
 });
 
 // ─────────────────────────────────────────────
+//  GET /dashboard — aggregated dashboard stats
+// ─────────────────────────────────────────────
+
+router.get("/dashboard", async (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  try {
+    const stats = await getDashboardStats(userId);
+    res.json(stats);
+  } catch (error: any) {
+    logger.error("[Decision Engine] Failed to get dashboard stats", {
+      error: error.message,
+    });
+    res
+      .status(500)
+      .json({ error: "Failed to get dashboard stats", message: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────
 //  Proxy routes (health, model-info)
 // ─────────────────────────────────────────────
 
@@ -466,6 +490,7 @@ logger.debug("Decision Engine routes registered", {
     "GET /history/:id",
     "POST /feedback/:id",
     "GET /accuracy",
+    "GET /dashboard",
     "GET /health",
     "GET /model-info",
   ],

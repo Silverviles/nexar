@@ -124,3 +124,27 @@ export interface AccuracyStats {
   averageCostSavings: number;
   averageTimeDelta: number;
 }
+
+export interface DashboardStats {
+  metrics: {
+    decisionAccuracy: number;
+    totalDecisions: number;
+    totalWithFeedback: number;
+    costSavings: number;
+    avgResponseTime: number;
+  };
+  recentDecisions: Array<{
+    id: string;
+    hardware: string;
+    confidence: number;
+    status: string;
+    cost: number | null;
+    createdAt: string;
+  }>;
+  weeklyDistribution: Array<{
+    day: string;
+    quantum: number;
+    classical: number;
+    hybrid: number;
+  }>;
+}

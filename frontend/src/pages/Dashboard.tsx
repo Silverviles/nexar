@@ -1,47 +1,98 @@
-import { Target, TrendingUp, Zap, DollarSign } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Target, TrendingUp, Zap, DollarSign, Loader2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { SystemStatusCard } from "@/components/dashboard/SystemStatusCard";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RecentDecisions } from "@/components/dashboard/RecentDecisions";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
+import { decisionEngineService } from "@/services/decision-engine-service";
+import type { DashboardStats } from "@/types/decision-engine.tp";
 
 export default function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const data = await decisionEngineService.getDashboardStats();
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
+
+  const metrics = stats?.metrics;
+
   return (
-    <MainLayout title="Dashboard" description="Quantum-Classical Code Router Overview">
+    <MainLayout
+      title="Dashboard"
+      description="Quantum-Classical Code Router Overview"
+    >
       <div className="space-y-4 md:space-y-6">
         {/* Metrics Row */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 md:gap-4">
           <MetricCard
             title="Decision Accuracy"
-            value="92.4%"
-            subtitle="Target: 85%"
+            value={
+              isLoading
+                ? "..."
+                : metrics && metrics.totalWithFeedback > 0
+                  ? `${metrics.decisionAccuracy}%`
+                  : "N/A"
+            }
+            subtitle={
+              metrics
+                ? `${metrics.totalWithFeedback} with feedback`
+                : "Loading..."
+            }
             icon={Target}
-            trend={{ value: "2.1%", positive: true }}
             variant="success"
           />
           <MetricCard
             title="Avg Response Time"
-            value="145ms"
-            subtitle="Last 24 hours"
+            value={
+              isLoading
+                ? "..."
+                : metrics && metrics.avgResponseTime > 0
+                  ? `${metrics.avgResponseTime}ms`
+                  : "N/A"
+            }
+            subtitle="Estimated execution"
             icon={Zap}
-            trend={{ value: "12ms", positive: true }}
             variant="quantum"
           />
           <MetricCard
             title="Cost Savings"
-            value="$2,847"
-            subtitle="This month"
+            value={
+              isLoading
+                ? "..."
+                : metrics && metrics.costSavings !== 0
+                  ? `$${Math.abs(metrics.costSavings).toFixed(2)}`
+                  : "N/A"
+            }
+            subtitle={
+              metrics && metrics.costSavings > 0
+                ? "Saved vs actual"
+                : metrics && metrics.costSavings < 0
+                  ? "Over estimated"
+                  : "No feedback yet"
+            }
             icon={DollarSign}
-            trend={{ value: "18.3%", positive: true }}
             variant="success"
           />
           <MetricCard
             title="Total Decisions"
-            value="1,284"
-            subtitle="This week"
+            value={
+              isLoading ? "..." : metrics ? `${metrics.totalDecisions}` : "0"
+            }
+            subtitle="All time"
             icon={TrendingUp}
-            trend={{ value: "156", positive: true }}
             variant="default"
           />
         </div>
@@ -54,8 +105,14 @@ export default function Dashboard() {
 
         {/* Charts and Recent Decisions */}
         <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
-          <PerformanceChart />
-          <RecentDecisions />
+          <PerformanceChart
+            data={stats?.weeklyDistribution ?? []}
+            isLoading={isLoading}
+          />
+          <RecentDecisions
+            decisions={stats?.recentDecisions ?? []}
+            isLoading={isLoading}
+          />
         </div>
       </div>
     </MainLayout>

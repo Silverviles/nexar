@@ -40,7 +40,7 @@ export interface FullFlowResults {
 class QuantumService {
   async translatePythonToQuantum(pythonCode: string): Promise<string> {
     try {
-      const response = await api.post<TranslationResponse>('/translate', {
+      const response = await api.post<TranslationResponse>('/v1/ai-code-converter/translate', {
         python_code: pythonCode,
       });
       return response.data.quantum_code;
@@ -53,7 +53,7 @@ class QuantumService {
   // Execute quantum code
   async executeQuantumCode(quantumCode: string, shots: number = 1000): Promise<ExecutionResponse> {
     try {
-      const response = await api.post<ExecutionResponse>('/execute', {
+      const response = await api.post<ExecutionResponse>('/v1/ai-code-converter/execute', {
         quantum_code: quantumCode,
         gate_type: 'auto',
         shots,

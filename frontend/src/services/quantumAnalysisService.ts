@@ -8,7 +8,7 @@ class QuantumAnalysisService {
     try {
       toast.info('Analyzing code for quantum patterns...');
 
-      const response = await api.post<AnalysisResponse>('/quantum/analyze', {
+      const response = await api.post<AnalysisResponse>('/v1/ai-code-converter/quantum/analyze', {
         code,
         include_code: includeCode,
       });

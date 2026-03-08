@@ -1,175 +1,273 @@
-"""
-Cirq Parser - Accurate static parser for Google Cirq circuits
-"""
-import re
-from typing import Dict, Any, List
+"""Cirq parser using Python AST extraction."""
+import ast
+from typing import Any, Dict, List, Optional
+
 from .base_parser import BaseParser
-from models.unified_ast import (
-    QuantumRegisterNode, QuantumGateNode, MeasurementNode, GateType
-)
+from models.unified_ast import GateType, MeasurementNode, QuantumGateNode, QuantumRegisterNode
+
 
 class CirqParser(BaseParser):
-    """Parser for Cirq code"""
+    """Parser for Python programs using Cirq APIs."""
 
     def __init__(self):
         super().__init__()
+        self.tree: Optional[ast.AST] = None
         self.gate_mapping = {
-            'H': GateType.H,
-            'X': GateType.X,
-            'Y': GateType.Y,
-            'Z': GateType.Z,
-            'S': GateType.S,
-            'T': GateType.T,
-            'RX': GateType.RX,
-            'RY': GateType.RY,
-            'RZ': GateType.RZ,
-            'CNOT': GateType.CNOT,
-            'CX': GateType.CX,
-            'CZ': GateType.CZ,
-            'SWAP': GateType.SWAP,
-            'CCX': GateType.TOFFOLI,
-            'TOFFOLI': GateType.TOFFOLI,
+            "h": GateType.H,
+            "x": GateType.X,
+            "y": GateType.Y,
+            "z": GateType.Z,
+            "rx": GateType.RX,
+            "ry": GateType.RY,
+            "rz": GateType.RZ,
+            "cnot": GateType.CNOT,
+            "cx": GateType.CX,
+            "cz": GateType.CZ,
+            "swap": GateType.SWAP,
+            "ccx": GateType.TOFFOLI,
+            "toffoli": GateType.TOFFOLI,
+            "measure": GateType.MEASURE,
         }
 
-    # ------------------------------------------------------------------ #
-    # PARSE
-    # ------------------------------------------------------------------ #
     def parse(self, code: str) -> Dict[str, Any]:
         self.code = code
-        self.lines = code.split('\n')
+        self.lines = code.splitlines()
+
+        try:
+            self.tree = ast.parse(code)
+        except SyntaxError:
+            self.tree = None
+
+        flow_meta = self.extract_python_control_flow_metadata(code)
 
         return {
-            'imports': self.extract_imports(),
-            'registers': self.extract_registers(),
-            'gates': self.extract_quantum_operations(),
-            'measurements': self.extract_measurements(),
-            'functions': self.extract_functions(code),
-            'metadata': {
-                'lines_of_code': self.count_lines(code),
-                'loop_count': self.count_loops(code),
-                'conditional_count': self.count_conditionals(code),
-                'nesting_depth': self.calculate_nesting_depth(code)
-            }
+            "imports": self.extract_imports(),
+            "registers": self.extract_registers(),
+            "gates": self.extract_quantum_operations(),
+            "measurements": self.extract_measurements(),
+            "functions": self.extract_functions(code),
+            "metadata": {
+                "lines_of_code": self.count_lines(code),
+                "loop_count": flow_meta.get("loop_count", 0),
+                "conditional_count": flow_meta.get("conditional_count", 0),
+                "nesting_depth": flow_meta.get("nesting_depth", 0),
+                "line_loop_multiplier": flow_meta.get("line_loop_multiplier", {}),
+            },
         }
 
-    # ------------------------------------------------------------------ #
-    # IMPORTS
-    # ------------------------------------------------------------------ #
     def extract_imports(self) -> List[str]:
-        return [
-            line.strip()
-            for line in self.lines
-            if line.strip().startswith(('import cirq', 'from cirq'))
-        ]
+        imports = []
+        for line in self.lines:
+            stripped = line.strip()
+            if stripped.startswith("import cirq") or stripped.startswith("from cirq"):
+                imports.append(stripped)
+        return imports
 
-    # ------------------------------------------------------------------ #
-    # REGISTERS (CRITICAL FOR FEATURES)
-    # ------------------------------------------------------------------ #
     def extract_registers(self) -> Dict[str, Any]:
-        quantum_regs = []
-        qubit_names = set()
+        quantum_regs: List[QuantumRegisterNode] = []
+        qubit_count = 0
 
-        patterns = [
-            r'cirq\.LineQubit\.range\s*\(\s*(\d+)\s*\)',
-            r'cirq\.LineQubit\s*\(\s*(\d+)\s*\)',
-            r'cirq\.NamedQubit\s*\(\s*[\'"](\w+)[\'"]\s*\)',
-            r'cirq\.GridQubit\s*\(\s*\d+\s*,\s*\d+\s*\)',
-        ]
-
-        for i, line in enumerate(self.lines):
-            # LineQubit.range(n)
-            match = re.search(patterns[0], line)
-            if match:
-                quantum_regs.append(
-                    QuantumRegisterNode(
-                        name='qubits',
-                        size=int(match.group(1)),
-                        line_number=i + 1
-                    )
-                )
-                continue
-
-            # Single LineQubit / NamedQubit / GridQubit
-            for p in patterns[1:]:
-                matches = re.findall(p, line)
-                for _ in matches:
-                    qubit_names.add(f"q{len(qubit_names)}")
-
-        if not quantum_regs and qubit_names:
-            quantum_regs.append(
-                QuantumRegisterNode(
-                    name='qubits',
-                    size=len(qubit_names),
-                    line_number=0
-                )
-            )
-
-        return {'quantum': quantum_regs, 'classical': []}
-
-    # ------------------------------------------------------------------ #
-    # GATES
-    # ------------------------------------------------------------------ #
-    def extract_quantum_operations(self) -> List[QuantumGateNode]:
-        gates = []
-
-        # Matches:
-        # cirq.H(q)
-        # cirq.H.on(q)
-        # cirq.CNOT(q1, q2)
-        # cirq.X(q) ** 0.5
-        gate_pattern = r'cirq\.([A-Za-z0-9_]+)(?:\.on)?\s*\(([^)]*)\)'
-
-        for i, line in enumerate(self.lines):
-            for match in re.finditer(gate_pattern, line):
-                raw_name = match.group(1).upper()
-
-                if raw_name not in self.gate_mapping:
+        if self.tree is not None:
+            for node in ast.walk(self.tree):
+                if not isinstance(node, ast.Assign):
+                    continue
+                if not isinstance(node.value, ast.Call):
                     continue
 
-                args = match.group(2)
-                qubit_count = len([a for a in args.split(',') if a.strip()])
+                call = node.value
+                func = call.func
 
-                gate_type = self.gate_mapping[raw_name]
-                is_controlled = gate_type in {
-                    GateType.CNOT, GateType.CX, GateType.CZ, GateType.TOFFOLI
-                }
+                # cirq.LineQubit.range(n)
+                if (
+                    isinstance(func, ast.Attribute)
+                    and func.attr == "range"
+                    and isinstance(func.value, ast.Attribute)
+                    and isinstance(func.value.value, ast.Name)
+                    and func.value.value.id == "cirq"
+                    and func.value.attr == "LineQubit"
+                    and call.args
+                    and isinstance(call.args[0], ast.Constant)
+                    and isinstance(call.args[0].value, int)
+                ):
+                    qubit_count = max(qubit_count, int(call.args[0].value))
 
-                gates.append(
-                    QuantumGateNode(
-                        gate_type=gate_type,
-                        qubits=list(range(max(1, qubit_count))),
-                        is_controlled=is_controlled,
-                        line_number=i + 1
-                    )
+                # [cirq.LineQubit(i) for i in range(n)]
+                if isinstance(node.value, ast.ListComp):
+                    for gen in node.value.generators:
+                        if (
+                            isinstance(gen.iter, ast.Call)
+                            and isinstance(gen.iter.func, ast.Name)
+                            and gen.iter.func.id == "range"
+                            and gen.iter.args
+                            and isinstance(gen.iter.args[0], ast.Constant)
+                            and isinstance(gen.iter.args[0].value, int)
+                        ):
+                            qubit_count = max(qubit_count, int(gen.iter.args[0].value))
+
+                # direct single qubit creation
+                if (
+                    isinstance(func, ast.Attribute)
+                    and isinstance(func.value, ast.Name)
+                    and func.value.id == "cirq"
+                    and func.attr in {"LineQubit", "NamedQubit", "GridQubit"}
+                ):
+                    qubit_count = max(qubit_count, qubit_count + 1)
+
+        # If qubit_count is still 0, try to infer from gate usage
+        if qubit_count == 0:
+            qubit_count = self._infer_qubit_count_from_gates()
+        
+        quantum_regs.append(QuantumRegisterNode(name="qubits", size=qubit_count, line_number=None))
+        return {"quantum": quantum_regs, "classical": []}
+
+    def extract_quantum_operations(self) -> List[QuantumGateNode]:
+        gates: List[QuantumGateNode] = []
+        if self.tree is None:
+            return gates
+
+        for node in ast.walk(self.tree):
+            if not isinstance(node, ast.Call):
+                continue
+
+            op_name = self._resolve_cirq_call_name(node.func)
+            if op_name is None:
+                continue
+            op_name = op_name.lower()
+
+            if op_name not in self.gate_mapping or op_name == "measure":
+                continue
+
+            gate_type = self.gate_mapping[op_name]
+            qubits = [idx for idx in [self._extract_qubit_index(a) for a in node.args] if idx is not None]
+
+            controls = []
+            targets = qubits
+            if op_name in {"cnot", "cx", "cz"} and len(qubits) >= 2:
+                controls = [qubits[0]]
+                targets = [qubits[-1]]
+            elif op_name in {"ccx", "toffoli"} and len(qubits) >= 3:
+                controls = qubits[:-1]
+                targets = [qubits[-1]]
+
+            gates.append(
+                QuantumGateNode(
+                    gate_type=gate_type,
+                    qubits=targets,
+                    control_qubits=controls,
+                    is_controlled=bool(controls),
+                    line_number=node.lineno,
                 )
+            )
 
         return gates
 
-    # ------------------------------------------------------------------ #
-    # MEASUREMENTS
-    # ------------------------------------------------------------------ #
     def extract_measurements(self) -> List[MeasurementNode]:
-        measurements = []
+        out: List[MeasurementNode] = []
+        if self.tree is None:
+            return out
 
-        # cirq.measure(q0, q1, key="m")
-        pattern = r'cirq\.measure\s*\(([^)]*)\)'
-
-        for i, line in enumerate(self.lines):
-            match = re.search(pattern, line)
-            if not match:
+        for node in ast.walk(self.tree):
+            if not isinstance(node, ast.Call):
+                continue
+            op_name = self._resolve_cirq_call_name(node.func)
+            if op_name is None or op_name.lower() != "measure":
                 continue
 
-            args = match.group(1)
-            qubits = [a.strip() for a in args.split(',') if 'key' not in a]
+            q_idxs = []
+            for arg in node.args:
+                if isinstance(arg, ast.Starred):
+                    # measure(*qubits) -> unknown exact mapping statically.
+                    continue
+                idx = self._extract_qubit_index(arg)
+                if idx is not None:
+                    q_idxs.append(idx)
 
-            measurements.append(
+            out.append(
                 MeasurementNode(
-                    quantum_register='qubits',
-                    classical_register='measurements',
-                    qubit_indices=list(range(len(qubits))),
-                    classical_indices=list(range(len(qubits))),
-                    line_number=i + 1
+                    quantum_register="qubits",
+                    classical_register="measurements",
+                    qubit_indices=q_idxs,
+                    classical_indices=list(range(len(q_idxs))),
+                    line_number=node.lineno,
                 )
             )
 
-        return measurements
+        return out
+
+    def _resolve_cirq_call_name(self, func: ast.AST) -> Optional[str]:
+        # cirq.H(...)
+        if (
+            isinstance(func, ast.Attribute)
+            and isinstance(func.value, ast.Name)
+            and func.value.id == "cirq"
+        ):
+            return func.attr
+
+        # cirq.H.on(...)
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr == "on"
+            and isinstance(func.value, ast.Attribute)
+            and isinstance(func.value.value, ast.Name)
+            and func.value.value.id == "cirq"
+        ):
+            return func.value.attr
+
+        return None
+
+    def _extract_qubit_index(self, node: ast.AST) -> Optional[int]:
+        # qubits[3]
+        if isinstance(node, ast.Subscript):
+            idx_node = node.slice.value if isinstance(node.slice, ast.Index) else node.slice
+            if isinstance(idx_node, ast.Constant) and isinstance(idx_node.value, int):
+                return int(idx_node.value)
+
+        # LineQubit(3)
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "cirq"
+            and node.func.attr == "LineQubit"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and isinstance(node.args[0].value, int)
+        ):
+            return int(node.args[0].value)
+
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return int(node.value)
+
+        return None
+    
+    def _infer_qubit_count_from_gates(self) -> int:
+        """
+        Infer qubit count from gate operations when register declaration uses variables.
+        Falls back to analyzing which qubit indices are used in gates.
+        """
+        if self.tree is None:
+            return 0
+        
+        max_qubit_index = -1
+        
+        for node in ast.walk(self.tree):
+            if not isinstance(node, ast.Call):
+                continue
+            
+            # Check if it's a Cirq gate operation
+            op_name = self._resolve_cirq_call_name(node.func)
+            if op_name is None:
+                continue
+            
+            # Extract qubit indices from this gate
+            for arg in node.args:
+                if isinstance(arg, ast.Starred):
+                    # *qubits - can't determine statically, use a reasonable default
+                    max_qubit_index = max(max_qubit_index, 2)
+                    continue
+                idx = self._extract_qubit_index(arg)
+                if idx is not None:
+                    max_qubit_index = max(max_qubit_index, idx)
+        
+        # Return qubit count (max_index + 1) or 0 if no qubits found
+        return max_qubit_index + 1 if max_qubit_index >= 0 else 0

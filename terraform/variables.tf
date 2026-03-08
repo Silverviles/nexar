@@ -93,11 +93,11 @@ variable "service_resources" {
       memory = "128Mi"
     }
     ai-code-converter = {
-      cpu    = "0.08"
+      cpu    = "0.5"
       memory = "1Gi"
     }
     code-analysis-engine = {
-      cpu    = "0.08"
+      cpu    = "0.5"
       memory = "512Mi"
     }
     decision-engine = {

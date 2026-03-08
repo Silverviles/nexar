@@ -58,8 +58,8 @@ export interface QuantumMetrics {
   entanglement_score: number;
   has_superposition: boolean;
   has_entanglement: boolean;
-  quantum_volume: number | null;
-  estimated_runtime_ms: number | null;
+  logical_circuit_volume: number | null;
+  estimated_logical_runtime_ms: number | null;
 }
 
 export interface AnalysisResult {

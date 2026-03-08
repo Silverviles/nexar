@@ -40,26 +40,45 @@ class QuantumAnalyzer:
         Returns:
             QuantumComplexity object
         """
-        # Basic counts
-        total_gates = len(unified_ast.gates)
-        single_qubit_gates = len(unified_ast.get_single_qubit_gates())
-        entangling_gates = unified_ast.get_entangling_gates()
-        two_qubit_gates = len(entangling_gates)
-        
-        # CX gate ratio
-        cx_gates = len([g for g in entangling_gates 
-                       if g.gate_type in {GateType.CNOT, GateType.CX}])
+        canonical_ir = unified_ast.canonical_ir
+
+        # Basic counts (canonical-IR first, AST fallback)
+        if canonical_ir:
+            gate_ops = [op for op in canonical_ir.operations if op.op_type == "gate"]
+            total_gates = len(gate_ops)
+            single_qubit_gates = sum(
+                1
+                for op in gate_ops
+                if not op.control_qubits and len(op.target_qubits) <= 1
+            )
+            two_qubit_gates = sum(
+                1
+                for op in gate_ops
+                if len(set(op.control_qubits + op.target_qubits)) >= 2
+            )
+            cx_gates = sum(1 for op in gate_ops if op.gate_name in {GateType.CNOT.value, GateType.CX.value})
+            has_superposition = any("creates_superposition" in op.semantic_tags for op in gate_ops)
+            has_entanglement = any(
+                "creates_or_propagates_entanglement" in op.semantic_tags
+                for op in gate_ops
+            )
+            measurement_count = canonical_ir.measurement_count()
+        else:
+            total_gates = len(unified_ast.gates)
+            single_qubit_gates = len(unified_ast.get_single_qubit_gates())
+            entangling_gates = unified_ast.get_entangling_gates()
+            two_qubit_gates = len(entangling_gates)
+            cx_gates = len([g for g in entangling_gates if g.gate_type in {GateType.CNOT, GateType.CX}])
+            has_superposition = unified_ast.has_superposition()
+            has_entanglement = unified_ast.has_entanglement()
+            measurement_count = len(unified_ast.measurements)
+
         cx_ratio = cx_gates / max(total_gates, 1)
         
-        # Circuit characteristics
-        has_superposition = unified_ast.has_superposition()
-        has_entanglement = unified_ast.has_entanglement()
-        
-        # Circuit depth (simplified)
         circuit_depth = self.depth_calculator.calculate_depth(unified_ast)
         
         # Quantum volume estimation
-        quantum_volume = self.estimate_quantum_volume(
+        logical_circuit_volume = self.estimate_logical_circuit_volume(
             unified_ast.total_qubits, circuit_depth
         )
         
@@ -71,7 +90,7 @@ class QuantumAnalyzer:
             "Quantum analysis: %d qubits, %d gates (single=%d, two=%d), "
             "depth=%d, volume=%.1f, superposition=%.3f, entanglement=%.3f",
             unified_ast.total_qubits, total_gates, single_qubit_gates,
-            two_qubit_gates, circuit_depth, quantum_volume,
+            two_qubit_gates, circuit_depth, logical_circuit_volume,
             sim_results['superposition_score'], sim_results['entanglement_score'],
         )
         
@@ -83,13 +102,13 @@ class QuantumAnalyzer:
             two_qubit_gates=two_qubit_gates,
             cx_gate_count=cx_gates,
             cx_gate_ratio=cx_ratio,
-            measurement_count=len(unified_ast.measurements),
+            measurement_count=measurement_count,
             superposition_score=sim_results['superposition_score'],
             entanglement_score=sim_results['entanglement_score'],
             has_superposition=has_superposition,
             has_entanglement=has_entanglement,
-            quantum_volume=quantum_volume,
-            estimated_runtime_ms=estimated_runtime
+            logical_circuit_volume=logical_circuit_volume,
+            estimated_logical_runtime_ms=estimated_runtime
         )
     
     def calculate_superposition_score(self, unified_ast: UnifiedAST) -> float:
@@ -148,7 +167,7 @@ class QuantumAnalyzer:
         
         return max(estimated_depth, total_gates // 3)  # Conservative estimate
     
-    def estimate_quantum_volume(self, n_qubits: int, depth: int) -> float:
+    def estimate_logical_circuit_volume(self, n_qubits: int, depth: int) -> float:
         """
         Estimate quantum volume
         QV = min(n, d)^2 where n=qubits, d=depth
@@ -168,9 +187,19 @@ class QuantumAnalyzer:
         two_qubit_gate_time = 0.5     # 500 ns
         measurement_time = 1.0        # 1 microsecond
         
-        single_qubit_gates = len(unified_ast.get_single_qubit_gates())
-        two_qubit_gates = len(unified_ast.get_entangling_gates())
-        measurements = len(unified_ast.measurements)
+        if unified_ast.canonical_ir:
+            gate_ops = [op for op in unified_ast.canonical_ir.operations if op.op_type == "gate"]
+            single_qubit_gates = sum(
+                1 for op in gate_ops if not op.control_qubits and len(op.target_qubits) <= 1
+            )
+            two_qubit_gates = sum(
+                1 for op in gate_ops if len(set(op.control_qubits + op.target_qubits)) >= 2
+            )
+            measurements = unified_ast.canonical_ir.measurement_count()
+        else:
+            single_qubit_gates = len(unified_ast.get_single_qubit_gates())
+            two_qubit_gates = len(unified_ast.get_entangling_gates())
+            measurements = len(unified_ast.measurements)
         
         # Calculate total time (in microseconds)
         total_time_us = (

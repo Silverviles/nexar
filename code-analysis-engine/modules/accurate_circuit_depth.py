@@ -26,6 +26,9 @@ class AccurateCircuitDepthCalculator:
         Build dependency graph and compute depths for each gate.
         Returns the maximum depth (circuit depth).
         """
+        if unified_ast.canonical_ir and unified_ast.canonical_ir.operations:
+            return self._calculate_depth_from_ir(unified_ast)
+
         gates = unified_ast.gates if unified_ast and unified_ast.gates else []
         if not gates:
             logger.debug("No gates in circuit, depth is 0")
@@ -47,6 +50,27 @@ class AccurateCircuitDepthCalculator:
         depth = max(self.gate_depth.values()) if self.gate_depth else 0
         logger.debug("Circuit depth calculated: %d from %d gates", depth, len(gates))
         return depth
+
+    def _calculate_depth_from_ir(self, unified_ast: UnifiedAST) -> int:
+        """Calculate depth directly from Canonical IR dependencies."""
+        operations = unified_ast.canonical_ir.operations
+        by_id = {op.op_id: op for op in operations}
+        memo: Dict[str, int] = {}
+
+        def depth_for(op_id: str) -> int:
+            if op_id in memo:
+                return memo[op_id]
+            op = by_id.get(op_id)
+            if op is None or not op.dependencies:
+                memo[op_id] = 1
+                return 1
+            memo[op_id] = 1 + max(depth_for(dep) for dep in op.dependencies if dep in by_id)
+            return memo[op_id]
+
+        if not by_id:
+            return 0
+
+        return max(depth_for(op_id) for op_id in by_id)
 
     def _build_dependency_graph(self, gates: List[QuantumGateNode]) -> None:
         """

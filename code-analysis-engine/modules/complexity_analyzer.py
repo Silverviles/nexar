@@ -8,6 +8,7 @@ import re
 from typing import Dict, Any
 from radon.complexity import cc_visit
 from models.analysis_result import ClassicalComplexity, TimeComplexity
+from models.unified_ast import UnifiedAST
 from modules.accurate_time_complexity import AccurateTimeComplexityAnalyzer
 from modules.space_complexity_analyzer import AccurateSpaceComplexityAnalyzer
 
@@ -20,7 +21,12 @@ class ComplexityAnalyzer:
         self.time_analyzer = AccurateTimeComplexityAnalyzer()
         self.space_analyzer = AccurateSpaceComplexityAnalyzer()
     
-    def analyze(self, code: str, metadata: Dict[str, Any]) -> ClassicalComplexity:
+    def analyze(
+        self,
+        code: str,
+        metadata: Dict[str, Any],
+        unified_ast: UnifiedAST = None,
+    ) -> ClassicalComplexity:
         """
         Analyze classical complexity metrics
         
@@ -31,6 +37,15 @@ class ComplexityAnalyzer:
         Returns:
             ClassicalComplexity object
         """
+        if unified_ast and unified_ast.canonical_ir:
+            metadata = {
+                **metadata,
+                'loop_count': unified_ast.canonical_ir.loop_count,
+                'conditional_count': unified_ast.canonical_ir.conditional_count,
+                'nesting_depth': unified_ast.canonical_ir.max_nesting_depth,
+                'lines_of_code': unified_ast.canonical_ir.metadata.get('lines_of_code', metadata.get('lines_of_code', 0)),
+            }
+
         cyclomatic = self.calculate_cyclomatic_complexity(code)
         cognitive = self.calculate_cognitive_complexity(code)
         time_complexity = self.time_analyzer.analyze(code)

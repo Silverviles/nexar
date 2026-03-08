@@ -171,10 +171,10 @@ class CompleteAnalysisEngine:
             has_entanglement=entanglement_score > 0.1,
             
             # Resource estimation
-            quantum_volume=self._calculate_quantum_volume(
+            logical_circuit_volume=self._calculate_logical_circuit_volume(
                 unified_ast.total_qubits, circuit_depth
             ),
-            estimated_runtime_ms=self._estimate_quantum_runtime(
+            estimated_logical_runtime_ms=self._estimate_quantum_runtime(
                 single_qubit_gates, two_qubit_gates, len(unified_ast.measurements)
             )
         )
@@ -235,8 +235,8 @@ class CompleteAnalysisEngine:
     
     # Helper methods
     
-    def _calculate_quantum_volume(self, n_qubits: int, depth: int) -> float:
-        """Calculate quantum volume: QV = min(n, d)²"""
+    def _calculate_logical_circuit_volume(self, n_qubits: int, depth: int) -> float:
+        """Calculate logical circuit volume: LV = min(n, d)²"""
         if n_qubits == 0 or depth == 0:
             return 0.0
         return float(min(n_qubits, depth) ** 2)
@@ -372,7 +372,7 @@ qc.measure_all()
     print(f"  CX Gate Ratio: {result.cx_gate_ratio:.2%}")
     print(f"  Superposition Score: {result.superposition_score:.3f} (ACCURATE - simulated)")
     print(f"  Entanglement Score: {result.entanglement_score:.3f} (ACCURATE - simulated)")
-    print(f"  Quantum Volume: {result.quantum_metrics.quantum_volume}")
+    print(f"  Quantum Volume: {result.quantum_metrics.logical_circuit_volume}")
     print()
     print(f"Time Complexity: {result.time_complexity}")
     print(f"Memory Requirement: {result.memory_requirement_mb:.2f} MB")

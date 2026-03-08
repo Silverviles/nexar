@@ -43,9 +43,9 @@ class QuantumStateSimulator:
         """
         self.num_qubits = unified_ast.total_qubits
         
-        # Check if circuit is too large to simulate
-        if self.num_qubits > self.max_qubits:
-            # Fall back to heuristic for large circuits
+        # Check if circuit is too large to simulate OR if qubits weren't detected
+        if self.num_qubits == 0 or self.num_qubits > self.max_qubits:
+            # Fall back to heuristic for large circuits or when qubits unknown
             logger.warning(
                 "Circuit has %d qubits (max=%d), falling back to heuristic analysis",
                 self.num_qubits, self.max_qubits,
@@ -59,8 +59,9 @@ class QuantumStateSimulator:
         entropy_history = [self._calculate_entropy()]
         entanglement_history = [0.0]
         
-        # Apply gates sequentially
-        for gate in unified_ast.gates:
+        # Apply gates sequentially (canonical IR first, AST fallback)
+        gates = self._get_simulation_gates(unified_ast)
+        for gate in gates:
             self._apply_gate(gate)
             entropy_history.append(self._calculate_entropy())
             entanglement_history.append(self._calculate_entanglement())
@@ -201,40 +202,47 @@ class QuantumStateSimulator:
         Apply single-qubit gate using tensor product
         State update: |ψ⟩ → (I ⊗ ... ⊗ U ⊗ ... ⊗ I)|ψ⟩
         """
-        # Build full gate matrix using tensor product
-        full_matrix = 1
-        for i in range(self.num_qubits):
-            if i == qubit:
-                if isinstance(full_matrix, int):
-                    full_matrix = gate_matrix
-                else:
-                    full_matrix = np.kron(full_matrix, gate_matrix)
-            else:
-                identity = np.eye(2)
-                if isinstance(full_matrix, int):
-                    full_matrix = identity
-                else:
-                    full_matrix = np.kron(full_matrix, identity)
-        
-        # Apply gate
-        self.state_vector = full_matrix @ self.state_vector
+        # Handle edge cases
+        if self.num_qubits == 0 or qubit < 0 or qubit >= self.num_qubits:
+            return
+
+        # Memory-efficient in-place pairwise update.
+        # This is mathematically equivalent to applying the full tensor-product matrix,
+        # but avoids allocating a 2^n x 2^n matrix.
+        target_bit = 1 << (self.num_qubits - 1 - qubit)
+        u00, u01 = gate_matrix[0, 0], gate_matrix[0, 1]
+        u10, u11 = gate_matrix[1, 0], gate_matrix[1, 1]
+
+        dim = len(self.state_vector)
+        for i in range(dim):
+            if i & target_bit:
+                continue
+
+            j = i | target_bit
+            a0 = self.state_vector[i]
+            a1 = self.state_vector[j]
+
+            self.state_vector[i] = u00 * a0 + u01 * a1
+            self.state_vector[j] = u10 * a0 + u11 * a1
     
     # Two-qubit gate implementations
     
     def _apply_cnot(self, control: int, target: int):
         """Apply CNOT (Controlled-X) gate"""
         dim = 2 ** self.num_qubits
-        new_state = np.copy(self.state_vector)
-        
-        # CNOT: if control=1, flip target
+        new_state = np.zeros_like(self.state_vector)
+
         for i in range(dim):
-            # Check if control qubit is 1
+            amp = self.state_vector[i]
+            if abs(amp) < 1e-12:
+                continue
+
             if (i >> (self.num_qubits - 1 - control)) & 1:
-                # Flip target qubit
                 flipped = i ^ (1 << (self.num_qubits - 1 - target))
-                new_state[flipped] = self.state_vector[i]
-                new_state[i] = self.state_vector[i]
-        
+                new_state[flipped] += amp
+            else:
+                new_state[i] += amp
+
         self.state_vector = new_state
     
     def _apply_cz(self, control: int, target: int):
@@ -317,44 +325,39 @@ class QuantumStateSimulator:
         if self.num_qubits < 2:
             return 0.0
         
-        # Calculate purity of first qubit's reduced density matrix
-        # Entanglement present if purity < 1
-        purity = self._calculate_reduced_purity(0)
-        
         # Convert purity to entanglement score
         # Pure state (purity=1) → no entanglement (score=0)
         # Maximally mixed (purity=0.5 for single qubit) → max entanglement (score=1)
-        entanglement_score = 1.0 - purity
-        
-        return min(entanglement_score, 1.0)
+        ent_scores = []
+        for q in range(self.num_qubits):
+            purity = self._calculate_reduced_purity(q)
+            score = (1.0 - purity) / 0.5
+            ent_scores.append(score)
+
+        return min(max(ent_scores), 1.0)
     
     def _calculate_reduced_purity(self, qubit: int) -> float:
         """
         Calculate purity of reduced density matrix for a qubit
         Tr(ρ²) where ρ is reduced density matrix
         """
-        # Reshape state vector into matrix for partial trace
-        dim = 2 ** self.num_qubits
-        dim_half = 2 ** (self.num_qubits - 1)
-        
-        # Create density matrix ρ = |ψ⟩⟨ψ|
-        density_matrix = np.outer(self.state_vector, np.conj(self.state_vector))
-        
-        # Partial trace (simplified for first qubit)
-        reduced_density = np.zeros((2, 2), dtype=complex)
-        
-        for i in range(2):
-            for j in range(2):
-                for k in range(dim_half):
-                    idx1 = i * dim_half + k
-                    idx2 = j * dim_half + k
-                    reduced_density[i, j] += density_matrix[idx1, idx2]
-        
-        # Calculate purity Tr(ρ²)
-        rho_squared = reduced_density @ reduced_density
-        purity = np.real(np.trace(rho_squared))
-        
-        return max(0.0, min(1.0, purity))
+        if self.num_qubits <= 1 or qubit < 0 or qubit >= self.num_qubits:
+            return 1.0
+
+        # Compute reduced 2x2 density matrix directly from state amplitudes.
+        # Avoids constructing the full density matrix (which is O(4^n) memory).
+        state_tensor = self.state_vector.reshape([2] * self.num_qubits)
+        state_tensor = np.moveaxis(state_tensor, qubit, 0).reshape(2, -1)
+
+        psi0 = state_tensor[0]
+        psi1 = state_tensor[1]
+
+        rho00 = float(np.vdot(psi0, psi0).real)
+        rho11 = float(np.vdot(psi1, psi1).real)
+        rho01 = np.sum(psi0 * np.conj(psi1))
+
+        purity = rho00 * rho00 + rho11 * rho11 + 2.0 * (abs(rho01) ** 2)
+        return float(max(0.0, min(1.0, purity.real)))
     
     def _calculate_purity(self) -> float:
         """Calculate purity of full state: Tr(|ψ⟩⟨ψ|²)"""
@@ -366,7 +369,7 @@ class QuantumStateSimulator:
         Fallback heuristic analysis for circuits too large to simulate
         Uses gate counting and patterns
         """
-        gates = unified_ast.gates
+        gates = self._get_simulation_gates(unified_ast)
         total_gates = len(gates)
         
         # Superposition heuristic
@@ -392,6 +395,45 @@ class QuantumStateSimulator:
             'final_state_purity': 0.0,
             'note': 'Heuristic analysis (circuit too large to simulate)'
         }
+
+    def _get_simulation_gates(self, unified_ast: UnifiedAST) -> List[QuantumGateNode]:
+        """Materialize simulator-friendly gate nodes from canonical IR when available."""
+        if not unified_ast.canonical_ir:
+            return unified_ast.gates
+
+        gates: List[QuantumGateNode] = []
+        for op in unified_ast.canonical_ir.operations:
+            if op.op_type != "gate" or not op.gate_name:
+                continue
+            gate_type = self._gate_type_from_ir_name(op.gate_name)
+            if gate_type is None:
+                continue
+
+            targets = list(op.target_qubits)
+            controls = list(op.control_qubits)
+
+            # SWAP uses 2 target qubits in the simulator path.
+            if gate_type == GateType.SWAP and len(targets) < 2 and len(controls) >= 1:
+                targets = [controls[0], targets[0]] if targets else controls[:2]
+                controls = []
+
+            gates.append(
+                QuantumGateNode(
+                    gate_type=gate_type,
+                    qubits=targets,
+                    parameters=list(op.parameters),
+                    line_number=op.line_number,
+                    is_controlled=bool(controls),
+                    control_qubits=controls,
+                )
+            )
+        return gates
+
+    def _gate_type_from_ir_name(self, gate_name: str) -> Optional[GateType]:
+        for gate_type in GateType:
+            if gate_type.value == gate_name:
+                return gate_type
+        return None
 
 
 # Example usage
@@ -419,3 +461,9 @@ if __name__ == "__main__":
     logger.info("Entanglement Score: %s", result['entanglement_score'])
     logger.info("State Entropy: %s", result['state_entropy'])
     logger.info("Expected: High superposition and entanglement (~1.0)")
+
+    print("Bell State Analysis:")
+    print(f"Superposition Score: {result['superposition_score']}")
+    print(f"Entanglement Score: {result['entanglement_score']}")
+    print(f"State Entropy: {result['state_entropy']}")
+    print(f"Expected: High superposition and entanglement (~1.0)")

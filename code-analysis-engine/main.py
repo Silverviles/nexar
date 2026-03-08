@@ -107,6 +107,7 @@ class LanguageDetectionResponse(BaseModel):
     confidence: float
     is_supported: bool
     details: str
+    method: str = "fallback"  # 'ml', 'fallback', or 'error'
 
 # Routes
 
@@ -153,6 +154,7 @@ async def analyze_code(submission: CodeSubmission, request: Request):
         
         # Step 1: Detect language
         lang_result = ml_language_classifier.detect(code=code)
+        detection_method = lang_result.get('method', 'fallback')
         
         if not lang_result["is_supported"]:
             logger.warning(f"[CodeAnalysisEngine] {request.method} {request.url} - Unsupported language: {lang_result['language']}")
@@ -260,7 +262,8 @@ async def analyze_code(submission: CodeSubmission, request: Request):
             metadata=metadata,
             detected_algorithms=detected_algorithms,  
             algorithm_confidence=algorithm_confidence,
-            algorithm_detection_source=algorithm_detection_source  
+            algorithm_detection_source=algorithm_detection_source,
+            language_detection_method=detection_method
         )
         
         logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Analysis completed for code submission.")
@@ -342,7 +345,8 @@ def build_analysis_result(
     metadata: dict,
     detected_algorithms: list = None,
     algorithm_confidence: float = 0.0,
-    algorithm_detection_source: Optional[str] = None
+    algorithm_detection_source: Optional[str] = None,
+    language_detection_method: str = "fallback"
 ) -> CodeAnalysisResult:
     """Build complete analysis result with accurate metrics"""
     
@@ -433,7 +437,8 @@ def build_analysis_result(
         confidence_score=confidence,
         analysis_notes=notes,
         detected_algorithms=detected_algorithms,
-        algorithm_detection_source=algorithm_detection_source 
+        algorithm_detection_source=algorithm_detection_source,
+        language_detection_method=language_detection_method
     )
 
 def determine_quantum_time_complexity(

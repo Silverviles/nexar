@@ -42,6 +42,5 @@ tqdm>=4.65.0
 
 accelerate==0.25.0
  
-torch  
 requests
 python-dotenv

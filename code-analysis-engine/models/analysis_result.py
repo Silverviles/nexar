@@ -103,6 +103,7 @@ class CodeAnalysisResult(BaseModel):
     # Algorithm detection (will be added later)
     detected_algorithms: list = Field(default_factory=list, description="Detected quantum algorithms")
     algorithm_detection_source: Optional[str] = None
+    language_detection_method: str = Field(default="fallback", description="Language detection method: 'ml', 'fallback', or 'error'")
     
     class Config:
         json_schema_extra = {

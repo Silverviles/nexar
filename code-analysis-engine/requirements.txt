@@ -32,3 +32,16 @@ seaborn
 scipy
 google-cloud-storage
 google-cloud-logging
+
+xgboost>=1.7.0
+
+# CodeBERT & Transformers
+torch>=2.0.0
+transformers>=4.30.0
+tqdm>=4.65.0
+
+accelerate==0.25.0
+ 
+torch  
+requests
+python-dotenv

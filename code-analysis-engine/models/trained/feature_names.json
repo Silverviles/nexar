@@ -8,7 +8,7 @@
   "cx_ratio",
   "superposition_score",
   "entanglement_score",
-  "quantum_volume",
+  "logical_circuit_volume",
   "has_superposition",
   "has_entanglement",
   "has_measurement",

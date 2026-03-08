@@ -94,19 +94,19 @@ variable "service_resources" {
     }
     ai-code-converter = {
       cpu    = "0.08"
-      memory = "128Mi"
+      memory = "1Gi"
     }
     code-analysis-engine = {
       cpu    = "0.08"
-      memory = "128Mi"
+      memory = "512Mi"
     }
     decision-engine = {
       cpu    = "0.08"
-      memory = "128Mi"
+      memory = "256Mi"
     }
     hardware-abstraction-layer = {
       cpu    = "0.08"
-      memory = "128Mi"
+      memory = "256Mi"
     }
   }
 }

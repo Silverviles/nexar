@@ -26,7 +26,7 @@ class MLLanguageClassifier:
     - Continuous learning support
     """
     
-    def __init__(self, models_dir: str = "models/language_classifier"):
+    def __init__(self, models_dir: str = "models/trained/language_classifier"):
         self.models_dir = Path(models_dir)
         
         # Models
@@ -315,7 +315,7 @@ class ContinuousLearningManager:
         version_dir.mkdir(parents=True, exist_ok=True)
         
         # Copy models
-        models_dir = Path("models/language_classifier")
+        models_dir = Path("models/trained/language_classifier")
         for file in models_dir.glob("*"):
             if file.is_file():
                 shutil.copy(file, version_dir / file.name)

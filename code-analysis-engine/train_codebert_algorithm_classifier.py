@@ -724,7 +724,7 @@ def main():
         }
     }
     
-    report_path = Path('models/trained_codebert/training_report.json')
+    report_path = Path('models/trained/trained_codebert/training_report.json')
     with open(report_path, 'w') as f:
         json.dump(report, f, indent=2)
     

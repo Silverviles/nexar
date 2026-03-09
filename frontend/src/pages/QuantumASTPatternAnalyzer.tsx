@@ -128,55 +128,6 @@ const analyzeCode = async () => {
     return "text-red-600";
   };
 
-  // Example codes for quick testing
-  const exampleCodes = [
-    {
-      name: "Linear Search",
-      code: `def linear_search(arr, target):
-    for i in range(len(arr)):
-        if arr[i] == target:
-            return i
-    return -1`,
-    },
-    {
-      name: "Binary Search",
-      code: `def binary_search(arr, target):
-    low, high = 0, len(arr) - 1
-    while low <= high:
-        mid = (low + high) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            low = mid + 1
-        else:
-            high = mid - 1
-    return -1`,
-    },
-    {
-      name: "Brute Force",
-      code: `def max_product_subarray(arr):
-    max_product = float('-inf')
-    for i in range(len(arr)):
-        for j in range(i, len(arr)):
-            product = 1
-            for k in range(i, j + 1):
-                product *= arr[k]
-            max_product = max(max_product, product)
-    return max_product`,
-    },
-    {
-      name: "Min/Max Finding",
-      code: `def find_min_max(arr):
-    min_val = arr[0]
-    max_val = arr[0]
-    for num in arr:
-        if num < min_val:
-            min_val = num
-        if num > max_val:
-            max_val = num
-    return min_val, max_val`,
-    },
-  ];
 
   return (
     <MainLayout
@@ -526,24 +477,7 @@ const analyzeCode = async () => {
                     </div>
                   </div>
 
-                  <div className="w-full max-w-md space-y-4">
-                    <div className="text-sm font-medium">
-                      Try Example Algorithms:
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {exampleCodes.map((example, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setInputCode(example.code)}
-                          className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors group"
-                        >
-                          <div className="font-medium mb-1">{example.name}</div>
-                          <div className="text-muted-foreground truncate">
-                            {example.code.split("\n")[0]}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+
 
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
                       <div className="flex items-center gap-2 mb-1">
@@ -554,14 +488,13 @@ const analyzeCode = async () => {
                       </div>
                       <ul className="text-xs text-blue-700 space-y-1">
                         <li>• Linear/Binary Search algorithms</li>
-                        <li>• Brute force optimization problems</li>
-                        <li>• Min/Max finding operations</li>
-                        <li>• Sorting algorithms</li>
-                        <li>• Nested loop patterns</li>
+                        <li>• Coin Flip</li>
+                        <li>• Hidden Bit String</li>
+                        <li>• Parity checking</li>
+                        <li>• Swap</li>
                       </ul>
                     </div>
                   </div>
-                </div>
               )}
             </CardContent>
           </Card>

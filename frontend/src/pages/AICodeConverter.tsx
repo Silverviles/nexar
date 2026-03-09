@@ -34,21 +34,21 @@ export default function AICodeConverter() {
   const [copied, setCopied] = useState(false);
 
   const executeFullFlow = async () => {
-  if (!inputCode.trim() || isLoading) return;
+    if (!inputCode.trim() || isLoading) return;
 
-  setIsLoading(true);
-  setResults(null);
+    setIsLoading(true);
+    setResults(null);
 
-  try {
-    const completeResults = await quantumService.executeFullFlow(inputCode);
-    setResults(completeResults);
-  } catch (error: any) {
-    console.error("Full flow error:", error);
-    // Error is already handled in the service with toast notifications
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      const completeResults = await quantumService.executeFullFlow(inputCode);
+      setResults(completeResults);
+    } catch (error: any) {
+      console.error("Full flow error:", error);
+      // Error is already handled in the service with toast notifications
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // const executeFullFlow = async () => {
   //   if (!inputCode.trim() || isLoading) return;
@@ -93,7 +93,7 @@ export default function AICodeConverter() {
   //       },
   //       body: JSON.stringify({
   //         quantum_code: quantumCodeWithImports,
-  //         gate_type: "auto", 
+  //         gate_type: "auto",
   //         shots: 1000,
   //       }),
   //     });
@@ -272,7 +272,7 @@ export default function AICodeConverter() {
               <Textarea
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value)}
-                placeholder={`# Paste your Python code here...\n# Example logic gates:\n\ndef xor_gate(a, b):\n    return a ^ b\n\ndef nor_gate(a, b):\n    return 1 - (a | b)\n\ndef complex_logic(a, b, c):\n    return (a and b) or (not c)`}
+                placeholder={`# Paste your Python code here...`}
                 className="min-h-[500px] border-0 rounded-none font-mono text-sm resize-none focus-visible:ring-0"
                 disabled={isLoading}
               />
@@ -416,7 +416,7 @@ export default function AICodeConverter() {
                     </div>
                     <div className="space-y-2">
                       {Object.entries(
-                        results.executionResults.counts || {}
+                        results.executionResults.counts || {},
                       ).map(([state, count]: [string, any]) => {
                         const probability = count / 1000;
                         return (
@@ -490,54 +490,11 @@ export default function AICodeConverter() {
                     </div>
                   </div>
 
-                  <div className="w-full max-w-md space-y-4">
-                    <div className="text-sm font-medium">Example Code:</div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() =>
-                          setInputCode(`def xor_gate(a, b): return a ^ b`)
-                        }
-                        className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
-                      >
-                        XOR Gate
-                      </button>
-                      <button
-                        onClick={() =>
-                          setInputCode(
-                            `def nor_gate(a, b): return 1 - (a | b)`
-                          )
-                        }
-                        className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
-                      >
-                        NOR Gate
-                      </button>
-                      <button
-                        onClick={() =>
-                          setInputCode(`def or_gate(a, b): return a | b`)
-                        }
-                        className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
-                      >
-                        OR Gate
-                      </button>
-                      <button
-                        onClick={() =>
-                          setInputCode(
-                            `def not_gate(a): return 1 - a`
-                          )
-                        }
-                        className="p-3 text-left text-xs font-mono bg-muted/50 rounded-lg border hover:bg-muted/80 transition-colors"
-                      >
-                        NOT Gate
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
-
-        
       </div>
     </MainLayout>
   );

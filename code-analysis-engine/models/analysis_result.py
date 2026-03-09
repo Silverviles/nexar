@@ -65,8 +65,8 @@ class QuantumComplexity(BaseModel):
     has_entanglement: bool = Field(default=False, description="Uses entanglement")
     
     # Resource estimation
-    quantum_volume: Optional[float] = Field(default=None, description="Estimated quantum volume")
-    estimated_runtime_ms: Optional[float] = Field(default=None, description="Estimated runtime")
+    logical_circuit_volume: Optional[float] = Field(default=None, description="Estimated logical_circuit volume")
+    estimated_logical_runtime_ms: Optional[float] = Field(default=None, description="Estimated runtime")
 
 class CodeAnalysisResult(BaseModel):
     """
@@ -103,6 +103,7 @@ class CodeAnalysisResult(BaseModel):
     # Algorithm detection (will be added later)
     detected_algorithms: list = Field(default_factory=list, description="Detected quantum algorithms")
     algorithm_detection_source: Optional[str] = None
+    language_detection_method: str = Field(default="fallback", description="Language detection method: 'ml', 'fallback', or 'error'")
     
     class Config:
         json_schema_extra = {

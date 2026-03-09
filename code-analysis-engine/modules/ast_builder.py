@@ -4,6 +4,7 @@ AST Builder - Constructs unified AST from parsed code
 import logging
 from typing import Dict, Any
 from models.unified_ast import UnifiedAST
+from modules.canonical_ir_builder import CanonicalIRBuilder
 from modules.language_detector import SupportedLanguage
 from modules.parsers import (
     QiskitParser, CirqParser, OpenQASMParser,
@@ -16,6 +17,7 @@ class ASTBuilder:
     """Builds unified AST from parsed code"""
     
     def __init__(self):
+        self.ir_builder = CanonicalIRBuilder()
         self.parsers = {
             SupportedLanguage.QISKIT: QiskitParser(),
             SupportedLanguage.CIRQ: CirqParser(),
@@ -73,7 +75,16 @@ class ASTBuilder:
             "Built unified AST for %s: %d qubits, %d gates, %d measurements",
             language.value, total_qubits, len(gates), len(measurements),
         )
+
+        # Attach canonical IR so all downstream analyzers share a single semantic source.
+        metadata = self.get_metadata(parsed_data)
+        unified_ast.canonical_ir = self.ir_builder.build(unified_ast, metadata)
+        
         return unified_ast
+    
+    def to_ir(self, unified_ast: UnifiedAST) -> Dict[str, Any]:
+        """Serialize a built UnifiedAST into canonical IR format."""
+        return unified_ast.to_ir()
     
     def get_metadata(self, parsed_data: Dict[str, Any]) -> Dict[str, Any]:
         """Extract metadata from parsed data"""

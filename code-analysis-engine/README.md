@@ -206,8 +206,8 @@ Complete code analysis pipeline. Returns metrics for the Decision Engine.
     "entanglement_score": 0.75,
     "has_superposition": true,
     "has_entanglement": true,
-    "quantum_volume": null,
-    "estimated_runtime_ms": null
+    "logical_circuit_volume": null,
+    "estimated_logical_runtime_ms": null
   },
   "qubits_required": 2,
   "circuit_depth": 3,

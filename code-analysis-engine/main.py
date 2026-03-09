@@ -28,13 +28,16 @@ from typing import Optional
 import uvicorn
 
 # Import modules
-from modules.language_detector import LanguageDetector, SupportedLanguage
+from modules.language_detector import SupportedLanguage
+from modules.ml_language_classifier import MLLanguageClassifier, ContinuousLearningManager
 from modules.ast_builder import ASTBuilder
 from modules.complexity_analyzer import ComplexityAnalyzer
 from modules.quantum_analyzer import QuantumAnalyzer
 from modules.algorithm_detector import QuantumAlgorithmDetector 
 from models.analysis_result import CodeAnalysisResult, ProblemType, TimeComplexity
 from modules.ml_algorithm_classifier import MLAlgorithmClassifier
+from modules.codebert_algorithm_classifier import CodeBERTAlgorithmClassifier
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -55,12 +58,42 @@ app.add_middleware(
 api_router = APIRouter(prefix="/api/v1/code-analysis-engine")
 
 # Initialize components
-language_detector = LanguageDetector()
+ml_language_classifier = MLLanguageClassifier()
+learning_manager = ContinuousLearningManager()
 ast_builder = ASTBuilder()
 complexity_analyzer = ComplexityAnalyzer()
 quantum_analyzer = QuantumAnalyzer()
 algorithm_detector = QuantumAlgorithmDetector() 
+
+# Try to load CodeBERT algorithm classifier (PRIMARY)
+# Falls back to pattern matching if CodeBERT not available
+codebert_classifier = None
+use_codebert = False
+
+try:
+    codebert_models_dir = Path("models/trained_codebert")
+    if codebert_models_dir.exists() and (codebert_models_dir / "codebert_model.pt").exists():
+        print("✅ Loading CodeBERT algorithm classifier (PRIMARY MODEL)...")
+        codebert_classifier = CodeBERTAlgorithmClassifier()
+        codebert_classifier.load_models()
+        print("✅ CodeBERT classifier loaded successfully!")
+        print("   🚀 Using transformer-based semantic understanding")
+        print("   ✅ Multi-label support enabled")
+        use_codebert = True
+    else:
+        print("ℹ️  CodeBERT model not found. Train using:")
+        print("      python train_codebert_algorithm_classifier.py")
+        print("   📌 Falling back to pattern-based detection")
+        use_codebert = False
+except Exception as e:
+    print(f"⚠️  Error loading CodeBERT classifier: {e}")
+    print("   Falling back to pattern-based detection")
+    use_codebert = False
+
+# Load legacy classifier as fallback
 ml_classifier = MLAlgorithmClassifier()
+if not use_codebert:
+    print("✅ Pattern-based algorithm detector loaded (FALLBACK).")
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -74,6 +107,7 @@ class LanguageDetectionResponse(BaseModel):
     confidence: float
     is_supported: bool
     details: str
+    method: str = "fallback"  # 'ml', 'fallback', or 'error'
 
 # Routes
 
@@ -102,7 +136,7 @@ async def health_check(request: Request):
 async def detect_language(submission: CodeSubmission, request: Request):
     """Detect programming language"""
     try:
-        result = language_detector.detect(code=submission.code)
+        result = ml_language_classifier.detect(code=submission.code)
         logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Detected language: {result['language']}")
         return LanguageDetectionResponse(**result)
     except Exception as e:
@@ -119,7 +153,8 @@ async def analyze_code(submission: CodeSubmission, request: Request):
         code = submission.code
         
         # Step 1: Detect language
-        lang_result = language_detector.detect(code=code)
+        lang_result = ml_language_classifier.detect(code=code)
+        detection_method = lang_result.get('method', 'fallback')
         
         if not lang_result["is_supported"]:
             logger.warning(f"[CodeAnalysisEngine] {request.method} {request.url} - Unsupported language: {lang_result['language']}")
@@ -130,11 +165,8 @@ async def analyze_code(submission: CodeSubmission, request: Request):
         
         detected_lang = SupportedLanguage(lang_result["language"])
         
-        # Step 2: Parse and build unified AST
-        parser = ast_builder.parsers[detected_lang]
-        parsed_data = parser.parse(code)
+        # Step 2: Parse and build unified AST + canonical IR
         unified_ast = ast_builder.build(code, detected_lang)
-        metadata = ast_builder.get_metadata(parsed_data)
         
         # Step 3: Determine if quantum or classical
         is_quantum = detected_lang in {
@@ -151,32 +183,73 @@ async def analyze_code(submission: CodeSubmission, request: Request):
         algorithm_confidence = 0.0
         algorithm_detection_source = None
         
+        # Metadata is always initialized, so downstream code is safe even if IR is missing.
+        metadata = {
+            'lines_of_code': len(code.splitlines()),
+            'loop_count': 0,
+            'conditional_count': 0,
+            'nesting_depth': 0,
+            'function_count': len(unified_ast.functions or [])
+        }
+
+        if unified_ast.canonical_ir:
+            ir_meta = unified_ast.canonical_ir.metadata or {}
+            metadata = {
+                'lines_of_code': ir_meta.get('lines_of_code', metadata['lines_of_code']),
+                'loop_count': unified_ast.canonical_ir.loop_count,
+                'conditional_count': unified_ast.canonical_ir.conditional_count,
+                'nesting_depth': unified_ast.canonical_ir.max_nesting_depth,
+                'function_count': ir_meta.get('function_count', metadata['function_count'])
+            }
+
         if is_quantum:
             # === QUANTUM ANALYSIS ===
             # quantum_analyzer uses:
             # - AccurateCircuitDepthCalculator
             # - QuantumStateSimulator
             quantum_metrics = quantum_analyzer.analyze(unified_ast)
-            ml_result = ml_classifier.classify(
-                unified_ast, 
-                quantum_metrics,
-                use_ensemble=True
-            )
             
-            if ml_result['confidence'] > 0.5:
-                detected_algorithms = [ml_result['algorithm']]
-                problem_type = ml_result['problem_type']
-                algorithm_confidence = ml_result['confidence']
-                algorithm_detection_source = "ml"
-            else:
-                # Use accurate algorithm detector 
+            # Try CodeBERT first (semantic understanding), then ML, then rule-based.
+            if use_codebert and codebert_classifier:
+                try:
+                    codebert_result = codebert_classifier.classify(code=code, threshold=0.5)
+
+                    if codebert_result.get('algorithms'):
+                        detected_algorithms = codebert_result['algorithms']
+                        algorithm_confidence = codebert_result.get('confidence', 0.8)
+                        algorithm_detection_source = "codebert"
+                        
+                        # Map primary algorithm to problem type
+                        from modules.codebert_algorithm_classifier import map_algorithm_to_problem_type
+                        primary_algo = detected_algorithms[0] if detected_algorithms else 'unknown'
+                        problem_type = map_algorithm_to_problem_type(primary_algo)
+                except Exception as e:
+                    print(f"CodeBERT classification failed: {e}, falling back")
+
+            # If CodeBERT is unavailable/failed/no result, use ML single-label classifier.
+            if not detected_algorithms:
+                try:
+                    ml_result = ml_classifier.classify(unified_ast, quantum_metrics, use_ensemble=True)
+                    ml_algorithm = ml_result.get('algorithm', 'unknown')
+                    ml_confidence = float(ml_result.get('confidence', 0.0))
+
+                    if ml_algorithm and ml_algorithm != 'unknown':
+                        detected_algorithms = [ml_algorithm]
+                        problem_type = ml_result.get('problem_type', ProblemType.UNKNOWN)
+                        algorithm_confidence = ml_confidence
+                        algorithm_detection_source = "ml-ensemble"
+                except Exception as e:
+                    print(f"ML classification failed: {e}, falling back")
+
+            # If still no algorithm OR confidence is low, use accurate rule-based detector.
+            if not detected_algorithms or algorithm_confidence < 0.5:
                 algorithm_result = algorithm_detector.detect(unified_ast)
                 problem_type = algorithm_result['problem_type']
                 detected_algorithms = algorithm_result['detected_algorithms']
                 algorithm_confidence = algorithm_result['confidence']
                 algorithm_detection_source = "rule-based"
             
-            # Fallback to heuristics if algorithm detector has low confidence
+            # Final fallback to heuristics if detector confidence is still low.
             if algorithm_confidence < 0.5:
                 problem_type = determine_problem_type_heuristic(code, is_quantum=True)
                 algorithm_detection_source = "heuristic"
@@ -186,12 +259,13 @@ async def analyze_code(submission: CodeSubmission, request: Request):
                 # complexity_analyzer uses:
                 # - AccurateTimeComplexityAnalyzer
                 # - AccurateSpaceComplexityAnalyzer
-                classical_metrics = complexity_analyzer.analyze(code, metadata)
+                classical_metrics = complexity_analyzer.analyze(code, metadata, unified_ast)
         else:
             # === CLASSICAL ANALYSIS ===
             # complexity_analyzer uses accurate methods
-            classical_metrics = complexity_analyzer.analyze(code, metadata)
+            classical_metrics = complexity_analyzer.analyze(code, metadata, unified_ast)
             problem_type = ProblemType.CLASSICAL
+            algorithm_detection_source = "classical"
         
         # Step 4: Build result for Decision Engine
         result = build_analysis_result(
@@ -203,7 +277,8 @@ async def analyze_code(submission: CodeSubmission, request: Request):
             metadata=metadata,
             detected_algorithms=detected_algorithms,  
             algorithm_confidence=algorithm_confidence,
-            algorithm_detection_source=algorithm_detection_source  
+            algorithm_detection_source=algorithm_detection_source,
+            language_detection_method=detection_method
         )
         
         logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Analysis completed for code submission.")
@@ -224,6 +299,24 @@ async def get_supported_languages(request: Request):
         "languages": [{"name": lang.capitalize(), "value": lang} for lang in supported_languages],
         "count": len(supported_languages)
     }
+
+# Continuous learning endpoints
+@api_router.post("/feedback")
+async def submit_feedback(
+    code: str,
+    predicted: str,
+    actual: str,
+    confidence: float
+):
+    """Submit feedback for continuous learning"""
+    learning_manager.collect_feedback(code, predicted, actual, confidence)
+    return {"status": "feedback_received", "message": "Thank you for your feedback!"}
+
+@api_router.post("/admin/retrain")
+async def trigger_retrain():
+    """Manually trigger model retraining (admin only)"""
+    learning_manager._trigger_retraining()
+    return {"status": "retraining_started"}
 
 app.include_router(api_router)
 
@@ -267,7 +360,8 @@ def build_analysis_result(
     metadata: dict,
     detected_algorithms: list = None,
     algorithm_confidence: float = 0.0,
-    algorithm_detection_source: Optional[str] = None
+    algorithm_detection_source: Optional[str] = None,
+    language_detection_method: str = "fallback"
 ) -> CodeAnalysisResult:
     """Build complete analysis result with accurate metrics"""
     
@@ -358,7 +452,8 @@ def build_analysis_result(
         confidence_score=confidence,
         analysis_notes=notes,
         detected_algorithms=detected_algorithms,
-        algorithm_detection_source=algorithm_detection_source 
+        algorithm_detection_source=algorithm_detection_source,
+        language_detection_method=language_detection_method
     )
 
 def determine_quantum_time_complexity(

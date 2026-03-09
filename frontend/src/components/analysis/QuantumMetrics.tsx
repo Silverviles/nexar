@@ -109,8 +109,8 @@ export function QuantumMetricsDisplay({
 
         <MetricCard
           icon={Box}
-          label="Quantum Volume"
-          value={metrics.quantum_volume ?? "N/A"}
+          label="Logical Circuit Volume"
+          value={metrics.logical_circuit_volume ?? "N/A"}
           subtitle="Resource scale"
           variant="quantum"
           animate
@@ -120,8 +120,8 @@ export function QuantumMetricsDisplay({
           icon={Clock}
           label="Est. Runtime"
           value={
-            metrics.estimated_runtime_ms
-              ? `${metrics.estimated_runtime_ms.toFixed(3)}ms`
+            metrics.estimated_logical_runtime_ms
+              ? `${metrics.estimated_logical_runtime_ms.toFixed(3)}ms`
               : "N/A"
           }
           subtitle="Execution time"
@@ -189,10 +189,10 @@ export function QuantumMetricsDisplay({
             </p>
             <p className="text-muted-foreground">
               <span className="font-semibold text-foreground">
-                Quantum Volume:
+                Logical Circuit Volume:
               </span>{" "}
-              {metrics.quantum_volume
-                ? `${metrics.quantum_volume} - indicates the circuit's computational power and error resilience.`
+              {metrics.logical_circuit_volume
+                ? `${metrics.logical_circuit_volume} - indicates the circuit's computational power and error resilience.`
                 : "Not calculated for this circuit."}
             </p>
           </div>

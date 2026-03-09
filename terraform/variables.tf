@@ -98,7 +98,7 @@ variable "service_resources" {
     }
     code-analysis-engine = {
       cpu    = "1"
-      memory = "512Mi"
+      memory = "4Gi"
     }
     decision-engine = {
       cpu    = "1"
@@ -168,7 +168,7 @@ variable "ai_code_converter_model_gcs_path" {
 variable "code_analysis_engine_model_gcs_path" {
   description = "GCS path (relative to the models bucket) for the Code Analysis Engine model folder (e.g. code-analysis-engine/trained)"
   type        = string
-  default     = "code-analysis-engine/version1"
+  default     = "code-analysis-engine/version2"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

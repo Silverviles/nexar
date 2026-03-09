@@ -10,6 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { ClassicalMetricsDisplay } from "./ClassicalMetrics";
 import { QuantumMetricsDisplay } from "./QuantumMetrics";
 import { EnvironmentRecommendation } from "./EnvironmentRecommendation";
+import { CodeQualityScore } from "./CodeQualityScore";
+import { OptimizationSuggestions } from "./OptimizationSuggestions";
+import { ASTTreeViewer } from "./ASTTreeViewer";
+import { ComplexityHeatmap } from "./ComplexityHeatmap";
 import type { AnalysisResult } from "@/types/codeAnalysis";
 import { getLanguageDisplayName } from "@/lib/languageDetection";
 import { cn } from "@/lib/utils";
@@ -246,6 +250,36 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
           </div>
         </CardContent>
       </Card>
+
+      <Separator />
+
+      {/* UI Enhancement Components */}
+      
+      {/* Code Quality Assessment */}
+      {result.code_quality_metrics && (
+        <CodeQualityScore metrics={result.code_quality_metrics} />
+      )}
+
+      {/* Complexity Heatmap */}
+      <ComplexityHeatmap
+        classicalMetrics={result.classical_metrics}
+        quantumMetrics={result.quantum_metrics}
+        isQuantum={result.is_quantum}
+      />
+
+      {/* Optimization Suggestions */}
+      {result.optimization_suggestions && (
+        result.optimization_suggestions.length > 0 ? (
+          <OptimizationSuggestions suggestions={result.optimization_suggestions} />
+        ) : null
+      )}
+
+      {/* AST Structure Viewer */}
+      {result.ast_structure && (
+        <ASTTreeViewer ast={result.ast_structure} />
+      )}
+
+      <Separator />
 
       {/* Environment Recommendation Section */}
       <EnvironmentRecommendation analysisResult={result} />

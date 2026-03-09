@@ -278,7 +278,8 @@ async def analyze_code(submission: CodeSubmission, request: Request):
             detected_algorithms=detected_algorithms,  
             algorithm_confidence=algorithm_confidence,
             algorithm_detection_source=algorithm_detection_source,
-            language_detection_method=detection_method
+            language_detection_method=detection_method,
+            code=code
         )
         
         logger.info(f"[CodeAnalysisEngine] {request.method} {request.url} - Analysis completed for code submission.")
@@ -361,7 +362,8 @@ def build_analysis_result(
     detected_algorithms: list = None,
     algorithm_confidence: float = 0.0,
     algorithm_detection_source: Optional[str] = None,
-    language_detection_method: str = "fallback"
+    language_detection_method: str = "fallback",
+    code: str = ""
 ) -> CodeAnalysisResult:
     """Build complete analysis result with accurate metrics"""
     
@@ -428,6 +430,15 @@ def build_analysis_result(
         
         confidence = lang_confidence
     
+    # Generate UI enhancement fields
+    code_quality = calculate_code_quality_metrics(
+        classical_metrics, quantum_metrics, problem_type, is_quantum, metadata
+    )
+    suggestions = generate_optimization_suggestions(
+        classical_metrics, quantum_metrics, problem_type, is_quantum, detected_algorithms
+    )
+    ast_struct = generate_ast_structure(code=code, detected_lang=detected_lang, metadata=metadata)
+    
     return CodeAnalysisResult(
         detected_language=detected_lang.value,
         language_confidence=lang_confidence,
@@ -453,7 +464,12 @@ def build_analysis_result(
         analysis_notes=notes,
         detected_algorithms=detected_algorithms,
         algorithm_detection_source=algorithm_detection_source,
-        language_detection_method=language_detection_method
+        language_detection_method=language_detection_method,
+        
+        # UI enhancement fields
+        code_quality_metrics=code_quality,
+        optimization_suggestions=suggestions,
+        ast_structure=ast_struct
     )
 
 def determine_quantum_time_complexity(
@@ -501,6 +517,241 @@ def estimate_classical_memory(space_complexity: str) -> float:
     }
     
     return estimates.get(space_complexity, 1.0)
+
+def calculate_code_quality_metrics(
+    classical_metrics,
+    quantum_metrics,
+    problem_type: ProblemType,
+    is_quantum: bool,
+    metadata: dict
+):
+    """Calculate code quality assessment"""
+    from models.analysis_result import CodeQualityMetrics
+    
+    # Base scores
+    maintainability = 100.0
+    performance = 100.0
+    resource_efficiency = 100.0
+    
+    if classical_metrics:
+        # Maintainability: affected by complexity and nesting depth
+        maintainability -= min(classical_metrics.cyclomatic_complexity * 2, 30)
+        maintainability -= min(classical_metrics.max_nesting_depth * 5, 20)
+        
+        # Performance: affected by time complexity and loop count
+        complexity_penalty = {
+            "O(1)": 0,
+            "O(log n)": 2,
+            "O(n)": 5,
+            "O(n log n)": 8,
+            "O(n^2)": 20,
+            "O(n^3)": 35,
+            "O(2^n)": 50,
+        }.get(classical_metrics.time_complexity.value, 15)
+        performance -= complexity_penalty
+        
+        # Resource efficiency
+        space_penalty = {
+            "O(1)": 0,
+            "O(n)": 5,
+            "O(n^2)": 20,
+            "O(n^3)": 40,
+        }.get(classical_metrics.space_complexity, 10)
+        resource_efficiency -= space_penalty
+    
+    if quantum_metrics:
+        # For quantum: high circuit depth or qubit count reduces efficiency
+        qubit_penalty = min(quantum_metrics.qubits_required * 2, 30)
+        depth_penalty = min(quantum_metrics.circuit_depth / 10, 25)
+        resource_efficiency -= qubit_penalty + depth_penalty
+        
+        # Good entanglement/superposition increases score
+        performance += quantum_metrics.entanglement_score * 10
+    
+    overall = (maintainability + performance + resource_efficiency) / 3
+    
+    complexity_rating = "Low"
+    if is_quantum:
+        if quantum_metrics and quantum_metrics.gate_count > 20:
+            complexity_rating = "Very High"
+        elif quantum_metrics and quantum_metrics.gate_count > 10:
+            complexity_rating = "High"
+        elif quantum_metrics and quantum_metrics.gate_count > 5:
+            complexity_rating = "Medium"
+    else:
+        if classical_metrics:
+            if classical_metrics.cyclomatic_complexity > 15:
+                complexity_rating = "Very High"
+            elif classical_metrics.cyclomatic_complexity > 10:
+                complexity_rating = "High"
+            elif classical_metrics.cyclomatic_complexity > 5:
+                complexity_rating = "Medium"
+    
+    return CodeQualityMetrics(
+        overall_score=max(0, min(100, overall)),
+        maintainability_score=max(0, min(100, maintainability)),
+        performance_score=max(0, min(100, performance)),
+        resource_efficiency_score=max(0, min(100, resource_efficiency)),
+        code_complexity_rating=complexity_rating
+    )
+
+def generate_optimization_suggestions(
+    classical_metrics,
+    quantum_metrics,
+    problem_type: ProblemType,
+    is_quantum: bool,
+    detected_algorithms: list = None
+):
+    """Generate actionable optimization suggestions"""
+    from models.analysis_result import OptimizationSuggestion
+    
+    suggestions = []
+    
+    if not detected_algorithms:
+        detected_algorithms = []
+    
+    if is_quantum and quantum_metrics:
+        # High circuit depth
+        if quantum_metrics.circuit_depth > 20:
+            suggestions.append(OptimizationSuggestion(
+                category="performance",
+                severity="high",
+                description="Circuit depth is high. Consider circuit optimization passes.",
+                expected_improvement="Reduce circuit depth by 20-40%",
+                estimated_savings={"circuit_depth_reduction": "20-40%"}
+            ))
+        
+        # High gate count
+        if quantum_metrics.gate_count > 30:
+            suggestions.append(OptimizationSuggestion(
+                category="resources",
+                severity="high",
+                description="High gate count increases error rates. Optimize gate decomposition.",
+                expected_improvement="Reduce error accumulation",
+                estimated_savings={"gate_count_reduction": "15-30%"}
+            ))
+        
+        # Low entanglement utilization
+        if quantum_metrics.entanglement_score < 0.3 and problem_type != ProblemType.CLASSICAL:
+            suggestions.append(OptimizationSuggestion(
+                category="structure",
+                severity="medium",
+                description="Limited entanglement usage. May not leverage quantum advantage.",
+                expected_improvement="Better quantum resource utilization",
+                estimated_savings=None
+            ))
+        
+        # No detected algorithms
+        if not detected_algorithms:
+            suggestions.append(OptimizationSuggestion(
+                category="structure",
+                severity="medium",
+                description="Could not identify standard quantum algorithm. Verify circuit structure.",
+                expected_improvement="Better algorithm characterization",
+                estimated_savings=None
+            ))
+        else:
+            # Algorithm-specific suggestions
+            algo_name = detected_algorithms[0].lower()
+            if "grover" in algo_name:
+                suggestions.append(OptimizationSuggestion(
+                    category="performance",
+                    severity="low",
+                    description="Grover's algorithm detected. Ensure oracle is optimized.",
+                    expected_improvement="5-15% speedup with oracle optimization",
+                    estimated_savings={"execution_time_reduction": "5-15%"}
+                ))
+    
+    elif classical_metrics:
+        # High cyclomatic complexity
+        if classical_metrics.cyclomatic_complexity > 15:
+            suggestions.append(OptimizationSuggestion(
+                category="structure",
+                severity="high",
+                description="High cyclomatic complexity. Consider refactoring into smaller functions.",
+                expected_improvement="Improved maintainability and testability",
+                estimated_savings={"branches": classical_metrics.cyclomatic_complexity - 10}
+            ))
+        
+        # High nesting depth
+        if classical_metrics.max_nesting_depth > 5:
+            suggestions.append(OptimizationSuggestion(
+                category="structure",
+                severity="medium",
+                description="Deep nesting detected. Refactor to reduce indentation levels.",
+                expected_improvement="Better readability and reduced bugs",
+                estimated_savings={"nesting_depth_reduction": "2-3 levels"}
+            ))
+        
+        # High time complexity
+        if classical_metrics.time_complexity.value in ["O(n^2)", "O(n^3)", "O(2^n)"]:
+            suggestions.append(OptimizationSuggestion(
+                category="performance",
+                severity="high",
+                description=f"Algorithm has {classical_metrics.time_complexity.value} complexity. Consider better algorithms.",
+                expected_improvement="Significant performance improvement",
+                estimated_savings={"speedup_factor": "5x-100x possible"}
+            ))
+        
+        # Many loops
+        if classical_metrics.loop_count > 5:
+            suggestions.append(OptimizationSuggestion(
+                category="performance",
+                severity="medium",
+                description="Multiple nested loops detected. Consider vectorization or parallel processing.",
+                expected_improvement="20-50% performance improvement",
+                estimated_savings={"execution_time_reduction": "20-50%"}
+            ))
+    
+    return suggestions
+
+def generate_ast_structure(code: str, detected_lang: SupportedLanguage, metadata: dict):
+    """Generate simplified AST for visualization"""
+    from models.analysis_result import ASTNode
+    
+    try:
+        ast = ASTNode(
+            type="program",
+            name=detected_lang.value,
+            attributes={
+                "language": detected_lang.value,
+                "lines_of_code": metadata.get("lines_of_code", 0),
+            },
+            children=[
+                ASTNode(
+                    type="imports",
+                    children=[
+                        ASTNode(
+                            type="import",
+                            name=imp,
+                            line_number=i+1
+                        ) for i, imp in enumerate(
+                            code.split('\n')[0:10] if detected_lang == SupportedLanguage.PYTHON else []
+                        ) if imp.strip().startswith('import' or 'from')
+                    ]
+                ),
+                ASTNode(
+                    type="functions",
+                    attributes={"count": metadata.get("function_count", 0)},
+                    complexity_score=metadata.get("nesting_depth", 0) / 10.0
+                ),
+                ASTNode(
+                    type="control_flow",
+                    attributes={
+                        "loops": metadata.get("loop_count", 0),
+                        "conditionals": metadata.get("conditional_count", 0),
+                    },
+                    complexity_score=(
+                        metadata.get("loop_count", 0) + 
+                        metadata.get("conditional_count", 0)
+                    ) / 10.0
+                ),
+            ]
+        )
+        return ast
+    except Exception as e:
+        logger.warning(f"Error generating AST structure: {e}")
+        return None
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8002, reload=True)

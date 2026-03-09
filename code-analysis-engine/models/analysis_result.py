@@ -4,7 +4,7 @@ Output format for Decision Engine
 """
 from pydantic import BaseModel, Field
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 class ProblemType(str, Enum):
     """Type of computational problem"""
@@ -68,6 +68,31 @@ class QuantumComplexity(BaseModel):
     logical_circuit_volume: Optional[float] = Field(default=None, description="Estimated logical_circuit volume")
     estimated_logical_runtime_ms: Optional[float] = Field(default=None, description="Estimated runtime")
 
+class ASTNode(BaseModel):
+    """AST Node for tree structure visualization"""
+    type: str = Field(..., description="Node type (function, loop, conditional, gate, register, etc.)")
+    name: Optional[str] = Field(default=None, description="Node name")
+    line_number: Optional[int] = Field(default=None, description="Line number in source")
+    complexity_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Complexity score")
+    children: List["ASTNode"] = Field(default_factory=list, description="Child nodes")
+    attributes: Dict[str, Any] = Field(default_factory=dict, description="Additional attributes")
+
+class OptimizationSuggestion(BaseModel):
+    """Optimization suggestion for code improvement"""
+    category: str = Field(..., description="Category (e.g., 'performance', 'resources', 'structure')")
+    severity: str = Field(..., description="Severity level (low, medium, high)")
+    description: str = Field(..., description="Human-readable suggestion")
+    expected_improvement: str = Field(..., description="Expected impact/improvement")
+    estimated_savings: Optional[Dict[str, Any]] = Field(default=None, description="Estimated resource savings")
+
+class CodeQualityMetrics(BaseModel):
+    """Code quality assessment"""
+    overall_score: float = Field(..., ge=0.0, le=100.0, description="Overall quality score 0-100")
+    maintainability_score: float = Field(..., ge=0.0, le=100.0, description="Maintainability score")
+    performance_score: float = Field(..., ge=0.0, le=100.0, description="Performance efficiency score")
+    resource_efficiency_score: float = Field(..., ge=0.0, le=100.0, description="Resource usage efficiency")
+    code_complexity_rating: str = Field(..., description="Low/Medium/High/Very High")
+
 class CodeAnalysisResult(BaseModel):
     """
     Complete code analysis result
@@ -104,6 +129,11 @@ class CodeAnalysisResult(BaseModel):
     detected_algorithms: list = Field(default_factory=list, description="Detected quantum algorithms")
     algorithm_detection_source: Optional[str] = None
     language_detection_method: str = Field(default="fallback", description="Language detection method: 'ml', 'fallback', or 'error'")
+    
+    # UI Enhancement Fields (optional)
+    ast_structure: Optional[ASTNode] = Field(default=None, description="Abstract Syntax Tree for visualization")
+    code_quality_metrics: Optional[CodeQualityMetrics] = Field(default=None, description="Code quality assessment")
+    optimization_suggestions: List[OptimizationSuggestion] = Field(default_factory=list, description="Recommended optimizations")
     
     class Config:
         json_schema_extra = {

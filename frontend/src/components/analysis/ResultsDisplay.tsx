@@ -10,6 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { ClassicalMetricsDisplay } from "./ClassicalMetrics";
 import { QuantumMetricsDisplay } from "./QuantumMetrics";
 import { EnvironmentRecommendation } from "./EnvironmentRecommendation";
+import { CodeQualityScore } from "./CodeQualityScore";
+import { OptimizationSuggestions } from "./OptimizationSuggestions";
+import { ASTTreeViewer } from "./ASTTreeViewer";
+import { ComplexityHeatmap } from "./ComplexityHeatmap";
 import type { AnalysisResult } from "@/types/codeAnalysis";
 import { getLanguageDisplayName } from "@/lib/languageDetection";
 import { cn } from "@/lib/utils";
@@ -53,7 +57,7 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
           "border-2 transition-all duration-500",
           isQuantum
             ? "border-purple-500/50 bg-gradient-to-br from-purple-500/10 to-transparent"
-            : "border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-transparent"
+            : "border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-transparent",
         )}
       >
         <CardHeader>
@@ -75,14 +79,14 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                   "flex h-24 w-24 items-center justify-center rounded-full border-4",
                   isQuantum
                     ? "border-purple-500 bg-purple-500/20"
-                    : "border-cyan-500 bg-cyan-500/20"
+                    : "border-cyan-500 bg-cyan-500/20",
                 )}
               >
                 <div className="text-center">
                   <div
                     className={cn(
                       "text-2xl font-bold",
-                      isQuantum ? "text-purple-400" : "text-cyan-400"
+                      isQuantum ? "text-purple-400" : "text-cyan-400",
                     )}
                   >
                     {(result.confidence_score * 100).toFixed(0)}%
@@ -246,6 +250,35 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
           </div>
         </CardContent>
       </Card>
+
+      <Separator />
+
+      {/* UI Enhancement Components */}
+
+      {/* Code Quality Assessment */}
+      {result.code_quality_metrics && (
+        <CodeQualityScore metrics={result.code_quality_metrics} />
+      )}
+
+      {/* Complexity Heatmap */}
+      <ComplexityHeatmap
+        classicalMetrics={result.classical_metrics}
+        quantumMetrics={result.quantum_metrics}
+        isQuantum={result.is_quantum}
+      />
+
+      {/* Optimization Suggestions */}
+      {result.optimization_suggestions &&
+        (result.optimization_suggestions.length > 0 ? (
+          <OptimizationSuggestions
+            suggestions={result.optimization_suggestions}
+          />
+        ) : null)}
+
+      {/* AST Structure Viewer */}
+      {result.ast_structure && <ASTTreeViewer ast={result.ast_structure} />}
+
+      <Separator />
 
       {/* Environment Recommendation Section */}
       <EnvironmentRecommendation analysisResult={result} />

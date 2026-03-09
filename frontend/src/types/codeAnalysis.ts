@@ -58,8 +58,8 @@ export interface QuantumMetrics {
   entanglement_score: number;
   has_superposition: boolean;
   has_entanglement: boolean;
-  quantum_volume: number | null;
-  estimated_runtime_ms: number | null;
+  logical_circuit_volume: number | null;
+  estimated_logical_runtime_ms: number | null;
 }
 
 export interface AnalysisResult {
@@ -82,6 +82,35 @@ export interface AnalysisResult {
   analysis_notes: string;
   detected_algorithms: string[];
   algorithm_detection_source: string | null;
+  code_quality_metrics?: CodeQualityMetrics;
+  optimization_suggestions?: OptimizationSuggestion[];
+  ast_structure?: ASTNode;
+  language_detection_method?: string;
+}
+
+export interface ASTNode {
+  type: string;
+  name?: string | null;
+  line_number?: number | null;
+  complexity_score?: number | null;
+  children?: ASTNode[] | null;
+  attributes?: Record<string, any> | null;
+}
+
+export interface OptimizationSuggestion {
+  category: string;
+  severity: "low" | "medium" | "high";
+  description: string;
+  expected_improvement: string;
+  estimated_savings?: Record<string, any>;
+}
+
+export interface CodeQualityMetrics {
+  overall_score: number;
+  maintainability_score: number;
+  performance_score: number;
+  resource_efficiency_score: number;
+  code_complexity_rating: "Low" | "Medium" | "High" | "Very High";
 }
 
 export interface Language {

@@ -27,7 +27,7 @@ export function OptimizationSuggestions({
   suggestions,
 }: OptimizationSuggestionsProps) {
   const [expandedId, setExpandedId] = useState<number | null>(
-    suggestions.length > 0 ? 0 : null
+    suggestions.length > 0 ? 0 : null,
   );
 
   if (!suggestions || suggestions.length === 0) {
@@ -41,7 +41,8 @@ export function OptimizationSuggestions({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            ✓ No major optimization opportunities detected. Your code is well-structured!
+            ✓ No major optimization opportunities detected. Your code is
+            well-structured!
           </p>
         </CardContent>
       </Card>
@@ -97,7 +98,7 @@ export function OptimizationSuggestions({
                 setExpandedId(
                   expandedId === suggestions.indexOf(suggestion)
                     ? null
-                    : suggestions.indexOf(suggestion)
+                    : suggestions.indexOf(suggestion),
                 )
               }
             />
@@ -121,7 +122,7 @@ export function OptimizationSuggestions({
                 setExpandedId(
                   expandedId === suggestions.indexOf(suggestion)
                     ? null
-                    : suggestions.indexOf(suggestion)
+                    : suggestions.indexOf(suggestion),
                 )
               }
             />
@@ -145,7 +146,7 @@ export function OptimizationSuggestions({
                 setExpandedId(
                   expandedId === suggestions.indexOf(suggestion)
                     ? null
-                    : suggestions.indexOf(suggestion)
+                    : suggestions.indexOf(suggestion),
                 )
               }
             />
@@ -189,7 +190,7 @@ function SuggestionCard({
     <div
       className={cn(
         "rounded-lg border transition-all",
-        severityColor[suggestion.severity as keyof typeof severityColor]
+        severityColor[suggestion.severity as keyof typeof severityColor],
       )}
     >
       <Button
@@ -198,13 +199,19 @@ function SuggestionCard({
         onClick={onToggle}
       >
         <div className="flex items-start gap-3 text-left flex-1">
-          <div className="mt-0.5">{severityIcon[suggestion.severity as keyof typeof severityIcon]}</div>
+          <div className="mt-0.5">
+            {severityIcon[suggestion.severity as keyof typeof severityIcon]}
+          </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <p className="font-semibold text-sm">{suggestion.description}</p>
               <Badge
                 variant="outline"
-                className={categoryColors[suggestion.category as keyof typeof categoryColors]}
+                className={
+                  categoryColors[
+                    suggestion.category as keyof typeof categoryColors
+                  ]
+                }
               >
                 {suggestion.category}
               </Badge>
@@ -219,7 +226,7 @@ function SuggestionCard({
         <ChevronDown
           className={cn(
             "h-4 w-4 transition-transform",
-            isExpanded && "rotate-180"
+            isExpanded && "rotate-180",
           )}
         />
       </Button>
@@ -239,18 +246,20 @@ function SuggestionCard({
                 Potential Savings
               </p>
               <div className="space-y-1">
-                {Object.entries(suggestion.estimated_savings).map(([key, value]) => (
-                  <div key={key} className="text-xs flex justify-between">
-                    <span className="text-muted-foreground capitalize">
-                      {key.replace(/_/g, " ")}:
-                    </span>
-                    <span className="font-mono font-semibold">
-                      {typeof value === "object"
-                        ? JSON.stringify(value)
-                        : String(value)}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(suggestion.estimated_savings).map(
+                  ([key, value]) => (
+                    <div key={key} className="text-xs flex justify-between">
+                      <span className="text-muted-foreground capitalize">
+                        {key.replace(/_/g, " ")}:
+                      </span>
+                      <span className="font-mono font-semibold">
+                        {typeof value === "object"
+                          ? JSON.stringify(value)
+                          : String(value)}
+                      </span>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           )}

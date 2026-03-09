@@ -41,7 +41,9 @@ export function CodeQualityScore({ metrics }: CodeQualityScoreProps) {
     return "bg-destructive/10 border-destructive/30";
   };
 
-  const getCertaintyLevel = (score: number): "Excellent" | "Good" | "Fair" | "Poor" => {
+  const getCertaintyLevel = (
+    score: number,
+  ): "Excellent" | "Good" | "Fair" | "Poor" => {
     if (score >= 80) return "Excellent";
     if (score >= 60) return "Good";
     if (score >= 40) return "Fair";
@@ -67,7 +69,12 @@ export function CodeQualityScore({ metrics }: CodeQualityScoreProps) {
         <div className="flex items-center justify-between rounded-lg border border-border/50 bg-secondary/10 p-4">
           <div>
             <p className="text-xs text-muted-foreground">Overall Score</p>
-            <p className={cn("text-3xl font-bold", getScoreColor(metrics.overall_score))}>
+            <p
+              className={cn(
+                "text-3xl font-bold",
+                getScoreColor(metrics.overall_score),
+              )}
+            >
               {metrics.overall_score.toFixed(1)}/100
             </p>
           </div>
@@ -75,7 +82,7 @@ export function CodeQualityScore({ metrics }: CodeQualityScoreProps) {
             className={cn(
               "flex h-20 w-20 items-center justify-center rounded-full border-2",
               getScoreBgColor(metrics.overall_score).split(" ").slice(0, 1)[0],
-              "border-blue-500"
+              "border-blue-500",
             )}
           >
             <div className="text-center">
@@ -115,7 +122,10 @@ export function CodeQualityScore({ metrics }: CodeQualityScoreProps) {
                 {metrics.resource_efficiency_score.toFixed(0)}/100
               </span>
             </div>
-            <Progress value={metrics.resource_efficiency_score} className="h-2" />
+            <Progress
+              value={metrics.resource_efficiency_score}
+              className="h-2"
+            />
           </div>
 
           <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-secondary/10 p-3">
@@ -144,27 +154,44 @@ export function CodeQualityScore({ metrics }: CodeQualityScoreProps) {
             </DialogHeader>
             <div className="space-y-4">
               <div className="rounded-lg border border-border p-4">
-                <h4 className="font-semibold mb-2">Maintainability ({metrics.maintainability_score.toFixed(1)}/100)</h4>
+                <h4 className="font-semibold mb-2">
+                  Maintainability ({metrics.maintainability_score.toFixed(1)}
+                  /100)
+                </h4>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Measures how easy the code is to understand and modify. Affected by cyclomatic complexity and nesting depth.
+                  Measures how easy the code is to understand and modify.
+                  Affected by cyclomatic complexity and nesting depth.
                 </p>
-                <Progress value={metrics.maintainability_score} className="h-2" />
+                <Progress
+                  value={metrics.maintainability_score}
+                  className="h-2"
+                />
               </div>
 
               <div className="rounded-lg border border-border p-4">
-                <h4 className="font-semibold mb-2">Performance ({metrics.performance_score.toFixed(1)}/100)</h4>
+                <h4 className="font-semibold mb-2">
+                  Performance ({metrics.performance_score.toFixed(1)}/100)
+                </h4>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Evaluates algorithm efficiency and resource utilization. Lower time complexity indicates better performance.
+                  Evaluates algorithm efficiency and resource utilization. Lower
+                  time complexity indicates better performance.
                 </p>
                 <Progress value={metrics.performance_score} className="h-2" />
               </div>
 
               <div className="rounded-lg border border-border p-4">
-                <h4 className="font-semibold mb-2">Resource Efficiency ({metrics.resource_efficiency_score.toFixed(1)}/100)</h4>
+                <h4 className="font-semibold mb-2">
+                  Resource Efficiency (
+                  {metrics.resource_efficiency_score.toFixed(1)}/100)
+                </h4>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Assessment of memory and computational resource usage. Lower space complexity is better.
+                  Assessment of memory and computational resource usage. Lower
+                  space complexity is better.
                 </p>
-                <Progress value={metrics.resource_efficiency_score} className="h-2" />
+                <Progress
+                  value={metrics.resource_efficiency_score}
+                  className="h-2"
+                />
               </div>
 
               <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4">
@@ -177,8 +204,8 @@ export function CodeQualityScore({ metrics }: CodeQualityScoreProps) {
                   {metrics.code_complexity_rating === "Very High"
                     ? "Consider refactoring: High complexity increases bug risk and maintenance effort."
                     : metrics.code_complexity_rating === "High"
-                    ? "Monitor complexity: Consider structural improvements for better maintainability."
-                    : "Good complexity level for this code type."}
+                      ? "Monitor complexity: Consider structural improvements for better maintainability."
+                      : "Good complexity level for this code type."}
                 </p>
               </div>
             </div>

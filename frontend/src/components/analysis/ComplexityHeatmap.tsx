@@ -98,10 +98,14 @@ function ClassicalComplexityView({ metrics }: { metrics: ClassicalMetrics }) {
             <div className="flex items-center justify-between mb-1">
               <div>
                 <p className="text-sm font-semibold">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
               <div className="text-right">
-                <span className="text-sm font-mono font-semibold">{item.value}</span>
+                <span className="text-sm font-mono font-semibold">
+                  {item.value}
+                </span>
                 <Badge
                   variant="outline"
                   className={cn(
@@ -109,8 +113,8 @@ function ClassicalComplexityView({ metrics }: { metrics: ClassicalMetrics }) {
                     isHigh
                       ? "border-destructive/50 text-destructive"
                       : isMedium
-                      ? "border-yellow-500/50 text-yellow-500"
-                      : "border-success/50 text-success"
+                        ? "border-yellow-500/50 text-yellow-500"
+                        : "border-success/50 text-success",
                   )}
                 >
                   {isHigh ? "High" : isMedium ? "Medium" : "Low"}
@@ -119,7 +123,11 @@ function ClassicalComplexityView({ metrics }: { metrics: ClassicalMetrics }) {
             </div>
             <div className="w-full bg-secondary/30 rounded-full h-2 overflow-hidden">
               <div
-                className={cn("h-full transition-all", item.color, "rounded-full")}
+                className={cn(
+                  "h-full transition-all",
+                  item.color,
+                  "rounded-full",
+                )}
                 style={{ width: `${Math.min(percentage, 100)}%` }}
               />
             </div>
@@ -131,7 +139,10 @@ function ClassicalComplexityView({ metrics }: { metrics: ClassicalMetrics }) {
       <div className="mt-4 pt-3 border-t border-border/50">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold">Time Complexity</p>
-          <Badge variant="outline" className="border-purple-500/30 text-purple-400">
+          <Badge
+            variant="outline"
+            className="border-purple-500/30 text-purple-400"
+          >
             {metrics.time_complexity}
           </Badge>
         </div>
@@ -203,7 +214,9 @@ function QuantumComplexityView({ metrics }: { metrics: QuantumMetrics }) {
             <div className="flex items-center justify-between mb-1">
               <div>
                 <p className="text-sm font-semibold">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
               <div className="text-right">
                 <span className="text-sm font-mono font-semibold">
@@ -217,8 +230,8 @@ function QuantumComplexityView({ metrics }: { metrics: QuantumMetrics }) {
                     isHigh
                       ? "border-destructive/50 text-destructive"
                       : isMedium
-                      ? "border-yellow-500/50 text-yellow-500"
-                      : "border-success/50 text-success"
+                        ? "border-yellow-500/50 text-yellow-500"
+                        : "border-success/50 text-success",
                   )}
                 >
                   {isHigh ? "High" : isMedium ? "Medium" : "Low"}
@@ -227,7 +240,11 @@ function QuantumComplexityView({ metrics }: { metrics: QuantumMetrics }) {
             </div>
             <div className="w-full bg-secondary/30 rounded-full h-2 overflow-hidden">
               <div
-                className={cn("h-full transition-all", item.color, "rounded-full")}
+                className={cn(
+                  "h-full transition-all",
+                  item.color,
+                  "rounded-full",
+                )}
                 style={{ width: `${Math.min(percentage, 100)}%` }}
               />
             </div>
@@ -243,7 +260,9 @@ function QuantumComplexityView({ metrics }: { metrics: QuantumMetrics }) {
             <div className="h-2 w-12 bg-secondary/30 rounded-full overflow-hidden">
               <div
                 className="h-full bg-purple-500 rounded-full"
-                style={{ width: `${Math.round(metrics.superposition_score * 100)}%` }}
+                style={{
+                  width: `${Math.round(metrics.superposition_score * 100)}%`,
+                }}
               />
             </div>
             <span className="text-xs font-mono">
@@ -257,7 +276,9 @@ function QuantumComplexityView({ metrics }: { metrics: QuantumMetrics }) {
             <div className="h-2 w-12 bg-secondary/30 rounded-full overflow-hidden">
               <div
                 className="h-full bg-pink-500 rounded-full"
-                style={{ width: `${Math.round(metrics.entanglement_score * 100)}%` }}
+                style={{
+                  width: `${Math.round(metrics.entanglement_score * 100)}%`,
+                }}
               />
             </div>
             <span className="text-xs font-mono">

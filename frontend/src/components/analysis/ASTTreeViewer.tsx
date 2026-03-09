@@ -39,16 +39,11 @@ export function ASTTreeViewer({ ast }: ASTTreeViewerProps) {
   );
 }
 
-function TreeNode({
-  node,
-  level,
-}: {
-  node: ASTNode;
-  level: number;
-}) {
+function TreeNode({ node, level }: { node: ASTNode; level: number }) {
   const [isExpanded, setIsExpanded] = useState(level < 2); // Expand first 2 levels
   const complexityScore =
-    typeof node.complexity_score === "number" && Number.isFinite(node.complexity_score)
+    typeof node.complexity_score === "number" &&
+    Number.isFinite(node.complexity_score)
       ? node.complexity_score
       : null;
   const lineNumber =
@@ -56,7 +51,9 @@ function TreeNode({
       ? node.line_number
       : null;
   const attributes =
-    node.attributes && typeof node.attributes === "object" ? node.attributes : null;
+    node.attributes && typeof node.attributes === "object"
+      ? node.attributes
+      : null;
 
   const getNodeIcon = (type: string) => {
     const iconMap: Record<string, React.ReactNode> = {
@@ -71,7 +68,9 @@ function TreeNode({
       quantum_circuit: <Icon.Quantum className="h-4 w-4 text-purple-400" />,
       gate: <Icon.Gate className="h-4 w-4 text-purple-400" />,
     };
-    return iconMap[type] || <Layers className="h-4 w-4 text-muted-foreground" />;
+    return (
+      iconMap[type] || <Layers className="h-4 w-4 text-muted-foreground" />
+    );
   };
 
   const getComplexityColor = (score: number | null) => {
@@ -96,7 +95,7 @@ function TreeNode({
           <ChevronRight
             className={cn(
               "h-3.5 w-3.5 transition-transform text-muted-foreground",
-              isExpanded && "rotate-90"
+              isExpanded && "rotate-90",
             )}
           />
         )}
@@ -127,7 +126,12 @@ function TreeNode({
           )}
 
           {complexityScore !== null && (
-            <div className={cn("text-xs font-mono", getComplexityColor(complexityScore))}>
+            <div
+              className={cn(
+                "text-xs font-mono",
+                getComplexityColor(complexityScore),
+              )}
+            >
               (complexity: {complexityScore.toFixed(2)})
             </div>
           )}
@@ -155,7 +159,14 @@ function TreeNode({
 namespace Icon {
   export function Loop(props: any) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        {...props}
+      >
         <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
         <path d="M21 3v5h-5" />
         <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
@@ -166,7 +177,14 @@ namespace Icon {
 
   export function Conditional(props: any) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        {...props}
+      >
         <path d="M12 3L22 8v8l-10 5-10-5V8l10-5z" />
         <path d="M12 12v5" />
       </svg>
@@ -175,7 +193,14 @@ namespace Icon {
 
   export function Quantum(props: any) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        {...props}
+      >
         <circle cx="12" cy="12" r="1" />
         <circle cx="19" cy="5" r="1" />
         <circle cx="5" cy="5" r="1" />
@@ -188,7 +213,14 @@ namespace Icon {
 
   export function Gate(props: any) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        {...props}
+      >
         <rect x="3" y="3" width="18" height="18" rx="2" />
         <line x1="9" y1="3" x2="9" y2="21" />
         <line x1="15" y1="3" x2="15" y2="21" />

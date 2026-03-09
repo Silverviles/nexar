@@ -70,6 +70,24 @@ class QuantumAlgorithmDetector:
             'confidence': confidence,
             'algorithm_details': detected
         }
+
+    def _gate_name_sequence(self, ast: UnifiedAST) -> List[str]:
+        if ast.canonical_ir:
+            return [
+                op.gate_name
+                for op in ast.canonical_ir.operations
+                if op.op_type == 'gate' and op.gate_name
+            ]
+        return [g.gate_type.value for g in ast.gates]
+
+    def _controlled_gate_count(self, ast: UnifiedAST) -> int:
+        if ast.canonical_ir:
+            return sum(
+                1
+                for op in ast.canonical_ir.operations
+                if op.op_type == 'gate' and len(op.control_qubits) > 0
+            )
+        return sum(1 for g in ast.gates if g.is_controlled)
     
     def _detect_grover(self, ast: UnifiedAST) -> Dict:
         """
@@ -85,16 +103,16 @@ class QuantumAlgorithmDetector:
         score = 0.0
         
         gates = ast.gates
-        gate_sequence = [g.gate_type for g in gates]
+        gate_sequence = self._gate_name_sequence(ast)
         
         # Check for initial Hadamards
-        h_count_start = sum(1 for g in gates[:ast.total_qubits] if g.gate_type == GateType.H)
+        h_count_start = sum(1 for g in gate_sequence[:ast.total_qubits] if g == GateType.H.value)
         if h_count_start >= ast.total_qubits * 0.8:  # At least 80% of qubits
             evidence.append("Initial superposition with H gates")
             score += 0.3
         
         # Check for oracle pattern (multiple CNOT/CX gates)
-        cx_gates = [g for g in gates if g.gate_type in {GateType.CNOT, GateType.CX}]
+        cx_gates = [g for g in gate_sequence if g in {GateType.CNOT.value, GateType.CX.value}]
         if len(cx_gates) >= 2:
             evidence.append(f"Oracle pattern detected ({len(cx_gates)} CX gates)")
             score += 0.2
@@ -127,22 +145,22 @@ class QuantumAlgorithmDetector:
         evidence = []
         score = 0.0
         
-        gates = ast.gates
+        gate_sequence = self._gate_name_sequence(ast)
         
         # Count Hadamards
-        h_count = sum(1 for g in gates if g.gate_type == GateType.H)
+        h_count = sum(1 for g in gate_sequence if g == GateType.H.value)
         if h_count >= ast.total_qubits * 0.5:
             evidence.append(f"Multiple Hadamard gates ({h_count})")
             score += 0.3
         
         # Count rotation gates
-        rotation_gates = [g for g in gates if g.gate_type in {GateType.RZ, GateType.RY}]
+        rotation_gates = [g for g in gate_sequence if g in {GateType.RZ.value, GateType.RY.value}]
         if len(rotation_gates) >= ast.total_qubits:
             evidence.append(f"Rotation gates present ({len(rotation_gates)})")
             score += 0.3
         
         # Check for SWAP gates (qubit reordering)
-        swap_count = sum(1 for g in gates if g.gate_type == GateType.SWAP)
+        swap_count = sum(1 for g in gate_sequence if g == GateType.SWAP.value)
         if swap_count >= ast.total_qubits // 2:
             evidence.append(f"SWAP gates for qubit reordering ({swap_count})")
             score += 0.4
@@ -166,10 +184,10 @@ class QuantumAlgorithmDetector:
         evidence = []
         score = 0.0
         
-        gates = ast.gates
+        gate_sequence = self._gate_name_sequence(ast)
         
         # Check for parameterized gates
-        param_gates = [g for g in gates if g.gate_type in {GateType.RX, GateType.RY, GateType.RZ}]
+        param_gates = [g for g in gate_sequence if g in {GateType.RX.value, GateType.RY.value, GateType.RZ.value}]
         if len(param_gates) >= ast.total_qubits:
             evidence.append(f"Parameterized gates ({len(param_gates)})")
             score += 0.4
@@ -208,22 +226,22 @@ class QuantumAlgorithmDetector:
         evidence = []
         score = 0.0
         
-        gates = ast.gates
+        gate_sequence = self._gate_name_sequence(ast)
         
         # Check for RX gates (mixing layer)
-        rx_gates = [g for g in gates if g.gate_type == GateType.RX]
+        rx_gates = [g for g in gate_sequence if g == GateType.RX.value]
         if len(rx_gates) >= ast.total_qubits:
             evidence.append(f"Mixing layer with RX gates ({len(rx_gates)})")
             score += 0.3
         
         # Check for ZZ interactions (CZ or CNOT-RZ-CNOT)
-        cz_gates = [g for g in gates if g.gate_type == GateType.CZ]
+        cz_gates = [g for g in gate_sequence if g == GateType.CZ.value]
         if len(cz_gates) > 0:
             evidence.append(f"Problem Hamiltonian layer (CZ gates: {len(cz_gates)})")
             score += 0.4
         
         # Check for layered structure
-        if self._has_layered_pattern(gates):
+        if self._has_layered_pattern(ast):
             evidence.append("Alternating layer structure detected")
             score += 0.3
         
@@ -252,9 +270,9 @@ class QuantumAlgorithmDetector:
             score += 0.5
         
         # Check for controlled operations (modular exponentiation)
-        controlled_gates = [g for g in ast.gates if g.is_controlled]
-        if len(controlled_gates) >= ast.total_qubits:
-            evidence.append(f"Modular exponentiation ({len(controlled_gates)} controlled ops)")
+        controlled_gates = self._controlled_gate_count(ast)
+        if controlled_gates >= ast.total_qubits:
+            evidence.append(f"Modular exponentiation ({controlled_gates} controlled ops)")
             score += 0.3
         
         # Shor requires many qubits
@@ -280,9 +298,9 @@ class QuantumAlgorithmDetector:
             evidence.append("Contains QFT")
         
         # Check for controlled unitaries
-        controlled_gates = [g for g in ast.gates if g.is_controlled]
-        if len(controlled_gates) >= ast.total_qubits // 2:
-            evidence.append(f"Controlled unitary operations ({len(controlled_gates)})")
+        controlled_gates = self._controlled_gate_count(ast)
+        if controlled_gates >= ast.total_qubits // 2:
+            evidence.append(f"Controlled unitary operations ({controlled_gates})")
             score += 0.6
         
         return {
@@ -303,12 +321,12 @@ class QuantumAlgorithmDetector:
     
     # Helper methods
     
-    def _has_diffusion_pattern(self, gate_sequence: List[GateType]) -> bool:
+    def _has_diffusion_pattern(self, gate_sequence: List[str]) -> bool:
         """Check for H-X-CZ-X-H pattern"""
-        pattern = [GateType.H, GateType.X, GateType.CZ, GateType.X, GateType.H]
+        pattern = [GateType.H.value, GateType.X.value, GateType.CZ.value, GateType.X.value, GateType.H.value]
         return self._find_subsequence(gate_sequence, pattern)
     
-    def _has_repeated_pattern(self, gate_sequence: List[GateType]) -> bool:
+    def _has_repeated_pattern(self, gate_sequence: List[str]) -> bool:
         """Check if there's a repeated pattern in gate sequence"""
         n = len(gate_sequence)
         for length in range(3, n // 2 + 1):
@@ -317,18 +335,19 @@ class QuantumAlgorithmDetector:
                 return True
         return False
     
-    def _has_layered_pattern(self, gates: List) -> bool:
+    def _has_layered_pattern(self, ast: UnifiedAST) -> bool:
         """Check for alternating layers (e.g., all RX then all CZ)"""
-        if len(gates) < 4:
+        sequence = self._gate_name_sequence(ast)
+        if len(sequence) < 4:
             return False
         
         # Simple check: gates of same type clustered together
-        prev_type = gates[0].gate_type
+        prev_type = sequence[0]
         transitions = 0
-        for gate in gates[1:]:
-            if gate.gate_type != prev_type:
+        for gate_name in sequence[1:]:
+            if gate_name != prev_type:
                 transitions += 1
-                prev_type = gate.gate_type
+                prev_type = gate_name
         
         # If transitions > 2, likely has layered structure
         return transitions >= 2

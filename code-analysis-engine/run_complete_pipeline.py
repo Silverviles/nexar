@@ -152,7 +152,7 @@ def run_complete_pipeline(
     
     print("📁 OUTPUT")
     print(f"   Dataset: datasets/quantum_algorithms/")
-    print(f"   Models: models/trained/")
+    print(f"   Models: models/trained/trained_ensemble/")
     print(f"   ├─ random_forest.pkl")
     print(f"   ├─ gradient_boosting.pkl")
     print(f"   ├─ xgboost.pkl")

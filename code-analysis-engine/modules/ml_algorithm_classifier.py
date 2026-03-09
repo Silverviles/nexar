@@ -26,7 +26,7 @@ class MLAlgorithmClassifier:
     3. Heuristics (keyword search) - Lowest accuracy
     """
     
-    def __init__(self, models_dir: str = "models/trained"):
+    def __init__(self, models_dir: str = "models/trained/trained_ensemble"):
         self.models_dir = Path(models_dir)
         
         self.random_forest = None

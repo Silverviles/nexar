@@ -565,7 +565,7 @@ class ImprovedQuantumMLPipeline:
             result = subprocess.run(cmd, check=True)
             
             print("\n✅ CodeBERT training completed successfully!")
-            print("   Model saved to: models/trained_codebert/")
+            print("   Model saved to: models/trained/trained_codebert/")
             print()
             print("💡 To use the model:")
             print("   1. Restart your FastAPI server (main.py)")

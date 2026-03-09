@@ -41,7 +41,7 @@ class QuantumAlgorithmMLPipeline:
     
     def __init__(self, dataset_dir: str = "datasets/quantum_algorithms"):
         self.dataset_dir = Path(dataset_dir)
-        self.models_dir = Path("models/trained")
+        self.models_dir = Path("models/trained/trained_ensemble")
         self.models_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize analyzers

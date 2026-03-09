@@ -71,7 +71,7 @@ codebert_classifier = None
 use_codebert = False
 
 try:
-    codebert_models_dir = Path("models/trained_codebert")
+    codebert_models_dir = Path("models/trained/trained_codebert")
     if codebert_models_dir.exists() and (codebert_models_dir / "codebert_model.pt").exists():
         print("✅ Loading CodeBERT algorithm classifier (PRIMARY MODEL)...")
         codebert_classifier = CodeBERTAlgorithmClassifier()

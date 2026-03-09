@@ -125,6 +125,8 @@ module "ai_code_converter" {
   env_vars = {
     MODEL_PATH    = "/app/models"
     GCS_MODEL_URI = "gs://${var.models_bucket_name}/${var.ai_code_converter_model_gcs_path}"
+    HAL_ENABLED   = "true"
+    HAL_URL       = local.service_urls["hardware-abstraction-layer"]
   }
 }
 
@@ -212,6 +214,7 @@ module "hardware_abstraction_layer" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
-    IBM_QUANTUM_TOKEN = var.ibm_quantum_token
+    IBM_QUANTUM_TOKEN  = var.ibm_quantum_token
+    IBM_EXECUTION_MODE = var.ibm_execution_mode
   }
 }

@@ -318,5 +318,11 @@ def get_job_status(provider_name: str, job_id: str):
 def get_job_result(provider_name: str, job_id: str):
     result = job_manager.get_job_result(job_id)
     if not result:
+        status = job_manager.get_job_status(job_id)
+        if status != "UNKNOWN":
+            raise HTTPException(
+                status_code=404,
+                detail=f"Result for HAL job '{job_id}' is not available yet (status: {status})"
+            )
         result = compute_service.get_job_result(provider_name, job_id)
     return {"job_id": job_id, "provider": provider_name, "result": result}

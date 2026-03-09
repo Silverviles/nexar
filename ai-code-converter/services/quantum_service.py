@@ -1,119 +1,181 @@
-"""Service for quantum circuit execution"""
+"""Service for quantum circuit execution (local AerSimulator or remote HAL)."""
+
+import logging
+from typing import Any, Dict, Optional
+
 import numpy as np
-from qiskit import QuantumCircuit
-from qiskit_aer import Aer
-from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
-from typing import Dict, Any
-from qiskit_aer import AerSimulator
-from utils.circuit_generator import circuit_generator
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import Aer, AerSimulator
+from qiskit.visualization import plot_histogram
+
+from config.config import CIRCUIT_STYLE, HAL_ENABLED, HAL_DEFAULT_DEVICE
+from services.hal_client import hal_client, HALError
 from services.visualization_service import visualization_service
-from config.config import CIRCUIT_STYLE
-from qiskit import transpile
+from utils.circuit_generator import circuit_generator
+
+logger = logging.getLogger(__name__)
+
 
 class QuantumService:
     def __init__(self):
         self.simulator = AerSimulator()
-    def safe_execute_qc(self, qc_code: str, gate_type: str = "xor", shots: int = 1024) -> Dict[str, Any]:
-        try:
-            import re
-            exec_globals = {}
-            exec_locals = {
-                'QuantumCircuit': QuantumCircuit,
-                'Aer': Aer,
-                'np': np,
-                'qc': None,
-                'plot_histogram': plot_histogram,
-                'plt': plt
-            }
-            code_no_comments = re.sub(r'#.*', '', qc_code)  # strip comments first
 
-        # --- Parse declared qubit count and max used index ---
-            declared = re.search(r'QuantumCircuit\((\d+)', code_no_comments)
-            used = re.findall(r'qc\.\w+\([^)]*\b(\d+)\b', code_no_comments)
-            declared_n = int(declared.group(1)) if declared else 2
-            max_used = max(int(i) for i in used) + 1 if used else declared_n
-            safe_n = max(declared_n, max_used)
+    # -- public entry point ---------------------------------------------------
 
-        # Patch the code to use the safe qubit count
-            patched_code = re.sub(
-             r'QuantumCircuit\(\d+,\s*\d+\)',
-                f'QuantumCircuit({safe_n}, {safe_n})',
-                qc_code
+    async def safe_execute_qc(
+        self,
+        qc_code: str,
+        gate_type: str = "xor",
+        shots: int = 1024,
+        backend: str = "local",
+        device_name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Execute quantum code on the chosen backend with fallback."""
+        use_hal = backend == "hal"
+
+        if use_hal and not HAL_ENABLED:
+            raise ValueError(
+                "HAL backend requested but HAL_ENABLED is not set to true"
             )
-            two_qubit_gates = ['cz', 'cx', 'cy', 'swap', 'ch', 'crz', 'crx', 'cry']
-            for gate in two_qubit_gates:
-                patched_code = re.sub(
-                    rf'qc\.{gate}\((\d+),\s*(\d+),\s*\d+\)',
-                    rf'qc.{gate}(\1, \2)',
-                    patched_code
+
+        try:
+            if use_hal:
+                return await self._execute_via_hal(
+                    qc_code, shots, device_name or HAL_DEFAULT_DEVICE
                 )
-
-            exec(patched_code, exec_globals, exec_locals)
-            qc = exec_locals.get('qc')
-
-            if qc is None or not isinstance(qc, QuantumCircuit):
-                raise ValueError("No valid QuantumCircuit produced")
-
-            if not any(instr.operation.name == 'measure' for instr in qc.data):
-                qc.measure(range(qc.num_qubits), range(qc.num_clbits))
-
-            qc = transpile(qc, self.simulator)
-            return self._execute_and_analyze(qc, shots, used_generated_code=True)
-
+            return self._execute_locally(qc_code, shots)
+        except HALError:
+            raise
         except Exception as e:
-            print(f"Falling back: {e}")
+            logger.warning("Error executing generated code: %s — using fallback", e)
             qc = circuit_generator.create_non_trivial_circuit(gate_type)
-            result = self._execute_and_analyze(qc, shots, used_generated_code=False)
+            result = self._run_and_analyze(qc, shots, used_generated_code=False)
             result["fallback_reason"] = str(e)
+            result["backend_used"] = "local"
             return result
 
-    # _execute_and_analyze stays exactly the same ↓
-    def _execute_and_analyze(self, qc: QuantumCircuit, shots: int, used_generated_code: bool) -> Dict[str, Any]:
-        """Execute circuit and analyze results"""
-        # Run the circuit
+    # -- local execution path -------------------------------------------------
+
+    def _execute_locally(self, qc_code: str, shots: int) -> Dict[str, Any]:
+        """Build + run the circuit on the local AerSimulator."""
+        qc = self._build_circuit(qc_code)
+        qc = transpile(qc, self.simulator)
+        result = self._run_and_analyze(qc, shots, used_generated_code=True)
+        result["backend_used"] = "local"
+        return result
+
+    # -- HAL execution path ---------------------------------------------------
+
+    async def _execute_via_hal(
+        self, qc_code: str, shots: int, device_name: str
+    ) -> Dict[str, Any]:
+        """Send the code to the HAL and wait for results.
+
+        The HAL's ``execute-python`` endpoint expects the submitted code
+        to define a variable called ``circuit``.  The ai-code-converter
+        convention is ``qc``, so we append a mapping line.
+        """
+        hal_code = qc_code.rstrip() + "\ncircuit = qc\n"
+
+        raw_result = await hal_client.execute_and_wait(
+            code=hal_code,
+            device_name=device_name,
+            shots=shots,
+        )
+
+        counts: Dict[str, int] = raw_result.get("counts", raw_result)
+
+        qc = self._build_circuit(qc_code)
+        result = self._analyze_counts(
+            qc, counts, shots, used_generated_code=True
+        )
+        result["backend_used"] = "hal"
+        result["device_name"] = device_name
+        return result
+
+    # -- shared helpers -------------------------------------------------------
+
+    def _build_circuit(self, qc_code: str) -> QuantumCircuit:
+        """Exec user code and return the resulting QuantumCircuit."""
+        exec_globals: Dict[str, Any] = {}
+        exec_locals: Dict[str, Any] = {
+            "QuantumCircuit": QuantumCircuit,
+            "Aer": Aer,
+            "np": np,
+            "qc": None,
+            "plot_histogram": plot_histogram,
+            "plt": plt,
+        }
+
+        exec(qc_code, exec_globals, exec_locals)
+        qc = exec_locals.get("qc")
+
+        if qc is None or not isinstance(qc, QuantumCircuit):
+            raise ValueError("Generated code did not produce a valid QuantumCircuit")
+
+        if len(qc.data) == 0 or not any(
+            gate[0].name == "measure" for gate in qc.data
+        ):
+            qc.measure(
+                list(range(qc.num_qubits)), list(range(qc.num_clbits))
+            )
+
+        return qc
+
+    def _run_and_analyze(
+        self, qc: QuantumCircuit, shots: int, used_generated_code: bool
+    ) -> Dict[str, Any]:
+        """Run locally on AerSimulator and analyse."""
         job = self.simulator.run(qc, shots=shots)
         result = job.result()
         counts = result.get_counts(qc)
-        
-        counts = {k: v for k, v in counts.items() if v > 0}
+        execution_time = getattr(result, "time_taken", 0.0)
 
-        # Check if circuit is trivial
+        return self._analyze_counts(
+            qc,
+            counts,
+            shots,
+            used_generated_code,
+            execution_time=execution_time,
+        )
+
+    def _analyze_counts(
+        self,
+        qc: QuantumCircuit,
+        counts: Dict[str, int],
+        shots: int,
+        used_generated_code: bool,
+        execution_time: float = 0.0,
+    ) -> Dict[str, Any]:
+        """Produce a uniform response dict from raw measurement counts."""
         total_shots = sum(counts.values())
         max_prob = max(counts.values()) / total_shots
-        if max_prob < 0.1:  # threshold for “non-trivial” circuit
+        if max_prob < 0.25:
             raise ValueError("Circuit produced trivial results")
-        
-        # Get circuit metrics
-        qc_depth = qc.depth()
-        qc_width = qc.num_qubits
-        qc_size = qc.size()
-        qc_counts = qc.count_ops()
-        execution_time = getattr(result, 'time_taken', 0.0)
-        
-        # Generate visualizations
-        circuit_fig = qc.draw(output='mpl', style=CIRCUIT_STYLE)
+
+        circuit_fig = qc.draw(output="mpl", style=CIRCUIT_STYLE)
         histogram_fig = visualization_service.create_enhanced_histogram(counts, shots)
-        
+
         images = {
             "circuit_diagram": visualization_service.fig_to_base64(circuit_fig),
-            "measurement_histogram": visualization_service.fig_to_base64(histogram_fig)
+            "measurement_histogram": visualization_service.fig_to_base64(histogram_fig),
         }
-        
+
         return {
             "success": True,
             "counts": counts,
-            "probabilities": {k: v / shots for k, v in counts.items()},
+            "probabilities": {k: v / total_shots for k, v in counts.items()},
             "performance": {
-                "depth": qc_depth,
-                "num_qubits": qc_width,
-                "num_gates": qc_size,
-                "gate_counts": dict(qc_counts),
-                "execution_time_seconds": execution_time
+                "depth": qc.depth(),
+                "num_qubits": qc.num_qubits,
+                "num_gates": qc.size(),
+                "gate_counts": dict(qc.count_ops()),
+                "execution_time_seconds": execution_time,
             },
             "images": images,
-            "used_generated_code": used_generated_code
+            "used_generated_code": used_generated_code,
         }
 
-# Singleton instance
+
 quantum_service = QuantumService()

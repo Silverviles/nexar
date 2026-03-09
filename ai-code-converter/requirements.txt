@@ -4,7 +4,6 @@ pydantic==2.5.0
 
 qiskit
 qiskit-aer
-qiskit-ibm-runtime
 
 numpy
 pandas
@@ -20,6 +19,7 @@ evaluate
 sentencepiece
 protobuf
 
+httpx
 requests
 pytest
 python-dotenv

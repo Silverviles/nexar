@@ -6,6 +6,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.providers import BackendV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Batch
+from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound
 
 from app.core.config import settings
 from app.core.constants import BasisGates
@@ -18,6 +19,17 @@ logger = logging.getLogger(__name__)
 class SandboxTimeoutError(Exception):
     """Raised when sandboxed code execution times out."""
     pass
+
+
+_IBM_STATUS_MAP = {
+    "Initializing": "PENDING",
+    "Queued": "QUEUED",
+    "Validating": "QUEUED",
+    "Running": "RUNNING",
+    "Done": "COMPLETED",
+    "Error": "FAILED",
+    "Cancelled": "CANCELLED",
+}
 
 
 class IBMQuantumProvider(QuantumProvider):
@@ -131,17 +143,20 @@ class IBMQuantumProvider(QuantumProvider):
         pm = generate_preset_pass_manager(target=backend.target, optimization_level=1)
         transpiled_circuit = pm.run(circuit)
 
-        # If caller provided an explicit mode, use it directly.
         if mode is not None:
             sampler = Sampler(mode=mode)
             job = sampler.run([transpiled_circuit], shots=shots)
             return job.job_id()
 
-        # Default: session execution mode (keeps current behavior).
-        with Session(backend=backend) as session:
-            sampler = Sampler(mode=session)
-            job = sampler.run([transpiled_circuit], shots=shots)
-            return job.job_id()
+        if settings.IBM_EXECUTION_MODE == "session":
+            with Session(backend=backend) as session:
+                sampler = Sampler(mode=session)
+                job = sampler.run([transpiled_circuit], shots=shots)
+                return job.job_id()
+
+        sampler = Sampler(mode=backend)
+        job = sampler.run([transpiled_circuit], shots=shots)
+        return job.job_id()
 
     def execute_batch(self, tasks: List[QuantumCircuit], device_name: str, **kwargs) -> List[str]:
         if not self.service:
@@ -153,16 +168,16 @@ class IBMQuantumProvider(QuantumProvider):
         pm = generate_preset_pass_manager(target=backend.target, optimization_level=1)
         transpiled_circuits = pm.run(tasks)
 
-        job = None
         if mode is not None:
-             sampler = Sampler(mode=mode)
-             job = sampler.run(transpiled_circuits, shots=shots)
+            sampler = Sampler(mode=mode)
+        elif settings.IBM_EXECUTION_MODE == "session":
+            session = Session(backend=backend)
+            sampler = Sampler(mode=session)
         else:
-            with Session(backend=backend) as session:
-                sampler = Sampler(mode=session)
-                job = sampler.run(transpiled_circuits, shots=shots)
-        
-        # Return composite IDs
+            sampler = Sampler(mode=backend)
+
+        job = sampler.run(transpiled_circuits, shots=shots)
+
         base_id = job.job_id()
         return [f"{base_id}:{i}" for i in range(len(tasks))]
 
@@ -170,8 +185,13 @@ class IBMQuantumProvider(QuantumProvider):
         if not self.service:
             return "UNKNOWN"
         real_id = job_id.split(":")[0]
-        job = self.service.job(real_id)
-        return job.status().title()
+        try:
+            job = self.service.job(real_id)
+            raw = job.status().title()
+            return _IBM_STATUS_MAP.get(raw, raw.upper())
+        except RuntimeJobNotFound:
+            logger.warning("IBM job not found while checking status: %s", real_id)
+            return "UNKNOWN"
 
     def get_job_result(self, job_id: str) -> Dict[str, Any]:
         if not self.service:
@@ -180,12 +200,61 @@ class IBMQuantumProvider(QuantumProvider):
         real_id = parts[0]
         index = int(parts[1]) if len(parts) > 1 else 0
 
-        job = self.service.job(real_id)
-        result = job.result()
-        
-        if hasattr(result, 'pub_results') and len(result.pub_results) > index:
-            pub_result = result.pub_results[index]
-            return pub_result.data.meas.get_counts() if hasattr(pub_result.data, 'meas') else {}
+        try:
+            job = self.service.job(real_id)
+            result = job.result()
+        except RuntimeJobNotFound:
+            logger.warning("IBM job not found while fetching result: %s", real_id)
+            return {}
+
+        counts = self._extract_counts_from_result(result, index)
+        if not counts:
+            logger.warning(
+                "IBM job %s completed but no counts could be extracted from result type %s",
+                real_id,
+                type(result).__name__,
+            )
+        return counts
+
+    def _extract_counts_from_result(self, result: Any, index: int) -> Dict[str, Any]:
+        pub_results = getattr(result, "pub_results", None)
+        if pub_results is None:
+            try:
+                pub_results = list(result)
+            except TypeError:
+                pub_results = None
+
+        if not pub_results or len(pub_results) <= index:
+            return {}
+
+        return self._extract_counts_from_pub_result(pub_results[index])
+
+    def _extract_counts_from_pub_result(self, pub_result: Any) -> Dict[str, Any]:
+        data = getattr(pub_result, "data", None)
+        if data is not None:
+            for register_name in ("meas", "c"):
+                register = getattr(data, register_name, None)
+                if register is not None and hasattr(register, "get_counts"):
+                    counts = register.get_counts()
+                    if counts:
+                        return counts
+
+            for value in vars(data).values():
+                if hasattr(value, "get_counts"):
+                    counts = value.get_counts()
+                    if counts:
+                        return counts
+
+        if hasattr(pub_result, "join_data"):
+            try:
+                joined = pub_result.join_data()
+                if hasattr(joined, "get_counts"):
+                    counts = joined.get_counts()
+                    if counts:
+                        return counts
+            except Exception as exc:
+                logger.debug("Failed to extract counts via join_data(): %s", exc)
+
         return {}
 
     def check_device_availability(self, device_name: str) -> DeviceAvailability:

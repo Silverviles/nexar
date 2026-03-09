@@ -196,6 +196,12 @@ variable "ibm_quantum_token" {
   sensitive   = true
 }
 
+variable "ibm_execution_mode" {
+  description = "IBM Quantum execution mode: 'direct' (works on all plans) or 'session' (requires paid plan)"
+  type        = string
+  default     = "direct"
+}
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Frontend
 # ──────────────────────────────────────────────────────────────────────────────

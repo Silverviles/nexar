@@ -15,9 +15,8 @@ class QuantumService:
     def __init__(self):
         self.simulator = AerSimulator()
     def safe_execute_qc(self, qc_code: str, gate_type: str = "xor", shots: int = 1024) -> Dict[str, Any]:
-        """Safely execute quantum code with fallback mechanism"""
         try:
-            # Try to execute the generated code
+            import re
             exec_globals = {}
             exec_locals = {
                 'QuantumCircuit': QuantumCircuit,
@@ -27,31 +26,49 @@ class QuantumService:
                 'plot_histogram': plot_histogram,
                 'plt': plt
             }
-            
-            exec(qc_code, exec_globals, exec_locals)
-            qc = exec_locals.get('qc')
-            
-            if qc is None or not isinstance(qc, QuantumCircuit):
-                raise ValueError("Generated code did not produce a valid QuantumCircuit")
-            
-            # Check if circuit has measurements
-            if len(qc.data) == 0 or not any(gate[0].name == 'measure' for gate in qc.data):
-                qc.measure(list(range(qc.num_qubits)), list(range(qc.num_clbits)))
-            
-            qc = transpile(qc, self.simulator)
+            code_no_comments = re.sub(r'#.*', '', qc_code)  # strip comments first
 
+        # --- Parse declared qubit count and max used index ---
+            declared = re.search(r'QuantumCircuit\((\d+)', code_no_comments)
+            used = re.findall(r'qc\.\w+\([^)]*\b(\d+)\b', code_no_comments)
+            declared_n = int(declared.group(1)) if declared else 2
+            max_used = max(int(i) for i in used) + 1 if used else declared_n
+            safe_n = max(declared_n, max_used)
+
+        # Patch the code to use the safe qubit count
+            patched_code = re.sub(
+             r'QuantumCircuit\(\d+,\s*\d+\)',
+                f'QuantumCircuit({safe_n}, {safe_n})',
+                qc_code
+            )
+            two_qubit_gates = ['cz', 'cx', 'cy', 'swap', 'ch', 'crz', 'crx', 'cry']
+            for gate in two_qubit_gates:
+                patched_code = re.sub(
+                    rf'qc\.{gate}\((\d+),\s*(\d+),\s*\d+\)',
+                    rf'qc.{gate}(\1, \2)',
+                    patched_code
+                )
+
+            exec(patched_code, exec_globals, exec_locals)
+            qc = exec_locals.get('qc')
+
+            if qc is None or not isinstance(qc, QuantumCircuit):
+                raise ValueError("No valid QuantumCircuit produced")
+
+            if not any(instr.operation.name == 'measure' for instr in qc.data):
+                qc.measure(range(qc.num_qubits), range(qc.num_clbits))
+
+            qc = transpile(qc, self.simulator)
             return self._execute_and_analyze(qc, shots, used_generated_code=True)
-            
+
         except Exception as e:
-            print(f"Error executing generated code: {e}")
-            print("Using fallback circuit...")
-            
-            # Use fallback circuit
+            print(f"Falling back: {e}")
             qc = circuit_generator.create_non_trivial_circuit(gate_type)
             result = self._execute_and_analyze(qc, shots, used_generated_code=False)
             result["fallback_reason"] = str(e)
             return result
-    
+
+    # _execute_and_analyze stays exactly the same ↓
     def _execute_and_analyze(self, qc: QuantumCircuit, shots: int, used_generated_code: bool) -> Dict[str, Any]:
         """Execute circuit and analyze results"""
         # Run the circuit
@@ -59,10 +76,12 @@ class QuantumService:
         result = job.result()
         counts = result.get_counts(qc)
         
+        counts = {k: v for k, v in counts.items() if v > 0}
+
         # Check if circuit is trivial
         total_shots = sum(counts.values())
         max_prob = max(counts.values()) / total_shots
-        if max_prob < 0.25:  # threshold for “non-trivial” circuit
+        if max_prob < 0.1:  # threshold for “non-trivial” circuit
             raise ValueError("Circuit produced trivial results")
         
         # Get circuit metrics

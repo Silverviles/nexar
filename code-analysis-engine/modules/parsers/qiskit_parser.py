@@ -20,6 +20,8 @@ class QiskitParser(BaseParser):
         self.tree: Optional[ast.AST] = None
         self.circuit_vars: set = set()
         self.register_sizes: Dict[str, int] = {}
+        self.symbol_table: Dict[str, Any] = {}
+        self.loop_ranges: Dict[str, int] = {}
         self.gate_mapping = {
             "h": GateType.H,
             "x": GateType.X,
@@ -56,11 +58,17 @@ class QiskitParser(BaseParser):
         self.lines = code.splitlines()
         self.circuit_vars = set()
         self.register_sizes = {}
+        self.symbol_table = {}
+        self.loop_ranges = {}
 
         try:
             self.tree = ast.parse(code)
         except SyntaxError:
             self.tree = None
+
+        if self.tree is not None:
+            self._build_symbol_table()
+            self._collect_loop_ranges()
 
         flow_meta = self.extract_python_control_flow_metadata(code)
 
@@ -109,7 +117,8 @@ class QiskitParser(BaseParser):
                 continue
 
             if ctor_name == "QuantumRegister":
-                size = self._const_int(node.value.args[0]) if node.value.args else 0
+                size = self._eval_int_expr(node.value.args[0]) if node.value.args else 0
+                size = size if size is not None else 0
                 reg_name = self._const_str(node.value.args[1]) if len(node.value.args) > 1 else target_name
                 quantum_regs.append(
                     QuantumRegisterNode(name=reg_name or target_name, size=size, line_number=node.lineno)
@@ -117,7 +126,8 @@ class QiskitParser(BaseParser):
                 self.register_sizes[target_name] = size
 
             elif ctor_name == "ClassicalRegister":
-                size = self._const_int(node.value.args[0]) if node.value.args else 0
+                size = self._eval_int_expr(node.value.args[0]) if node.value.args else 0
+                size = size if size is not None else 0
                 reg_name = self._const_str(node.value.args[1]) if len(node.value.args) > 1 else target_name
                 classical_regs.append(
                     ClassicalRegisterNode(name=reg_name or target_name, size=size, line_number=node.lineno)
@@ -128,12 +138,12 @@ class QiskitParser(BaseParser):
                 self.circuit_vars.add(target_name)
                 q_count = 0
                 c_count = 0
-                if len(node.value.args) >= 1 and isinstance(node.value.args[0], ast.Constant):
-                    if isinstance(node.value.args[0].value, int):
-                        q_count = node.value.args[0].value
-                if len(node.value.args) >= 2 and isinstance(node.value.args[1], ast.Constant):
-                    if isinstance(node.value.args[1].value, int):
-                        c_count = node.value.args[1].value
+                if len(node.value.args) >= 1:
+                    q_count = self._eval_int_expr(node.value.args[0])
+                    q_count = q_count if q_count is not None else 0
+                if len(node.value.args) >= 2:
+                    c_count = self._eval_int_expr(node.value.args[1])
+                    c_count = c_count if c_count is not None else 0
 
                 if q_count > 0:
                     quantum_regs.append(QuantumRegisterNode(name="q", size=q_count, line_number=node.lineno))
@@ -229,7 +239,9 @@ class QiskitParser(BaseParser):
         return measurements
 
     def _extract_gate_qubits(self, gate_name: str, args: List[ast.AST]) -> (List[int], List[int]):
-        qubit_indices = [idx for idx in [self._extract_single_index(a) for a in args] if idx is not None]
+        qubit_indices: List[int] = []
+        for arg in args:
+            qubit_indices.extend(self._extract_index_list(arg))
 
         controlled_names = {
             "cx",
@@ -269,6 +281,9 @@ class QiskitParser(BaseParser):
         return out
 
     def _extract_index_list(self, node: ast.AST) -> List[int]:
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "range":
+            return self._extract_range_indices(node)
+
         if isinstance(node, (ast.List, ast.Tuple)):
             out = []
             for elt in node.elts:
@@ -284,11 +299,29 @@ class QiskitParser(BaseParser):
         if isinstance(node, ast.Constant) and isinstance(node.value, int):
             return int(node.value)
 
+        if isinstance(node, ast.Name):
+            if node.id in self.symbol_table:
+                return self.symbol_table[node.id]
+            if node.id in self.loop_ranges:
+                # When index comes from a loop variable, use first valid index.
+                return 0
+            # Fallback for unresolved symbolic indices (e.g., function args like n_count).
+            return 0
+
+        if isinstance(node, ast.BinOp):
+            value = self._eval_int_expr(node)
+            return value if value is not None else 0
+
         if isinstance(node, ast.Subscript):
             # q[2]
             idx_node = node.slice.value if isinstance(node.slice, ast.Index) else node.slice
             if isinstance(idx_node, ast.Constant) and isinstance(idx_node.value, int):
                 return int(idx_node.value)
+            if isinstance(idx_node, ast.Name):
+                if idx_node.id in self.symbol_table:
+                    return self.symbol_table[idx_node.id]
+                if idx_node.id in self.loop_ranges:
+                    return 0
 
         return None
 
@@ -341,3 +374,126 @@ class QiskitParser(BaseParser):
                     max_qubit_index = max(max_qubit_index, max(indices))
         
         return max_qubit_index + 1 if max_qubit_index >= 0 else 0
+
+    def _build_symbol_table(self) -> None:
+        """Collect simple integer assignments like n = 3 for expression resolution."""
+        if self.tree is None or not isinstance(self.tree, ast.Module):
+            return
+
+        # Process in source order so dependent assignments (e.g., n = len(b)) resolve.
+        for node in self.tree.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            if len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+                continue
+
+            name = node.targets[0].id
+            value = self._eval_static_value(node.value)
+            if value is not None:
+                self.symbol_table[name] = value
+
+    def _collect_loop_ranges(self) -> None:
+        """Collect for-loop bounds for patterns like for i in range(n)."""
+        if self.tree is None:
+            return
+
+        for node in ast.walk(self.tree):
+            if not isinstance(node, ast.For):
+                continue
+            if not isinstance(node.target, ast.Name):
+                continue
+            if not isinstance(node.iter, ast.Call):
+                continue
+            if not isinstance(node.iter.func, ast.Name) or node.iter.func.id != "range":
+                continue
+
+            values = self._extract_range_indices(node.iter)
+            if values:
+                self.loop_ranges[node.target.id] = len(values)
+
+    def _extract_range_indices(self, node: ast.Call) -> List[int]:
+        """Resolve Python range(...) calls with simple integer expressions."""
+        args = node.args
+        if len(args) == 1:
+            start = 0
+            stop = self._eval_int_expr(args[0])
+            step = 1
+        elif len(args) == 2:
+            start = self._eval_int_expr(args[0])
+            stop = self._eval_int_expr(args[1])
+            step = 1
+        elif len(args) >= 3:
+            start = self._eval_int_expr(args[0])
+            stop = self._eval_int_expr(args[1])
+            step = self._eval_int_expr(args[2])
+        else:
+            return []
+
+        if start is None or stop is None or step is None or step == 0:
+            return []
+
+        try:
+            return list(range(start, stop, step))
+        except Exception:
+            return []
+
+    def _eval_int_expr(self, node: ast.AST) -> Optional[int]:
+        """Evaluate a small subset of integer expressions used in canonical code."""
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return int(node.value)
+
+        if isinstance(node, ast.Name):
+            value = self.symbol_table.get(node.id)
+            return value if isinstance(value, int) else None
+
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "len":
+            if len(node.args) != 1:
+                return None
+            resolved = self._eval_static_value(node.args[0])
+            if isinstance(resolved, (str, list, tuple, dict)):
+                return len(resolved)
+            return None
+
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+            value = self._eval_int_expr(node.operand)
+            return -value if value is not None else None
+
+        if isinstance(node, ast.BinOp):
+            left = self._eval_int_expr(node.left)
+            right = self._eval_int_expr(node.right)
+            if left is None or right is None:
+                return None
+
+            if isinstance(node.op, ast.Add):
+                return left + right
+            if isinstance(node.op, ast.Sub):
+                return left - right
+            if isinstance(node.op, ast.Mult):
+                return left * right
+            if isinstance(node.op, ast.FloorDiv):
+                return left // right if right != 0 else None
+
+        return None
+
+    def _eval_static_value(self, node: ast.AST) -> Optional[Any]:
+        """Evaluate basic literal/static values used by canonical examples."""
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, (int, str)):
+                return node.value
+            return None
+
+        int_value = self._eval_int_expr(node)
+        if int_value is not None:
+            return int_value
+
+        if isinstance(node, ast.Name):
+            return self.symbol_table.get(node.id)
+
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "len":
+            if len(node.args) != 1:
+                return None
+            base = self._eval_static_value(node.args[0])
+            if isinstance(base, (str, list, tuple, dict)):
+                return len(base)
+
+        return None

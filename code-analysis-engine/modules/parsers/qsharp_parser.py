@@ -127,9 +127,13 @@ class QSharpParser(BaseParser):
 
     def extract_measurements(self) -> List[MeasurementNode]:
         measurements = []
+        # Regular measurement calls: M, Measure, MResetZ
         measure_call = re.compile(r"\b(M|Measure|MResetZ)\s*\(([^)]*)\)")
+        # ForEach measurement pattern: ForEach(MResetZ, qubits) or ForEach(M, qubits)
+        foreach_measure = re.compile(r"\bForEach\s*\(\s*(M|MResetZ|Measure)\s*,\s*([^)]+)\)")
 
         for i, line in enumerate(self.lines):
+            # Check regular measurements
             for match in measure_call.finditer(line):
                 args = [a.strip() for a in match.group(2).split(",") if a.strip()]
                 q_idxs = [idx for idx in [self._extract_qubit_index(a) for a in args] if idx is not None]
@@ -139,6 +143,20 @@ class QSharpParser(BaseParser):
                         classical_register="results",
                         qubit_indices=q_idxs,
                         classical_indices=list(range(len(q_idxs))),
+                        line_number=i + 1,
+                    )
+                )
+            
+            # Check ForEach measurements
+            for match in foreach_measure.finditer(line):
+                qubit_arg = match.group(2).strip()
+                # ForEach measures all qubits in the register
+                measurements.append(
+                    MeasurementNode(
+                        quantum_register=qubit_arg,
+                        classical_register="results",
+                        qubit_indices=[],  # Measures all qubits in register
+                        classical_indices=[],
                         line_number=i + 1,
                     )
                 )

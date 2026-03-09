@@ -209,7 +209,7 @@ async def analyze_code(submission: CodeSubmission, request: Request):
             # - QuantumStateSimulator
             quantum_metrics = quantum_analyzer.analyze(unified_ast)
             
-            # Try CodeBERT first (semantic understanding), then fallback to rule-based
+            # Try CodeBERT first (semantic understanding), then ML, then rule-based.
             if use_codebert and codebert_classifier:
                 try:
                     codebert_result = codebert_classifier.classify(code=code, threshold=0.5)
@@ -226,15 +226,30 @@ async def analyze_code(submission: CodeSubmission, request: Request):
                 except Exception as e:
                     print(f"CodeBERT classification failed: {e}, falling back")
 
+            # If CodeBERT is unavailable/failed/no result, use ML single-label classifier.
             if not detected_algorithms:
-                # Use accurate algorithm detector 
+                try:
+                    ml_result = ml_classifier.classify(unified_ast, quantum_metrics, use_ensemble=True)
+                    ml_algorithm = ml_result.get('algorithm', 'unknown')
+                    ml_confidence = float(ml_result.get('confidence', 0.0))
+
+                    if ml_algorithm and ml_algorithm != 'unknown':
+                        detected_algorithms = [ml_algorithm]
+                        problem_type = ml_result.get('problem_type', ProblemType.UNKNOWN)
+                        algorithm_confidence = ml_confidence
+                        algorithm_detection_source = "ml-ensemble"
+                except Exception as e:
+                    print(f"ML classification failed: {e}, falling back")
+
+            # If still no algorithm OR confidence is low, use accurate rule-based detector.
+            if not detected_algorithms or algorithm_confidence < 0.5:
                 algorithm_result = algorithm_detector.detect(unified_ast)
                 problem_type = algorithm_result['problem_type']
                 detected_algorithms = algorithm_result['detected_algorithms']
                 algorithm_confidence = algorithm_result['confidence']
                 algorithm_detection_source = "rule-based"
             
-            # Fallback to heuristics if algorithm detector has low confidence
+            # Final fallback to heuristics if detector confidence is still low.
             if algorithm_confidence < 0.5:
                 problem_type = determine_problem_type_heuristic(code, is_quantum=True)
                 algorithm_detection_source = "heuristic"

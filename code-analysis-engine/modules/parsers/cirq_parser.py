@@ -12,6 +12,7 @@ class CirqParser(BaseParser):
     def __init__(self):
         super().__init__()
         self.tree: Optional[ast.AST] = None
+        self.default_qubit_count: int = 0
         self.gate_mapping = {
             "h": GateType.H,
             "x": GateType.X,
@@ -32,6 +33,7 @@ class CirqParser(BaseParser):
     def parse(self, code: str) -> Dict[str, Any]:
         self.code = code
         self.lines = code.splitlines()
+        self.default_qubit_count = 0
 
         try:
             self.tree = ast.parse(code)
@@ -116,6 +118,8 @@ class CirqParser(BaseParser):
         # If qubit_count is still 0, try to infer from gate usage
         if qubit_count == 0:
             qubit_count = self._infer_qubit_count_from_gates()
+
+        self.default_qubit_count = qubit_count
         
         quantum_regs.append(QuantumRegisterNode(name="qubits", size=qubit_count, line_number=None))
         return {"quantum": quantum_regs, "classical": []}
@@ -138,7 +142,7 @@ class CirqParser(BaseParser):
                 continue
 
             gate_type = self.gate_mapping[op_name]
-            qubits = [idx for idx in [self._extract_qubit_index(a) for a in node.args] if idx is not None]
+            qubits = self._extract_qubit_indices(node.args)
 
             controls = []
             targets = qubits
@@ -148,6 +152,10 @@ class CirqParser(BaseParser):
             elif op_name in {"ccx", "toffoli"} and len(qubits) >= 3:
                 controls = qubits[:-1]
                 targets = [qubits[-1]]
+
+            # Skip malformed gate nodes that carry no qubit information.
+            if len(targets) == 0 and len(controls) == 0:
+                continue
 
             gates.append(
                 QuantumGateNode(
@@ -213,9 +221,26 @@ class CirqParser(BaseParser):
         ):
             return func.value.attr
 
+        # cirq.H.on_each(...)
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr == "on_each"
+            and isinstance(func.value, ast.Attribute)
+            and isinstance(func.value.value, ast.Name)
+            and func.value.value.id == "cirq"
+        ):
+            return func.value.attr
+
         return None
 
     def _extract_qubit_index(self, node: ast.AST) -> Optional[int]:
+        if isinstance(node, ast.Starred):
+            return None
+
+        if isinstance(node, ast.Name):
+            # Fallback for symbolic names like output_qubit/input_qubits in examples.
+            return 0
+
         # qubits[3]
         if isinstance(node, ast.Subscript):
             idx_node = node.slice.value if isinstance(node.slice, ast.Index) else node.slice
@@ -239,6 +264,30 @@ class CirqParser(BaseParser):
             return int(node.value)
 
         return None
+
+    def _extract_qubit_indices(self, args: List[ast.AST]) -> List[int]:
+        """Extract qubit indices from call args including starred sequences."""
+        indices: List[int] = []
+        for arg in args:
+            if isinstance(arg, ast.Starred):
+                if self.default_qubit_count > 0:
+                    indices.extend(list(range(self.default_qubit_count)))
+                else:
+                    indices.append(0)
+                continue
+
+            idx = self._extract_qubit_index(arg)
+            if idx is not None:
+                indices.append(idx)
+
+        # Deduplicate while preserving order.
+        seen = set()
+        deduped: List[int] = []
+        for idx in indices:
+            if idx not in seen:
+                seen.add(idx)
+                deduped.append(idx)
+        return deduped
     
     def _infer_qubit_count_from_gates(self) -> int:
         """

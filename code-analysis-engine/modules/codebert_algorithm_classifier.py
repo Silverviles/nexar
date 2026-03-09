@@ -62,7 +62,7 @@ class CodeBERTAlgorithmClassifier:
     - Multi-label detection (multiple algorithms per sample)
     """
     
-    def __init__(self, models_dir: str = "models/trained_codebert"):
+    def __init__(self, models_dir: str = "models/trained/trained_codebert"):
         self.models_dir = Path(models_dir)
         self.models_dir.mkdir(parents=True, exist_ok=True)
         

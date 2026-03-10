@@ -32,7 +32,7 @@ export function ClassicalMetricsDisplay({
   problemSize,
 }: ClassicalMetricsProps) {
   const getComplexityColor = (
-    complexity: number
+    complexity: number,
   ): "default" | "success" | "warning" => {
     if (complexity <= 5) return "success";
     if (complexity <= 10) return "default";

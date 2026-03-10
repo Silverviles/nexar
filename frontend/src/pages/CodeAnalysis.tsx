@@ -268,7 +268,7 @@ export default function CodeAnalysis() {
                       "flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-all",
                       optimization === option.value
                         ? "border-primary/50 bg-primary/5"
-                        : "border-border hover:border-primary/30"
+                        : "border-border hover:border-primary/30",
                     )}
                   >
                     <RadioGroupItem value={option.value} className="mt-0.5" />

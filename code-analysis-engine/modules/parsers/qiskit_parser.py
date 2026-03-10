@@ -83,6 +83,8 @@ class QiskitParser(BaseParser):
                 "loop_count": flow_meta.get("loop_count", 0),
                 "conditional_count": flow_meta.get("conditional_count", 0),
                 "nesting_depth": flow_meta.get("nesting_depth", 0),
+                "control_flow_nesting_depth": flow_meta.get("control_flow_nesting_depth", 0),
+                "structural_nesting_depth": flow_meta.get("structural_nesting_depth", flow_meta.get("nesting_depth", 0)),
                 "line_loop_multiplier": flow_meta.get("line_loop_multiplier", {}),
             },
         }
@@ -168,36 +170,131 @@ class QiskitParser(BaseParser):
         if self.tree is None:
             return gates
 
-        for node in ast.walk(self.tree):
-            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                continue
-
-            owner = node.func.value
-            if not isinstance(owner, ast.Name):
-                continue
-            if owner.id not in self.circuit_vars:
-                continue
-
-            gate_name = node.func.attr.lower()
-            if gate_name not in self.gate_mapping or gate_name in {"measure", "measure_all"}:
-                continue
-
-            gate_type = self.gate_mapping[gate_name]
-            qubits, controls = self._extract_gate_qubits(gate_name, node.args)
-            parameters = self._extract_gate_params(gate_name, node.args)
-
-            gates.append(
-                QuantumGateNode(
-                    gate_type=gate_type,
-                    qubits=qubits,
-                    control_qubits=controls,
-                    is_controlled=bool(controls),
-                    parameters=parameters,
-                    line_number=node.lineno,
-                )
-            )
-
+        # Instead of ast.walk, traverse tree with loop context
+        self._extract_gates_with_loop_expansion(self.tree, gates, {})
         return gates
+
+    def _extract_gates_with_loop_expansion(self, node: ast.AST, gates: List[QuantumGateNode], loop_ctx: Dict[str, int]):
+        """
+        Recursively traverse AST and expand gates inside for loops.
+        
+        Args:
+            node: Current AST node
+            gates: List to append extracted gates
+            loop_ctx: Dict mapping loop variables to their current values
+        """
+        if isinstance(node, ast.For):
+            # Check if this is a simple for i in range(n) loop
+            if isinstance(node.target, ast.Name) and isinstance(node.iter, ast.Call):
+                if isinstance(node.iter.func, ast.Name) and node.iter.func.id == "range":
+                    # Extract the range values
+                    range_values = self._extract_range_indices(node.iter)
+                    if range_values:
+                        # Expand the loop body for each iteration
+                        loop_var = node.target.id
+                        for val in range_values:
+                            new_ctx = loop_ctx.copy()
+                            new_ctx[loop_var] = val
+                            # Process loop body with this value
+                            for child in node.body:
+                                self._extract_gates_with_loop_expansion(child, gates, new_ctx)
+                        return  # Don't process children again
+        
+        # Check if this is a gate call
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            owner = node.func.value
+            if isinstance(owner, ast.Name) and owner.id in self.circuit_vars:
+                gate_name = node.func.attr.lower()
+                if gate_name in self.gate_mapping and gate_name not in {"measure", "measure_all"}:
+                    gate_type = self.gate_mapping[gate_name]
+                    qubits, controls = self._extract_gate_qubits_with_context(gate_name, node.args, loop_ctx)
+                    parameters = self._extract_gate_params(gate_name, node.args)
+
+                    gates.append(
+                        QuantumGateNode(
+                            gate_type=gate_type,
+                            qubits=qubits,
+                            control_qubits=controls,
+                            is_controlled=bool(controls),
+                            parameters=parameters,
+                            line_number=node.lineno,
+                        )
+                    )
+                    return  # Don't recurse into gate call args
+        
+        # Recurse into children
+        for child in ast.iter_child_nodes(node):
+            self._extract_gates_with_loop_expansion(child, gates, loop_ctx)
+
+    def _extract_gate_qubits_with_context(self, gate_name: str, args: List[ast.AST], loop_ctx: Dict[str, int]) -> (List[int], List[int]):
+        """Extract qubit indices with loop context for variable resolution."""
+        qubit_indices: List[int] = []
+        for arg in args:
+            qubit_indices.extend(self._extract_index_list_with_context(arg, loop_ctx))
+
+        controlled_names = {
+            "cx",
+            "cnot",
+            "cz",
+            "ch",
+            "cy",
+            "cp",
+            "crx",
+            "cry",
+            "crz",
+            "cu",
+            "cu1",
+            "cu3",
+        }
+
+        if gate_name in {"ccx", "toffoli"} and len(qubit_indices) >= 3:
+            return [qubit_indices[-1]], qubit_indices[:-1]
+        if gate_name == "cswap" and len(qubit_indices) >= 3:
+            return qubit_indices[1:], [qubit_indices[0]]
+        if gate_name in controlled_names and len(qubit_indices) >= 2:
+            return [qubit_indices[-1]], qubit_indices[:-1]
+
+        return qubit_indices, []
+
+    def _extract_index_list_with_context(self, node: ast.AST, loop_ctx: Dict[str, int]) -> List[int]:
+        """Extract index list with loop context for variable resolution."""
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "range":
+            return self._extract_range_indices(node)
+
+        if isinstance(node, (ast.List, ast.Tuple)):
+            out = []
+            for elt in node.elts:
+                idx = self._extract_single_index_with_context(elt, loop_ctx)
+                if idx is not None:
+                    out.append(idx)
+            return out
+
+        single = self._extract_single_index_with_context(node, loop_ctx)
+        return [single] if single is not None else []
+
+    def _extract_single_index_with_context(self, node: ast.AST, loop_ctx: Dict[str, int]) -> Optional[int]:
+        """Extract single index with loop context for variable resolution."""
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return int(node.value)
+
+        if isinstance(node, ast.Name):
+            # First check loop context
+            if node.id in loop_ctx:
+                return loop_ctx[node.id]
+            # Then check symbol table
+            if node.id in self.symbol_table:
+                return self.symbol_table[node.id]
+            # Fallback for unresolved symbolic indices
+            return 0
+
+        if isinstance(node, ast.BinOp):
+            value = self._eval_int_expr(node)
+            return value if value is not None else 0
+
+        if isinstance(node, ast.Subscript):
+            return self._extract_single_index_with_context(node.slice, loop_ctx)
+
+        return 0
 
     def extract_measurements(self) -> List[MeasurementNode]:
         measurements: List[MeasurementNode] = []

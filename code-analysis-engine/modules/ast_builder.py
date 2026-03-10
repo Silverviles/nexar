@@ -94,5 +94,8 @@ class ASTBuilder:
             'loop_count': metadata.get('loop_count', 0),
             'conditional_count': metadata.get('conditional_count', 0),
             'nesting_depth': metadata.get('nesting_depth', 0),
+            'control_flow_nesting_depth': metadata.get('control_flow_nesting_depth', metadata.get('nesting_depth', 0)),
+            'structural_nesting_depth': metadata.get('structural_nesting_depth', metadata.get('nesting_depth', 0)),
+            'line_loop_multiplier': metadata.get('line_loop_multiplier', {}),
             'function_count': len(parsed_data.get('functions', []))
         }

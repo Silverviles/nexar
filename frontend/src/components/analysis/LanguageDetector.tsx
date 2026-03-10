@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import { Code2, Loader2, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
-  detectLanguage,
   getLanguageDisplayName,
   getLanguageColor,
 } from "@/lib/languageDetection";
-import type { SupportedLanguage } from "@/types/codeAnalysis";
+import type { LanguageDetectionResponse } from "@/types/codeAnalysis";
 import { cn } from "@/lib/utils";
+import { codeAnalysisAPI } from "@/services/codeAnalysisApi";
 
 interface LanguageDetectorProps {
   code: string;
@@ -20,14 +20,80 @@ interface LanguageDetectorProps {
 }
 
 export function LanguageDetector({ code, className }: LanguageDetectorProps) {
-  const [detection, setDetection] = useState(detectLanguage(""));
+  const [detection, setDetection] = useState<LanguageDetectionResponse>({
+    language: "unknown",
+    confidence: 0,
+    is_supported: false,
+    details: "Type code to detect language",
+    method: "error",
+  });
+  const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
-    const result = detectLanguage(code);
-    setDetection(result);
+    const trimmedCode = code.trim();
+
+    if (!trimmedCode) {
+      setDetection({
+        language: "unknown",
+        confidence: 0,
+        is_supported: false,
+        details: "Type code to detect language",
+        method: "error",
+      });
+      setIsScanning(false);
+      return;
+    }
+
+    // Avoid noisy requests while user is still typing very short snippets.
+    if (trimmedCode.length < 20) {
+      setDetection({
+        language: "unknown",
+        confidence: 0,
+        is_supported: false,
+        details: "Add a bit more code for reliable detection",
+        method: "error",
+      });
+      setIsScanning(true);
+      return;
+    }
+
+    let canceled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        setIsScanning(true);
+        const result = await codeAnalysisAPI.detectLanguage({
+          code: trimmedCode,
+        });
+        if (!canceled) {
+          setDetection(result);
+        }
+      } catch (error) {
+        if (!canceled) {
+          setDetection({
+            language: "unknown",
+            confidence: 0,
+            is_supported: false,
+            details:
+              error instanceof Error
+                ? error.message
+                : "Language detection unavailable",
+            method: "error",
+          });
+        }
+      } finally {
+        if (!canceled) {
+          setIsScanning(false);
+        }
+      }
+    }, 450);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timer);
+    };
   }, [code]);
 
-  const { language, confidence, isScanning } = detection;
+  const { language, confidence, method } = detection;
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -45,13 +111,16 @@ export function LanguageDetector({ code, className }: LanguageDetectorProps) {
             variant="outline"
             className={cn(
               "gap-1.5 border-primary/30 bg-primary/5",
-              getLanguageColor(language)
+              getLanguageColor(language),
             )}
           >
             <Code2 className="h-3 w-3" />
             {getLanguageDisplayName(language)}
             <span className="text-xs opacity-70">
               {(confidence * 100).toFixed(0)}%
+            </span>
+            <span className="text-[10px] uppercase tracking-wide opacity-70">
+              {method}
             </span>
           </Badge>
         </>

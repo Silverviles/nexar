@@ -107,10 +107,12 @@ class CanonicalIRBuilder:
             qubit_interactions=interactions,
             loop_count=metadata.get("loop_count", 0),
             conditional_count=metadata.get("conditional_count", 0),
-            max_nesting_depth=metadata.get("nesting_depth", 0),
+            max_nesting_depth=metadata.get("control_flow_nesting_depth", metadata.get("nesting_depth", 0)),
             metadata={
                 "lines_of_code": metadata.get("lines_of_code", 0),
                 "function_count": metadata.get("function_count", 0),
+                "control_flow_nesting_depth": metadata.get("control_flow_nesting_depth", metadata.get("nesting_depth", 0)),
+                "structural_nesting_depth": metadata.get("structural_nesting_depth", metadata.get("nesting_depth", 0)),
             },
         )
 

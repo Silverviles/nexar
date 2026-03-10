@@ -25,6 +25,7 @@ else:
 from fastapi import FastAPI, HTTPException, APIRouter, Request
 from pydantic import BaseModel
 from typing import Optional
+import ast
 import uvicorn
 
 # Import modules
@@ -101,6 +102,7 @@ logger = logging.getLogger(__name__)
 # Request Models
 class CodeSubmission(BaseModel):
     code: str
+    problem_size_strategy: Optional[str] = "loc"
 
 class LanguageDetectionResponse(BaseModel):
     language: str
@@ -189,6 +191,8 @@ async def analyze_code(submission: CodeSubmission, request: Request):
             'loop_count': 0,
             'conditional_count': 0,
             'nesting_depth': 0,
+            'control_flow_nesting_depth': 0,
+            'structural_nesting_depth': 0,
             'function_count': len(unified_ast.functions or [])
         }
 
@@ -198,7 +202,9 @@ async def analyze_code(submission: CodeSubmission, request: Request):
                 'lines_of_code': ir_meta.get('lines_of_code', metadata['lines_of_code']),
                 'loop_count': unified_ast.canonical_ir.loop_count,
                 'conditional_count': unified_ast.canonical_ir.conditional_count,
-                'nesting_depth': unified_ast.canonical_ir.max_nesting_depth,
+                'nesting_depth': ir_meta.get('control_flow_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
+                'control_flow_nesting_depth': ir_meta.get('control_flow_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
+                'structural_nesting_depth': ir_meta.get('structural_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
                 'function_count': ir_meta.get('function_count', metadata['function_count'])
             }
 
@@ -279,6 +285,7 @@ async def analyze_code(submission: CodeSubmission, request: Request):
             algorithm_confidence=algorithm_confidence,
             algorithm_detection_source=algorithm_detection_source,
             language_detection_method=detection_method,
+            problem_size_strategy=(submission.problem_size_strategy or "loc"),
             code=code
         )
         
@@ -363,6 +370,7 @@ def build_analysis_result(
     algorithm_confidence: float = 0.0,
     algorithm_detection_source: Optional[str] = None,
     language_detection_method: str = "fallback",
+    problem_size_strategy: str = "loc",
     code: str = ""
 ) -> CodeAnalysisResult:
     """Build complete analysis result with accurate metrics"""
@@ -419,7 +427,7 @@ def build_analysis_result(
         memory_mb = estimate_classical_memory(space_comp)
         
         is_quantum = False
-        problem_size = metadata.get('lines_of_code', 1)
+        problem_size = estimate_classical_problem_size(problem_size_strategy, code, metadata)
         
         notes = (
             f"Classical analysis: {detected_lang.value} | "
@@ -517,6 +525,57 @@ def estimate_classical_memory(space_complexity: str) -> float:
     }
     
     return estimates.get(space_complexity, 1.0)
+
+def estimate_classical_problem_size(problem_size_strategy: str, code: str, metadata: dict) -> int:
+    """Estimate classical problem size using a selectable strategy."""
+    strategy = (problem_size_strategy or "loc").lower()
+
+    if strategy == "ast_nodes":
+        try:
+            tree = ast.parse(code)
+            node_count = sum(1 for _ in ast.walk(tree))
+            return max(node_count, 1)
+        except Exception:
+            return max(metadata.get('lines_of_code', 1), 1)
+
+    if strategy in {"algorithm_hints", "hints"}:
+        hinted = _estimate_problem_size_from_algorithm_hints(code)
+        if hinted is not None:
+            return max(hinted, 1)
+
+    # Default + fallback strategy: LOC
+    return max(metadata.get('lines_of_code', 1), 1)
+
+def _estimate_problem_size_from_algorithm_hints(code: str) -> Optional[int]:
+    """Try to infer problem size from common data shapes (e.g., grid pathfinding)."""
+    try:
+        tree = ast.parse(code)
+    except Exception:
+        return None
+
+    best_grid_size: Optional[int] = None
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        if not isinstance(node.value, ast.List):
+            continue
+
+        rows = node.value.elts
+        if not rows:
+            continue
+        if not all(isinstance(r, ast.List) for r in rows):
+            continue
+
+        row_lengths = [len(r.elts) for r in rows if isinstance(r, ast.List)]
+        if not row_lengths:
+            continue
+
+        grid_size = len(rows) * max(row_lengths)
+        if best_grid_size is None or grid_size > best_grid_size:
+            best_grid_size = grid_size
+
+    return best_grid_size
 
 def calculate_code_quality_metrics(
     classical_metrics,

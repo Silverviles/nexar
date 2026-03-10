@@ -68,6 +68,9 @@ export default function CodeAnalysis() {
   const [code, setCode] = useState(sampleCode);
   const [optimization, setOptimization] =
     useState<OptimizationPreference>("balanced");
+  const [problemSizeStrategy, setProblemSizeStrategy] = useState<
+    "loc" | "ast_nodes" | "algorithm_hints"
+  >("algorithm_hints");
   const [maxBudget, setMaxBudget] = useState<string>("10.00");
   const [priority, setPriority] = useState<string>("Normal");
 
@@ -113,7 +116,10 @@ export default function CodeAnalysis() {
     }, 200);
 
     try {
-      const analysisResult = await codeAnalysisAPI.analyzeCode({ code });
+      const analysisResult = await codeAnalysisAPI.analyzeCode({
+        code,
+        problem_size_strategy: problemSizeStrategy,
+      });
 
       // Complete progress
       clearInterval(progressInterval);
@@ -262,7 +268,7 @@ export default function CodeAnalysis() {
                       "flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-all",
                       optimization === option.value
                         ? "border-primary/50 bg-primary/5"
-                        : "border-border hover:border-primary/30"
+                        : "border-border hover:border-primary/30",
                     )}
                   >
                     <RadioGroupItem value={option.value} className="mt-0.5" />
@@ -313,6 +319,35 @@ export default function CodeAnalysis() {
                     <option>Critical</option>
                   </select>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card variant="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Code className="h-4 w-4 text-primary" />
+                Problem Size Strategy
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  Backend estimation mode
+                </Label>
+                <select
+                  value={problemSizeStrategy}
+                  onChange={(e) =>
+                    setProblemSizeStrategy(
+                      e.target.value as "loc" | "ast_nodes" | "algorithm_hints",
+                    )
+                  }
+                  className="w-full rounded-md border border-border bg-secondary/30 px-3 py-2 text-sm"
+                >
+                  <option value="algorithm_hints">Algorithm Hints</option>
+                  <option value="ast_nodes">AST Nodes</option>
+                  <option value="loc">Lines of Code</option>
+                </select>
               </div>
             </CardContent>
           </Card>

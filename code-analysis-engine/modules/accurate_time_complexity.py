@@ -14,14 +14,21 @@ class AccurateTimeComplexityAnalyzer:
     def __init__(self):
         self.loop_bounds = {}
         self.recursive_calls = set()
+        self.has_heap_usage = False
+        self.has_graph_search_pattern = False
     
     def analyze(self, code: str) -> TimeComplexity:
         """
         Analyze time complexity accurately through AST analysis
         """
         try:
+            self.recursive_calls.clear()
             tree = ast.parse(code)
+            self._collect_context(tree)
             complexity = self._analyze_node(tree)
+            if self.has_heap_usage and self.has_graph_search_pattern and complexity in {'n^2', 'n^3'}:
+                # A*/Dijkstra-like pattern: priority queue frontier + graph-style expansion.
+                complexity = 'n*log(n)'
             result = self._complexity_to_enum(complexity)
             logger.debug("Time complexity analysis result: %s (raw=%s)", result.value, complexity)
             return result
@@ -81,6 +88,8 @@ class AccurateTimeComplexityAnalyzer:
             # Check for built-in operations
             if isinstance(node.func, ast.Name):
                 return self._get_builtin_complexity(node.func.id)
+            if isinstance(node.func, ast.Attribute):
+                return self._get_builtin_complexity(node.func.attr)
             return '1'
         
         else:
@@ -193,9 +202,45 @@ class AccurateTimeComplexityAnalyzer:
             'append': '1',
             'pop': '1',
             'index': 'n',
-            'count': 'n'
+            'count': 'n',
+            'heappush': 'log(n)',
+            'heappop': 'log(n)',
+            'heapreplace': 'log(n)',
+            'heappushpop': 'log(n)',
         }
         return complexities.get(func_name, '1')
+
+    def _collect_context(self, tree: ast.AST) -> None:
+        """Collect structural hints to improve classification for graph/heap search."""
+        has_heap_import = False
+        has_heap_calls = False
+        has_while = False
+        has_for = False
+        has_neighbor_iter = False
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                if any(alias.name == 'heapq' for alias in node.names):
+                    has_heap_import = True
+            elif isinstance(node, ast.ImportFrom):
+                if node.module == 'heapq':
+                    has_heap_import = True
+
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Attribute) and node.func.attr in {'heappush', 'heappop', 'heapreplace', 'heappushpop'}:
+                    has_heap_calls = True
+                if isinstance(node.func, ast.Name) and node.func.id in {'heappush', 'heappop', 'heapreplace', 'heappushpop'}:
+                    has_heap_calls = True
+
+            if isinstance(node, ast.While):
+                has_while = True
+            if isinstance(node, ast.For):
+                has_for = True
+                if isinstance(node.iter, ast.Name) and node.iter.id in {'neighbors', 'adj', 'adjacency', 'edges'}:
+                    has_neighbor_iter = True
+
+        self.has_heap_usage = has_heap_import or has_heap_calls
+        self.has_graph_search_pattern = has_while and has_for and (has_neighbor_iter or has_heap_calls)
     
     def _complexity_to_enum(self, complexity: str) -> TimeComplexity:
         """Convert string complexity to enum"""

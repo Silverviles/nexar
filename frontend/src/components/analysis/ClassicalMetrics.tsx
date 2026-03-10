@@ -2,9 +2,23 @@
  * Classical Metrics Display Component
  */
 
-import { Code, GitBranch, Layers, Repeat, Zap, FileCode } from "lucide-react";
+import {
+  Code,
+  GitBranch,
+  Layers,
+  Repeat,
+  Zap,
+  FileCode,
+  CircleHelp,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { MetricCard } from "./MetricCard";
 import type { ClassicalMetrics } from "@/types/codeAnalysis";
 
@@ -18,7 +32,7 @@ export function ClassicalMetricsDisplay({
   problemSize,
 }: ClassicalMetricsProps) {
   const getComplexityColor = (
-    complexity: number
+    complexity: number,
   ): "default" | "success" | "warning" => {
     if (complexity <= 5) return "success";
     if (complexity <= 10) return "default";
@@ -33,6 +47,29 @@ export function ClassicalMetricsDisplay({
           <CardTitle className="flex items-center gap-2 text-cyan-400">
             <Code className="h-5 w-5" />
             Classical Code Analysis
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-cyan-300/80 hover:text-cyan-200"
+                    aria-label="Explain nesting depth metrics"
+                  >
+                    <CircleHelp className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>
+                    <strong>Control-flow nesting</strong> counts only branching
+                    and loop depth (`if`/`for`/`while`).
+                  </p>
+                  <p className="mt-1">
+                    <strong>Structural nesting</strong> also includes wrapper
+                    scopes like `class` and `def` blocks.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -65,7 +102,7 @@ export function ClassicalMetricsDisplay({
           icon={GitBranch}
           label="Cyclomatic Complexity"
           value={metrics.cyclomatic_complexity}
-          subtitle={`Cognitive: ${metrics.cognitive_complexity}`}
+          subtitle={`Max fn: ${metrics.cyclomatic_complexity_max} | Cognitive: ${metrics.cognitive_complexity}`}
           variant={getComplexityColor(metrics.cyclomatic_complexity)}
           animate
         />
@@ -99,10 +136,19 @@ export function ClassicalMetricsDisplay({
 
         <MetricCard
           icon={Layers}
-          label="Nesting Depth"
+          label="Control-Flow Nesting"
           value={metrics.max_nesting_depth}
-          subtitle="Maximum depth"
+          subtitle={`Structural: ${metrics.structural_nesting_depth}`}
           variant={metrics.max_nesting_depth > 3 ? "warning" : "success"}
+          animate
+        />
+
+        <MetricCard
+          icon={Layers}
+          label="Structural Nesting"
+          value={metrics.structural_nesting_depth}
+          subtitle={`Control-flow: ${metrics.control_flow_nesting_depth}`}
+          variant={metrics.structural_nesting_depth > 4 ? "warning" : "success"}
           animate
         />
 

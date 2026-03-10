@@ -35,6 +35,7 @@ export type TimeComplexity =
 
 export interface ClassicalMetrics {
   cyclomatic_complexity: number;
+  cyclomatic_complexity_max: number;
   cognitive_complexity: number;
   time_complexity: TimeComplexity;
   space_complexity: string;
@@ -42,6 +43,8 @@ export interface ClassicalMetrics {
   conditional_count: number;
   function_count: number;
   max_nesting_depth: number;
+  control_flow_nesting_depth: number;
+  structural_nesting_depth: number;
   lines_of_code: number;
 }
 
@@ -124,9 +127,18 @@ export interface SupportedLanguagesResponse {
   count: number;
 }
 
+export interface LanguageDetectionResponse {
+  language: SupportedLanguage | "unknown";
+  confidence: number;
+  is_supported: boolean;
+  details: string;
+  method: "ml" | "fallback" | "error";
+}
+
 export interface CodeSubmission {
   code: string;
   filename?: string;
+  problem_size_strategy?: "loc" | "ast_nodes" | "algorithm_hints";
 }
 
 export type OptimizationPreference = "cost" | "performance" | "balanced";

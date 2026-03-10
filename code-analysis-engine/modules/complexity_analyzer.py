@@ -5,7 +5,7 @@ Calculates cyclomatic complexity, time complexity, space complexity
 import ast
 import logging
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 from radon.complexity import cc_visit
 from models.analysis_result import ClassicalComplexity, TimeComplexity
 from models.unified_ast import UnifiedAST
@@ -38,15 +38,18 @@ class ComplexityAnalyzer:
             ClassicalComplexity object
         """
         if unified_ast and unified_ast.canonical_ir:
+            ir_meta = unified_ast.canonical_ir.metadata or {}
             metadata = {
                 **metadata,
                 'loop_count': unified_ast.canonical_ir.loop_count,
                 'conditional_count': unified_ast.canonical_ir.conditional_count,
                 'nesting_depth': unified_ast.canonical_ir.max_nesting_depth,
-                'lines_of_code': unified_ast.canonical_ir.metadata.get('lines_of_code', metadata.get('lines_of_code', 0)),
+                'control_flow_nesting_depth': ir_meta.get('control_flow_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
+                'structural_nesting_depth': ir_meta.get('structural_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
+                'lines_of_code': ir_meta.get('lines_of_code', metadata.get('lines_of_code', 0)),
             }
 
-        cyclomatic = self.calculate_cyclomatic_complexity(code)
+        cyclomatic, cyclomatic_max = self.calculate_cyclomatic_complexity(code)
         cognitive = self.calculate_cognitive_complexity(code)
         time_complexity = self.time_analyzer.analyze(code)
         space_complexity = self.space_analyzer.analyze(code)
@@ -58,49 +61,68 @@ class ComplexityAnalyzer:
         
         return ClassicalComplexity(
             cyclomatic_complexity=cyclomatic,
+            cyclomatic_complexity_max=cyclomatic_max,
             cognitive_complexity=cognitive,
             time_complexity=time_complexity,
             space_complexity=space_complexity,
             loop_count=metadata.get('loop_count', 0),
             conditional_count=metadata.get('conditional_count', 0),
             function_count=metadata.get('function_count', 0),
-            max_nesting_depth=metadata.get('nesting_depth', 0),
+            max_nesting_depth=metadata.get('control_flow_nesting_depth', metadata.get('nesting_depth', 0)),
+            control_flow_nesting_depth=metadata.get('control_flow_nesting_depth', metadata.get('nesting_depth', 0)),
+            structural_nesting_depth=metadata.get('structural_nesting_depth', metadata.get('nesting_depth', 0)),
             lines_of_code=metadata.get('lines_of_code', 0)
         )
     
-    def calculate_cyclomatic_complexity(self, code: str) -> int:
+    def calculate_cyclomatic_complexity(self, code: str) -> Tuple[int, int]:
         """
         Calculate McCabe cyclomatic complexity
         Uses radon library for Python code
         """
         try:
-            # Try Python AST parsing
             complexity_results = cc_visit(code)
             if complexity_results:
-                # Return average complexity
                 total = sum(item.complexity for item in complexity_results)
-                return total // max(len(complexity_results), 1)
-            return 1  # Base complexity
+                max_complexity = max(item.complexity for item in complexity_results)
+                return total, max_complexity
+            return 1, 1  # Base complexity
         except Exception:
             logger.warning("cc_visit failed for cyclomatic complexity, using manual fallback", exc_info=True)
-            # Fallback: manual calculation
-            return self._calculate_complexity_manual(code)
+            fallback = self._calculate_complexity_manual(code)
+            return fallback, fallback
         
     def calculate_cognitive_complexity(self, code: str) -> int:
+        """AST-based cognitive complexity (nesting-aware)."""
         try:
-            results = cc_visit(code)
-            total = 0
-            for r in results:
-                # r has attribute 'cognitive_complexity'
-                cc = getattr(r, "cognitive_complexity", None)
-                if cc is None:
-                    # fallback: 1 per decision point
-                    cc = 0
-                total += cc
-            return max(total, 1)  # ensure at least 1
-        except Exception:
-            logger.warning("cc_visit failed for cognitive complexity, defaulting to 1", exc_info=True)
+            tree = ast.parse(code)
+        except SyntaxError:
+            logger.warning("SyntaxError during cognitive complexity analysis, defaulting to 1")
             return 1
+
+        def score_block(statements, nesting: int) -> int:
+            total_score = 0
+            for stmt in statements:
+                if isinstance(stmt, (ast.If, ast.For, ast.While, ast.AsyncFor)):
+                    total_score += 1 + nesting
+                    total_score += score_block(getattr(stmt, 'body', []), nesting + 1)
+                    total_score += score_block(getattr(stmt, 'orelse', []), nesting)
+                elif isinstance(stmt, ast.Try):
+                    total_score += 1 + nesting
+                    total_score += score_block(stmt.body, nesting + 1)
+                    for handler in stmt.handlers:
+                        total_score += 1 + nesting
+                        total_score += score_block(handler.body, nesting + 1)
+                    total_score += score_block(stmt.orelse, nesting)
+                    total_score += score_block(stmt.finalbody, nesting)
+                elif isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    total_score += score_block(stmt.body, nesting)
+                else:
+                    if isinstance(stmt, (ast.Break, ast.Continue)):
+                        total_score += 1
+            return total_score
+
+        total = score_block(getattr(tree, 'body', []), 0)
+        return max(total, 1)
     
     def _calculate_complexity_manual(self, code: str) -> int:
         """

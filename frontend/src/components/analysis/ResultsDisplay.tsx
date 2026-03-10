@@ -162,10 +162,11 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                 <>
                   <div className="rounded border border-border/50 bg-secondary/10 p-3">
                     <div className="text-xs text-muted-foreground">
-                      Complexity
+                      Cyclomatic (Sum/Max)
                     </div>
                     <div className="mt-1 font-mono text-sm font-semibold">
-                      {result.classical_metrics.cyclomatic_complexity}
+                      {result.classical_metrics.cyclomatic_complexity}/
+                      {result.classical_metrics.cyclomatic_complexity_max}
                     </div>
                   </div>
 

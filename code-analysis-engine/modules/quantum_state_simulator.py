@@ -398,8 +398,9 @@ class QuantumStateSimulator:
 
     def _get_simulation_gates(self, unified_ast: UnifiedAST) -> List[QuantumGateNode]:
         """Materialize simulator-friendly gate nodes from canonical IR when available."""
-        if not unified_ast.canonical_ir:
-            return unified_ast.gates
+        if not unified_ast.canonical_ir or not unified_ast.canonical_ir.operations:
+            logger.debug("Using AST gates directly (no canonical IR)")
+            return unified_ast.gates if unified_ast.gates else []
 
         gates: List[QuantumGateNode] = []
         for op in unified_ast.canonical_ir.operations:
@@ -407,6 +408,7 @@ class QuantumStateSimulator:
                 continue
             gate_type = self._gate_type_from_ir_name(op.gate_name)
             if gate_type is None:
+                logger.debug(f"Unknown gate type: {op.gate_name}")
                 continue
 
             targets = list(op.target_qubits)
@@ -427,7 +429,9 @@ class QuantumStateSimulator:
                     control_qubits=controls,
                 )
             )
-        return gates
+        
+        logger.debug(f"Extracted {len(gates)} gates from canonical IR for simulation")
+        return gates if gates else (unified_ast.gates if unified_ast.gates else [])
 
     def _gate_type_from_ir_name(self, gate_name: str) -> Optional[GateType]:
         for gate_type in GateType:

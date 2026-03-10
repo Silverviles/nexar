@@ -105,6 +105,8 @@ class BaseParser(ABC):
             "loop_count": 0,
             "conditional_count": 0,
             "nesting_depth": 0,
+            "control_flow_nesting_depth": 0,
+            "structural_nesting_depth": 0,
         }
 
         try:
@@ -118,8 +120,9 @@ class BaseParser(ABC):
             if isinstance(node, ast.If):
                 metadata["conditional_count"] += 1
 
-        def visit_block(nodes: List[ast.stmt], multiplier: int, depth: int) -> None:
-            metadata["nesting_depth"] = max(metadata["nesting_depth"], depth)
+        # Control-flow depth ignores module/function/class wrappers.
+        def visit_control_flow(nodes: List[ast.stmt], multiplier: int, depth: int) -> None:
+            metadata["control_flow_nesting_depth"] = max(metadata["control_flow_nesting_depth"], depth)
             for stmt in nodes:
                 line_no = getattr(stmt, "lineno", None)
                 if line_no is not None:
@@ -130,22 +133,42 @@ class BaseParser(ABC):
 
                 if isinstance(stmt, (ast.For, ast.AsyncFor)):
                     loop_mult = self._infer_for_loop_iterations(stmt)
-                    visit_block(stmt.body, multiplier * loop_mult, depth + 1)
-                    visit_block(stmt.orelse, multiplier, depth + 1)
+                    visit_control_flow(stmt.body, multiplier * loop_mult, depth + 1)
+                    visit_control_flow(stmt.orelse, multiplier, depth)
                 elif isinstance(stmt, ast.While):
-                    visit_block(stmt.body, multiplier, depth + 1)
-                    visit_block(stmt.orelse, multiplier, depth + 1)
+                    visit_control_flow(stmt.body, multiplier, depth + 1)
+                    visit_control_flow(stmt.orelse, multiplier, depth)
                 elif isinstance(stmt, ast.If):
-                    visit_block(stmt.body, multiplier, depth + 1)
-                    visit_block(stmt.orelse, multiplier, depth + 1)
+                    visit_control_flow(stmt.body, multiplier, depth + 1)
+                    visit_control_flow(stmt.orelse, multiplier, depth)
                 elif isinstance(stmt, ast.Try):
-                    visit_block(stmt.body, multiplier, depth + 1)
+                    visit_control_flow(stmt.body, multiplier, depth + 1)
                     for handler in stmt.handlers:
-                        visit_block(handler.body, multiplier, depth + 1)
-                    visit_block(stmt.orelse, multiplier, depth + 1)
-                    visit_block(stmt.finalbody, multiplier, depth + 1)
+                        visit_control_flow(handler.body, multiplier, depth + 1)
+                    visit_control_flow(stmt.orelse, multiplier, depth)
+                    visit_control_flow(stmt.finalbody, multiplier, depth)
+                elif isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    # Function/class wrappers do not increase control-flow depth.
+                    visit_control_flow(stmt.body, multiplier, depth)
 
-        visit_block(tree.body, multiplier=1, depth=0)
+        # Structural depth includes wrappers such as function/class definitions.
+        def visit_structural(nodes: List[ast.stmt], depth: int) -> None:
+            metadata["structural_nesting_depth"] = max(metadata["structural_nesting_depth"], depth)
+            for stmt in nodes:
+                if isinstance(stmt, (ast.For, ast.AsyncFor, ast.While, ast.If, ast.Try)):
+                    visit_structural(getattr(stmt, "body", []), depth + 1)
+                    visit_structural(getattr(stmt, "orelse", []), depth)
+                    if isinstance(stmt, ast.Try):
+                        for handler in stmt.handlers:
+                            visit_structural(handler.body, depth + 1)
+                        visit_structural(stmt.finalbody, depth)
+                elif isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    visit_structural(stmt.body, depth + 1)
+
+        visit_control_flow(tree.body, multiplier=1, depth=0)
+        visit_structural(tree.body, depth=1)
+        # Backward-compatible alias now points to control-flow depth.
+        metadata["nesting_depth"] = metadata["control_flow_nesting_depth"]
         return metadata
 
     def _infer_for_loop_iterations(self, loop_node: ast.stmt) -> int:

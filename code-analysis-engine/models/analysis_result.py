@@ -37,14 +37,17 @@ class TimeComplexity(str, Enum):
 
 class ClassicalComplexity(BaseModel):
     """Classical code complexity metrics"""
-    cyclomatic_complexity: int = Field(..., description="McCabe complexity")
+    cyclomatic_complexity: int = Field(..., description="Total McCabe complexity across analyzed functions")
+    cyclomatic_complexity_max: int = Field(default=0, description="Maximum per-function McCabe complexity")
     cognitive_complexity: int = Field(default=0, description="Cognitive complexity")
     time_complexity: TimeComplexity = Field(..., description="Estimated time complexity")
     space_complexity: str = Field(default="O(1)", description="Space complexity")
     loop_count: int = Field(default=0, description="Number of loops")
     conditional_count: int = Field(default=0, description="Number of conditionals")
     function_count: int = Field(default=0, description="Number of functions")
-    max_nesting_depth: int = Field(default=0, description="Maximum nesting depth")
+    max_nesting_depth: int = Field(default=0, description="Maximum control-flow nesting depth (backward-compatible alias)")
+    control_flow_nesting_depth: int = Field(default=0, description="Maximum control-flow nesting depth")
+    structural_nesting_depth: int = Field(default=0, description="Maximum structural nesting depth (includes functions/classes)")
     lines_of_code: int = Field(default=0, description="Total lines of code")
 
 class QuantumComplexity(BaseModel):

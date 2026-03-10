@@ -64,6 +64,8 @@ class OpenQASMParser(BaseParser):
                 "loop_count": self.count_loops(code),
                 "conditional_count": self.count_conditionals(code),
                 "nesting_depth": self.calculate_nesting_depth(code),
+                "control_flow_nesting_depth": self.calculate_nesting_depth(code),
+                "structural_nesting_depth": self.calculate_nesting_depth(code),
             },
         }
 

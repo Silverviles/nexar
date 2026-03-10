@@ -53,6 +53,8 @@ class CirqParser(BaseParser):
                 "loop_count": flow_meta.get("loop_count", 0),
                 "conditional_count": flow_meta.get("conditional_count", 0),
                 "nesting_depth": flow_meta.get("nesting_depth", 0),
+                "control_flow_nesting_depth": flow_meta.get("control_flow_nesting_depth", 0),
+                "structural_nesting_depth": flow_meta.get("structural_nesting_depth", flow_meta.get("nesting_depth", 0)),
                 "line_loop_multiplier": flow_meta.get("line_loop_multiplier", {}),
             },
         }

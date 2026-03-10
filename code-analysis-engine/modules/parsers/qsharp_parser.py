@@ -49,6 +49,8 @@ class QSharpParser(BaseParser):
                 "loop_count": self._count_qsharp_loops(),
                 "conditional_count": self._count_qsharp_conditionals(),
                 "nesting_depth": self.calculate_nesting_depth(code),
+                "control_flow_nesting_depth": self.calculate_nesting_depth(code),
+                "structural_nesting_depth": self.calculate_nesting_depth(code),
             },
         }
 
@@ -65,6 +67,8 @@ class QSharpParser(BaseParser):
 
         array_pattern = r"\buse\s+(\w+)\s*=\s*Qubit\[(\d+)\]"
         single_pattern = r"\buse\s+(\w+)\s*=\s*Qubit\s*\(\s*\)"
+        # Match tuple pattern with proper parenthesis handling
+        tuple_pattern = r"\buse\s*\(([^)]+)\)\s*=\s*\((.+?)\)\s*;"
 
         for i, line in enumerate(self.lines):
             if array_match := re.search(array_pattern, line):
@@ -75,6 +79,16 @@ class QSharpParser(BaseParser):
                         line_number=i + 1,
                     )
                 )
+            elif tuple_match := re.search(tuple_pattern, line):
+                # Handle tuple allocation like use (q1, q2) = (Qubit(), Qubit());
+                var_names = [v.strip() for v in tuple_match.group(1).split(',')]
+                qubit_calls = tuple_match.group(2)
+                # Count how many Qubit() calls there are
+                qubit_count = qubit_calls.count('Qubit()')
+                for var_name in var_names[:qubit_count]:
+                    quantum_regs.append(
+                        QuantumRegisterNode(name=var_name, size=1, line_number=i + 1)
+                    )
             elif single_match := re.search(single_pattern, line):
                 quantum_regs.append(
                     QuantumRegisterNode(name=single_match.group(1), size=1, line_number=i + 1)

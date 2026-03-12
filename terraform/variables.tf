@@ -86,15 +86,15 @@ variable "service_resources" {
   default = {
     api = {
       cpu    = "1"
-      memory = "128Mi"
+      memory = "256Mi"
     }
     frontend = {
       cpu    = "1"
       memory = "128Mi"
     }
     ai-code-converter = {
-      cpu    = "1"
-      memory = "1Gi"
+      cpu    = "2"
+      memory = "4Gi"
     }
     code-analysis-engine = {
       cpu    = "1"

@@ -24,6 +24,7 @@ import AICodeConverter from "./pages/AICodeConverter";
 import CodeConversionResults from "./pages/CodeConversionResults";
 import NotFound from "./pages/NotFound";
 import QuantumASTPatternAnalyzer from "./pages/QuantumASTPatternAnalyzer";
+import Pipeline from "./pages/Pipeline";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pipeline"
+              element={
+                <ProtectedRoute>
+                  <Pipeline />
                 </ProtectedRoute>
               }
             />

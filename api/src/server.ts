@@ -11,6 +11,7 @@ import decisionEngineRoutes from '@routes/decision-engine.js';
 import aiCodeConverterRoutes from '@routes/ai-code-converter.js';
 import codeAnalysisRoutes from "@routes/code-analysis.js";
 import hardwareRoutes from '@routes/hardware.js';
+import pipelineRoutes from '@routes/pipeline.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -69,6 +70,9 @@ app.use('/api/v1/hardware', authMiddleware, hardwareRoutes);
 
 logger.info("Mounting route group: /api (ai-code-converter, protected)");
 app.use('/api/v1/ai-code-converter', authMiddleware, aiCodeConverterRoutes);
+
+logger.info("Mounting route group: /api/v1/pipeline (protected)");
+app.use('/api/v1/pipeline', authMiddleware, pipelineRoutes);
 
 // ---------------------------------------------------------------------------
 // Root endpoint

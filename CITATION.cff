@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "Nexar: Intelligent Quantum-Classical Code Routing Platform"
+message: "If you use this software, please cite it as below."
+type: software
+license: MIT
+repository-code: https://github.com/Silverviles/nexar
+authors:
+  - family-names: Siriwardhana
+    given-names: A H L T S
+  - family-names: Hettiarachchi
+    given-names: S R
+  - family-names: Jayasinghe
+    given-names: Y L
+  - family-names: Prasad
+    given-names: H G A T
+keywords:
+  - quantum computing
+  - hybrid computing
+  - code routing
+  - NISQ
+  - machine learning
+  - code analysis

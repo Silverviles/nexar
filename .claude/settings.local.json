@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E '^/c/Users/sudar/projects/nexar/[^/]+$')",
+      "Bash(grep -E \"\\\\.py$|\\\\.ts$\")",
+      "Bash(ls -d /c/Users/sudar/projects/nexar/*/)",
+      "Bash(pip install:*)",
+      "Bash(mkdocs build:*)",
+      "Bash(python -m mkdocs build --strict)",
+      "Bash(pip show:*)",
+      "Bash(where mkdocs:*)",
+      "Bash(\"C:\\\\Users\\\\sudar\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\\\python.exe\" -m mkdocs build --strict)",
+      "Bash(grep -E \"\\\\.\\(py|ts|tsx\\)$\")",
+      "Bash(npx tsc:*)",
+      "Bash(grep '\"\"lucide-react\"\"' package.json)"
+    ]
+  }
+}

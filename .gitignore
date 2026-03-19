@@ -21,3 +21,6 @@ terraform/.terraform.tfstate.lock.info
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Dev
+.nexar-pids

@@ -49,18 +49,18 @@ class MLLanguageClassifier:
         try:
             self.load_models()
         except Exception as e:
-            print(f"⚠️  ML language models not loaded: {e}")
-            print("   Will use heuristic fallback")
+            print(f"[WARN] ML language models not loaded: {e}")
+            print("       Will use heuristic fallback")
     
     def load_models(self):
         """Load all trained models"""
         
-        # CodeBERT
+        # CodeBERT (local only — no network calls)
         self.codebert_tokenizer = AutoTokenizer.from_pretrained(
-            str(self.models_dir / 'codebert')
+            str(self.models_dir / 'codebert'), local_files_only=True
         )
         self.codebert_model = AutoModelForSequenceClassification.from_pretrained(
-            str(self.models_dir / 'codebert')
+            str(self.models_dir / 'codebert'), local_files_only=True
         )
         self.codebert_model.eval()
         
@@ -78,7 +78,7 @@ class MLLanguageClassifier:
             self.ensemble_weights = json.load(f)
         
         self.loaded = True
-        print("✅ ML language models loaded successfully!")
+        print("[OK] ML language models loaded successfully!")
     
     def detect(self, code: str) -> Dict[str, any]:
         """

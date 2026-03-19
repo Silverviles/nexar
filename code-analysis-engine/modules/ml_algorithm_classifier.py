@@ -47,8 +47,8 @@ class MLAlgorithmClassifier:
         try:
             self.load_models()
         except Exception as e:
-            print(f"⚠️  ML models not loaded: {e}")
-            print("   Will use pattern matching fallback")
+            print(f"[WARN] ML models not loaded: {e}")
+            print("       Will use pattern matching fallback")
     
     def load_models(self):
         """Load trained models and artifacts"""
@@ -64,7 +64,7 @@ class MLAlgorithmClassifier:
         
         self.loaded = True
         logger.info("ML models loaded successfully from %s", self.models_dir)
-        print("✅ ML models loaded successfully!")
+        print("[OK] ML models loaded successfully!")
     
     def extract_features_from_ast(self, unified_ast: UnifiedAST, quantum_metrics) -> np.ndarray:
         """

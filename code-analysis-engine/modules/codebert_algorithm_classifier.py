@@ -11,7 +11,7 @@ This classifier:
 
 import torch
 import torch.nn as nn
-from transformers import RobertaTokenizer, RobertaModel
+from transformers import RobertaTokenizer, RobertaModel, RobertaConfig
 import numpy as np
 import json
 from pathlib import Path
@@ -33,9 +33,13 @@ class CodeBERTMultiLabelClassifier(nn.Module):
     - Sigmoid activation (multi-label)
     """
     
-    def __init__(self, num_labels: int, dropout_prob: float = 0.1):
+    def __init__(self, num_labels: int, base_model_path: str = 'microsoft/codebert-base', dropout_prob: float = 0.1):
         super().__init__()
-        self.codebert = RobertaModel.from_pretrained('microsoft/codebert-base')
+        # Try loading from local path first (no network), fall back to Hub on first run
+        try:
+            self.codebert = RobertaModel.from_pretrained(base_model_path, local_files_only=True)
+        except (OSError, ValueError):
+            self.codebert = RobertaModel.from_pretrained('microsoft/codebert-base')
         self.dropout = nn.Dropout(dropout_prob)
         self.classifier = nn.Linear(self.codebert.config.hidden_size, num_labels)
         
@@ -226,7 +230,7 @@ class CodeBERTAlgorithmClassifier:
     
     def load_models(self):
         """Load fine-tuned CodeBERT model and metadata"""
-        print("\n📥 Loading CodeBERT algorithm classifier...")
+        print("\n[INFO] Loading CodeBERT algorithm classifier...")
         
         # Check if model exists
         model_path = self.models_dir / 'codebert_model.pt'
@@ -248,18 +252,26 @@ class CodeBERTAlgorithmClassifier:
         self.threshold = metadata['threshold']
         num_labels = metadata['num_labels']
         
-        # Load tokenizer
-        self.tokenizer = RobertaTokenizer.from_pretrained(tokenizer_path)
-        
-        # Load model
-        self.model = CodeBERTMultiLabelClassifier(num_labels=num_labels)
+        # Load tokenizer (local only — no network)
+        self.tokenizer = RobertaTokenizer.from_pretrained(tokenizer_path, local_files_only=True)
+
+        # Load model (pass models_dir so it can find a local config.json)
+        self.model = CodeBERTMultiLabelClassifier(
+            num_labels=num_labels,
+            base_model_path=str(self.models_dir),
+        )
         self.model.load_state_dict(torch.load(model_path, map_location=self.device))
         self.model.to(self.device)
         self.model.eval()
+
+        # Save base model config locally so future loads are fully offline
+        config_path = self.models_dir / 'config.json'
+        if not config_path.exists():
+            self.model.codebert.config.save_pretrained(str(self.models_dir))
         
         self.loaded = True
         
-        print(f"✅ CodeBERT classifier loaded!")
+        print("[OK] CodeBERT classifier loaded!")
         print(f"   Algorithms: {len(self.algorithms)}")
         print(f"   Device: {self.device}")
         print(f"   Algorithm list: {self.algorithms}")

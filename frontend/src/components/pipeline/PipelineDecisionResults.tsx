@@ -26,6 +26,31 @@ import {
 } from "@/types/decision-engine.tp";
 import { cn } from "@/lib/utils";
 
+/** Format execution time (ms) into a readable string */
+function formatTime(ms: number | null | undefined): string {
+  if (ms == null) return "N/A";
+  if (ms > 1e15) return "Infeasible";
+  const s = ms / 1000;
+  if (s < 1) return `${ms.toFixed(0)}ms`;
+  if (s < 60) return `${s.toFixed(2)}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ${Math.round((s % 3600) / 60)}m`;
+  const days = s / 86400;
+  if (days < 365) return `${days.toFixed(1)} days`;
+  return `${(days / 365).toFixed(1)} years`;
+}
+
+/** Format cost (USD) into a readable string */
+function formatCost(usd: number | null | undefined): string {
+  if (usd == null) return "N/A";
+  if (usd > 1e12) return "Infeasible";
+  if (usd < 0.01) return `$${usd.toFixed(6)}`;
+  if (usd < 1000) return `$${usd.toFixed(2)}`;
+  if (usd < 1e6) return `$${(usd / 1000).toFixed(1)}K`;
+  if (usd < 1e9) return `$${(usd / 1e6).toFixed(1)}M`;
+  return `$${(usd / 1e9).toFixed(1)}B`;
+}
+
 interface PipelineDecisionResultsProps {
   result: DecisionEngineResponse;
   mappedInput: CodeAnalysisInput | null;
@@ -111,9 +136,7 @@ export function PipelineDecisionResults({
                 <span className="text-xs">Expected Time</span>
               </div>
               <p className="mt-1 font-mono text-xl font-bold">
-                {estimated_execution_time_ms
-                  ? `${(estimated_execution_time_ms / 1000).toFixed(2)}s`
-                  : "N/A"}
+                {formatTime(estimated_execution_time_ms)}
               </p>
             </div>
 
@@ -124,7 +147,7 @@ export function PipelineDecisionResults({
                 <span className="text-xs">Estimated Cost</span>
               </div>
               <p className="mt-1 font-mono text-xl font-bold">
-                ${estimated_cost_usd?.toFixed(4) || "N/A"}
+                {formatCost(estimated_cost_usd)}
               </p>
             </div>
 

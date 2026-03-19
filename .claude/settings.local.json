@@ -1,18 +1,33 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -E '^/c/Users/sudar/projects/nexar/[^/]+$')",
-      "Bash(grep -E \"\\\\.py$|\\\\.ts$\")",
-      "Bash(ls -d /c/Users/sudar/projects/nexar/*/)",
-      "Bash(pip install:*)",
-      "Bash(mkdocs build:*)",
-      "Bash(python -m mkdocs build --strict)",
-      "Bash(pip show:*)",
-      "Bash(where mkdocs:*)",
-      "Bash(\"C:\\\\Users\\\\sudar\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\\\python.exe\" -m mkdocs build --strict)",
-      "Bash(grep -E \"\\\\.\\(py|ts|tsx\\)$\")",
+      "*",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(.venv/Scripts/uvicorn --version)",
+      "Bash(pkill -f \"uvicorn main:app\")",
+      "Bash(pkill -f \"tsx watch\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(bash setup-dev.sh --help)",
+      "Bash(bash setup-dev.sh --skip-prereqs decision-engine)",
+      "Bash(where python:*)",
+      "Bash(where python3:*)",
+      "Bash(where python3.12)",
+      "Bash(where python3.13)",
+      "Bash(py -3.12 --version)",
+      "Bash(py --list)",
+      "Bash(rm -rf decision-engine/.venv)",
+      "Bash(bash setup-dev.sh --skip-prereqs --force decision-engine)",
+      "Bash(bash setup-dev.sh decision-engine)",
+      "Bash(find C:/Users/sudar/projects/nexar -type f -name *.env ! -path */.venv/* ! -path */node_modules/*)",
+      "Bash(bash -n start-dev.sh)",
+      "Bash(bash start-dev.sh --help)",
+      "Bash(curl -s http://localhost:8004/api/jobs/local/b87f1477-15c6-4d27-a2bf-e1203cc43e51/result)",
+      "Bash(hardware-abstraction-layer/.venv/Scripts/pip install:*)",
+      "Bash(curl -s http://localhost:8004/api/quantum/ibm-quantum/devices)",
+      "Bash(python -m json.tool)",
       "Bash(npx tsc:*)",
-      "Bash(grep '\"\"lucide-react\"\"' package.json)"
+      "Bash(.venv/Scripts/python -c \":*)"
     ]
   }
 }

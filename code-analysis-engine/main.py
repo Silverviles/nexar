@@ -74,27 +74,27 @@ use_codebert = False
 try:
     codebert_models_dir = Path("models/trained/trained_codebert")
     if codebert_models_dir.exists() and (codebert_models_dir / "codebert_model.pt").exists():
-        print("✅ Loading CodeBERT algorithm classifier (PRIMARY MODEL)...")
+        print("[OK] Loading CodeBERT algorithm classifier (PRIMARY MODEL)...")
         codebert_classifier = CodeBERTAlgorithmClassifier()
         codebert_classifier.load_models()
-        print("✅ CodeBERT classifier loaded successfully!")
-        print("   🚀 Using transformer-based semantic understanding")
-        print("   ✅ Multi-label support enabled")
+        print("[OK] CodeBERT classifier loaded successfully!")
+        print("     Using transformer-based semantic understanding")
+        print("     Multi-label support enabled")
         use_codebert = True
     else:
-        print("ℹ️  CodeBERT model not found. Train using:")
-        print("      python train_codebert_algorithm_classifier.py")
-        print("   📌 Falling back to pattern-based detection")
+        print("[INFO] CodeBERT model not found. Train using:")
+        print("       python train_codebert_algorithm_classifier.py")
+        print("       Falling back to pattern-based detection")
         use_codebert = False
 except Exception as e:
-    print(f"⚠️  Error loading CodeBERT classifier: {e}")
-    print("   Falling back to pattern-based detection")
+    print(f"[WARN] Error loading CodeBERT classifier: {e}")
+    print("       Falling back to pattern-based detection")
     use_codebert = False
 
 # Load legacy classifier as fallback
 ml_classifier = MLAlgorithmClassifier()
 if not use_codebert:
-    print("✅ Pattern-based algorithm detector loaded (FALLBACK).")
+    print("[OK] Pattern-based algorithm detector loaded (FALLBACK).")
 
 # Initialize logger
 logger = logging.getLogger(__name__)

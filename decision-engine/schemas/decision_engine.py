@@ -18,6 +18,7 @@ class ProblemType(str, Enum):
     DYNAMIC_PROGRAMMING = "dynamic_programming"
     MATRIX_OPS = "matrix_ops"
     RANDOM_CIRCUIT = "random_circuit"
+    SAMPLING = "sampling"
 
 class TimeComplexity(str, Enum):
     """Time complexity types"""

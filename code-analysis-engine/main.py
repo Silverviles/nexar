@@ -224,13 +224,32 @@ async def analyze_code(submission: CodeSubmission, request: Request):
                         detected_algorithms = codebert_result['algorithms']
                         algorithm_confidence = codebert_result.get('confidence', 0.8)
                         algorithm_detection_source = "codebert"
-                        
+
                         # Map primary algorithm to problem type
                         from modules.codebert_algorithm_classifier import map_algorithm_to_problem_type
                         primary_algo = detected_algorithms[0] if detected_algorithms else 'unknown'
                         problem_type = map_algorithm_to_problem_type(primary_algo)
                 except Exception as e:
                     print(f"CodeBERT classification failed: {e}, falling back")
+
+            # Always run rule-based detector to cross-validate CodeBERT results.
+            # CodeBERT can misclassify structurally similar circuits (e.g., QFT as deutsch_jozsa).
+            rule_based_result = algorithm_detector.detect(unified_ast)
+
+            if detected_algorithms:
+                # Cross-validate: if rule-based detector disagrees with high confidence,
+                # prefer rule-based since it uses structural pattern matching.
+                rule_confidence = rule_based_result.get('confidence', 0.0)
+                rule_algos = rule_based_result.get('detected_algorithms', [])
+                if (rule_confidence >= 0.7 and rule_algos
+                        and rule_algos[0] not in detected_algorithms):
+                    print(f"Cross-validation conflict: CodeBERT={detected_algorithms}, "
+                          f"rule-based={rule_algos} (conf={rule_confidence:.2f}). "
+                          f"Preferring rule-based detection.")
+                    detected_algorithms = rule_algos
+                    problem_type = rule_based_result['problem_type']
+                    algorithm_confidence = rule_confidence
+                    algorithm_detection_source = "rule-based (cross-validated)"
 
             # If CodeBERT is unavailable/failed/no result, use ML single-label classifier.
             if not detected_algorithms:
@@ -247,12 +266,11 @@ async def analyze_code(submission: CodeSubmission, request: Request):
                 except Exception as e:
                     print(f"ML classification failed: {e}, falling back")
 
-            # If still no algorithm OR confidence is low, use accurate rule-based detector.
+            # If still no algorithm OR confidence is low, use rule-based result.
             if not detected_algorithms or algorithm_confidence < 0.5:
-                algorithm_result = algorithm_detector.detect(unified_ast)
-                problem_type = algorithm_result['problem_type']
-                detected_algorithms = algorithm_result['detected_algorithms']
-                algorithm_confidence = algorithm_result['confidence']
+                problem_type = rule_based_result['problem_type']
+                detected_algorithms = rule_based_result['detected_algorithms']
+                algorithm_confidence = rule_based_result['confidence']
                 algorithm_detection_source = "rule-based"
             
             # Final fallback to heuristics if detector confidence is still low.

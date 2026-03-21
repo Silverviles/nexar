@@ -97,6 +97,12 @@ class RuleBasedSystem:
                 'reason': "QAOA/VQE can explore solution space efficiently",
                 'min_qubits': 6,
             },
+            ProblemType.SAMPLING: {
+                'preferred_hardware': HardwareType.CLASSICAL,
+                'reason': "Classical FFT is O(n log n) vs quantum QFT O(n²) gates; quantum advantage only as subroutine in larger algorithms (Shor's, QPE)",
+                'quantum_not_beneficial': True,
+                'conditional': "quantum_if_subroutine",  # Quantum beneficial only when QFT is part of a larger quantum algorithm
+            },
             ProblemType.SORTING: {
                 'preferred_hardware': HardwareType.CLASSICAL,
                 'reason': "Classical sorting algorithms are highly optimized",
@@ -528,7 +534,9 @@ class RuleBasedSystem:
 
             # Practical scale check: don't force quantum for small problems
             # where classical simulation is trivial and NISQ overhead hurts.
-            MIN_QUBITS_FOR_FORCE = 20
+            # 30+ qubits (~1B amplitudes) is where classical simulation starts
+            # to become expensive; below that, let cost/ML analysis decide.
+            MIN_QUBITS_FOR_FORCE = 30
             if input_data.qubits_required < MIN_QUBITS_FOR_FORCE:
                 # Problem type prefers quantum but scale is too small to force
                 # it. Return ALLOW_BOTH so the weighted merger (ML + cost) can

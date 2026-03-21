@@ -4,6 +4,9 @@ from app.providers.azure_classical import AzureClassicalProvider
 from app.providers.azure_quantum import AzureQuantumProvider
 from app.providers.ibm_classical import IBMClassicalProvider
 from app.providers.ibm_quantum import IBMQuantumProvider
+from app.providers.cpu_classical import CPUClassicalProvider
+from app.providers.gpu_classical import GPUClassicalProvider
+from app.providers.tpu_classical import TPUClassicalProvider
 from app.providers.local import LocalClassicalProvider
 from app.services.compute_service import ComputeService
 
@@ -19,11 +22,16 @@ def create_compute_service() -> ComputeService:
     service.register_provider(AzureQuantumProvider())
     service.register_provider(IBMQuantumProvider())
 
-    # Register Classical Providers
+    # Register Classical Providers (cloud)
     service.register_provider(AWSClassicalProvider())
     service.register_provider(AzureClassicalProvider())
     service.register_provider(IBMClassicalProvider())
     service.register_provider(LocalClassicalProvider())
+
+    # Register Classical Providers (hardware-specific)
+    service.register_provider(CPUClassicalProvider())
+    service.register_provider(GPUClassicalProvider())
+    service.register_provider(TPUClassicalProvider())
 
     return service
 

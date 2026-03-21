@@ -557,31 +557,42 @@ prefix_output() {
     # Build the prefix string with ANSI codes for sed
     # Using printf to embed the escape codes into a variable
     prefix=$(printf '  \033[%sm[%s]\033[0m ' "${color}" "${name}")
-    sed -u "s|^|${prefix}|"
+    # sed -u (unbuffered) is GNU-only; macOS BSD sed doesn't support it.
+    # Use sed -l on GNU sed if available, otherwise fall back to plain sed.
+    if sed -u '' </dev/null 2>/dev/null; then
+        sed -u "s|^|${prefix}|"
+    else
+        sed "s|^|${prefix}|"
+    fi
 }
 
-# Map service names to raw ANSI color codes (for sed — can't use \033[...m bash vars inside sed easily)
-# These are the numeric codes without the \033[ prefix
-declare -A PY_COLOR_CODES
-PY_COLOR_CODES["ai-code-converter"]="1;33"
-PY_COLOR_CODES["code-analysis-engine"]="0;35"
-PY_COLOR_CODES["decision-engine"]="0;34"
-PY_COLOR_CODES["hardware-abstraction-layer"]="1;37"
+# Lookup helpers — compatible with Bash 3.2 (macOS default) which lacks
+# associative arrays (declare -A).  Each function maps a service name to
+# its ANSI color code or bash color variable.
 
-declare -A NODE_COLOR_CODES
-NODE_COLOR_CODES["api"]="0;32"
-NODE_COLOR_CODES["frontend"]="0;36"
+get_color_code() {
+    case "$1" in
+        ai-code-converter)          echo "1;33" ;;
+        code-analysis-engine)       echo "0;35" ;;
+        decision-engine)            echo "0;34" ;;
+        hardware-abstraction-layer) echo "1;37" ;;
+        api)                        echo "0;32" ;;
+        frontend)                   echo "0;36" ;;
+        *)                          echo "0"    ;;
+    esac
+}
 
-# Corresponding bash color vars for log_ok/log_fail calls
-declare -A PY_SERVICE_MAP
-PY_SERVICE_MAP["ai-code-converter"]="$YELLOW"
-PY_SERVICE_MAP["code-analysis-engine"]="$MAGENTA"
-PY_SERVICE_MAP["decision-engine"]="$BLUE"
-PY_SERVICE_MAP["hardware-abstraction-layer"]="$WHITE"
-
-declare -A NODE_SERVICE_MAP
-NODE_SERVICE_MAP["api"]="$GREEN"
-NODE_SERVICE_MAP["frontend"]="$CYAN"
+get_service_color() {
+    case "$1" in
+        ai-code-converter)          echo "$YELLOW"  ;;
+        code-analysis-engine)       echo "$MAGENTA" ;;
+        decision-engine)            echo "$BLUE"    ;;
+        hardware-abstraction-layer) echo "$WHITE"   ;;
+        api)                        echo "$GREEN"   ;;
+        frontend)                   echo "$CYAN"    ;;
+        *)                          echo "$NC"      ;;
+    esac
+}
 
 # ── Phase 2: Python Services (parallel with live streaming logs) ──
 log_header "Python Services (installing in parallel)"
@@ -592,8 +603,8 @@ PYTHON_SERVICES=()
 
 for svc_name in ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer; do
     if should_setup "$svc_name"; then
-        svc_color="${PY_SERVICE_MAP[$svc_name]}"
-        color_code="${PY_COLOR_CODES[$svc_name]}"
+        svc_color="$(get_service_color "$svc_name")"
+        color_code="$(get_color_code "$svc_name")"
 
         # Launch in background, pipe output through color-coded prefix in real-time
         (setup_python_service "$svc_name" "$svc_name" "$svc_color" 2>&1) | prefix_output "$color_code" "$svc_name" &
@@ -619,8 +630,8 @@ NODE_SERVICES=()
 
 for svc_name in api frontend; do
     if should_setup "$svc_name"; then
-        svc_color="${NODE_SERVICE_MAP[$svc_name]}"
-        color_code="${NODE_COLOR_CODES[$svc_name]}"
+        svc_color="$(get_service_color "$svc_name")"
+        color_code="$(get_color_code "$svc_name")"
 
         (setup_node_service "$svc_name" "$svc_name" "$svc_color" 2>&1) | prefix_output "$color_code" "$svc_name" &
         NODE_PIDS+=($!)

@@ -398,42 +398,82 @@ class RuleBasedSystem:
     
     def _evaluate_quantum_advantage(self, input_data: CodeAnalysisInput) -> Dict[str, Any]:
         """
-        Evaluate if problem exhibits clear quantum advantage based on thresholds
+        Evaluate if problem exhibits clear quantum advantage based on thresholds.
+
+        High quantum feature scores (superposition, entanglement, cx_gate_ratio)
+        indicate the algorithm *could* benefit from quantum hardware, but that alone
+        is not sufficient. Quantum advantage only materialises when the problem is
+        large enough that quantum speedup outweighs the practical overhead of
+        current NISQ devices (queue time, shot noise, gate errors, decoherence).
+
+        For small qubit counts (< 20) the full state vector fits easily in classical
+        memory (2^20 ≈ 1M amplitudes) so classical simulation is fast and reliable.
+        We therefore require *both* strong quantum features AND a problem scale where
+        classical simulation becomes expensive before forcing quantum execution.
         """
-        
-        # Calculate weighted quantum score
+
+        # Calculate weighted quantum score from algorithm features
         quantum_score = (
             input_data.superposition_score * 0.4 +
             input_data.entanglement_score * 0.4 +
             input_data.cx_gate_ratio * 0.2
         )
-        
+
         reasons = []
-        
-        # Check individual thresholds
+
+        # Check individual feature thresholds
         if input_data.superposition_score >= self.quantum_advantage_thresholds['min_superposition_score']:
             reasons.append(f"High superposition potential ({input_data.superposition_score:.2f})")
-        
+
         if input_data.entanglement_score >= self.quantum_advantage_thresholds['min_entanglement_score']:
             reasons.append(f"Strong entanglement ({input_data.entanglement_score:.2f})")
-        
+
         if input_data.cx_gate_ratio >= self.quantum_advantage_thresholds['min_cx_gate_ratio']:
             reasons.append(f"High entangling gate usage ({input_data.cx_gate_ratio:.2f})")
-        
+
         # Check time complexity for exponential problems
         if input_data.time_complexity == TimeComplexity.EXPONENTIAL:
             reasons.append("Exponential classical complexity")
         elif input_data.time_complexity == TimeComplexity.QUADRATIC_SPEEDUP:
             reasons.append("Known quantum speedup available")
-        
-        # Determine if advantage exists
-        has_advantage = (
+
+        has_strong_features = (
             quantum_score >= self.quantum_advantage_thresholds['min_combined_quantum_score'] or
-            len(reasons) >= 3  # Multiple indicators suggest advantage
+            len(reasons) >= 3
         )
-        
-        confidence = min(quantum_score * 1.2, 1.0)  # Scale confidence
-        
+
+        # ------------------------------------------------------------------
+        # Practical scale check: quantum advantage requires a problem large
+        # enough that classical simulation is actually expensive.
+        #   - < 20 qubits: classical state-vector sim is trivial
+        #   - 20-30 qubits: classical is feasible but slow for deep circuits
+        #   - > 30 qubits: classical simulation becomes impractical
+        #
+        # For small problems, even perfect quantum features don't justify the
+        # overhead of real quantum hardware on current NISQ devices.
+        # ------------------------------------------------------------------
+        MIN_QUBITS_FOR_ADVANTAGE = 20
+        MIN_PROBLEM_SIZE_FOR_ADVANTAGE = 500
+
+        has_practical_scale = (
+            input_data.qubits_required >= MIN_QUBITS_FOR_ADVANTAGE or
+            (input_data.problem_size >= MIN_PROBLEM_SIZE_FOR_ADVANTAGE and
+             input_data.time_complexity in (TimeComplexity.EXPONENTIAL, TimeComplexity.QUADRATIC_SPEEDUP))
+        )
+
+        has_advantage = has_strong_features and has_practical_scale
+
+        # If features are strong but scale is too small, note why
+        if has_strong_features and not has_practical_scale:
+            reasons.append(
+                f"Scale too small for quantum advantage "
+                f"({input_data.qubits_required} qubits, problem size {input_data.problem_size})"
+            )
+
+        confidence = min(quantum_score * 1.2, 1.0)
+        if not has_practical_scale:
+            confidence *= 0.5  # Low confidence when scale doesn't justify quantum
+
         return {
             'has_advantage': has_advantage,
             'quantum_score': quantum_score,
@@ -452,22 +492,28 @@ class RuleBasedSystem:
         compatibility: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
-        Apply problem-type-specific routing rules
+        Apply problem-type-specific routing rules.
+
+        Quantum-preferred problem types (Factorization, Search, Simulation,
+        Optimization) only force quantum when the problem is large enough that
+        quantum hardware provides a real advantage over classical execution.
+        For small qubit counts, classical simulation is fast and reliable, so
+        we return ALLOW_BOTH to let the weighted merger decide.
         """
-        
+
         problem_rule = self.problem_type_rules.get(input_data.problem_type)
-        
+
         if problem_rule is None:
             return None
-        
+
         preferred_hw = problem_rule['preferred_hardware']
         reason = problem_rule['reason']
-        
+
         # Check if preferred hardware is compatible
         if preferred_hw == HardwareType.QUANTUM:
             if not compatibility['quantum_compatible']:
                 return None  # Can't use preferred hardware
-            
+
             # Check minimum qubit requirement if specified
             min_qubits = problem_rule.get('min_qubits', 0)
             if input_data.qubits_required < min_qubits:
@@ -479,7 +525,26 @@ class RuleBasedSystem:
                     'compatibility': compatibility,
                     'rules_triggered': ['problem_type_min_qubits']
                 }
-            
+
+            # Practical scale check: don't force quantum for small problems
+            # where classical simulation is trivial and NISQ overhead hurts.
+            MIN_QUBITS_FOR_FORCE = 20
+            if input_data.qubits_required < MIN_QUBITS_FOR_FORCE:
+                # Problem type prefers quantum but scale is too small to force
+                # it. Return ALLOW_BOTH so the weighted merger (ML + cost) can
+                # make a balanced decision instead of blindly overriding.
+                return {
+                    'decision_type': RuleDecisionType.ALLOW_BOTH,
+                    'hardware': None,
+                    'confidence': 0.5,
+                    'rationale': (
+                        f"{input_data.problem_type.value} problems can benefit from quantum ({reason}), "
+                        f"but {input_data.qubits_required} qubits is efficiently simulable classically — deferring to weighted analysis"
+                    ),
+                    'compatibility': compatibility,
+                    'rules_triggered': ['problem_type_quantum_preferred_small_scale']
+                }
+
             return {
                 'decision_type': RuleDecisionType.FORCE_QUANTUM,
                 'hardware': HardwareType.QUANTUM,
@@ -488,7 +553,7 @@ class RuleBasedSystem:
                 'compatibility': compatibility,
                 'rules_triggered': ['problem_type_quantum_preferred']
             }
-        
+
         else:  # Classical preferred
             return {
                 'decision_type': RuleDecisionType.FORCE_CLASSICAL,

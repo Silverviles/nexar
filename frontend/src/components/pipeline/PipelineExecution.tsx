@@ -4,7 +4,7 @@
  * Routes to IBM Quantum or Local Classical based on the decision engine recommendation.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Play,
   Loader2,
@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useJobStatus } from "@/hooks/useJobStatus";
 import { hardwareService } from "@/services/hardware-service";
 import { HardwareType } from "@/types/decision-engine.tp";
+import type { HardwareDevice } from "@/types/hardware";
 
 interface PipelineExecutionProps {
   recommendedHardware: string;
@@ -38,17 +39,34 @@ export function PipelineExecution({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const isQuantum = recommendedHardware === HardwareType.QUANTUM;
+
   // IBM Quantum settings
-  const [deviceName, setDeviceName] = useState("ibm_sherbrooke");
+  const [deviceName, setDeviceName] = useState("");
   const [shots, setShots] = useState(1024);
+  const [devices, setDevices] = useState<HardwareDevice[]>([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isQuantum) return;
+    setDevicesLoading(true);
+    hardwareService
+      .getDevices()
+      .then((res) => {
+        setDevices(res.devices);
+        if (res.devices.length > 0 && !deviceName) {
+          setDeviceName(res.devices[0].name);
+        }
+      })
+      .catch(() => setDevices([]))
+      .finally(() => setDevicesLoading(false));
+  }, [isQuantum]);
 
   const jobStatus = useJobStatus({
     provider: provider ?? "",
     jobId: jobId ?? "",
     enabled: !!provider && !!jobId,
   });
-
-  const isQuantum = recommendedHardware === HardwareType.QUANTUM;
 
   const handleExecute = async () => {
     setIsSubmitting(true);
@@ -99,7 +117,7 @@ export function PipelineExecution({
           <div className="space-y-4">
             {isQuantum ? (
               <>
-                <p className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground">
                   Your code will be submitted to{" "}
                   <Badge variant="quantum">IBM Quantum</Badge> via the Qiskit
                   Runtime. The code must define a{" "}
@@ -107,7 +125,7 @@ export function PipelineExecution({
                     circuit
                   </code>{" "}
                   variable (QuantumCircuit).
-                </p>
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -117,17 +135,40 @@ export function PipelineExecution({
                     <select
                       value={deviceName}
                       onChange={(e) => setDeviceName(e.target.value)}
+                      disabled={devicesLoading}
                       className="mt-1 w-full rounded-md border border-border bg-secondary/30 px-3 py-2 text-sm font-mono"
                     >
-                      <optgroup label="Real Quantum Hardware">
-                        <option value="ibm_sherbrooke">ibm_sherbrooke (127 qubits)</option>
-                        <option value="ibm_brisbane">ibm_brisbane (127 qubits)</option>
-                        <option value="ibm_kyiv">ibm_kyiv (127 qubits)</option>
-                        <option value="ibm_nazca">ibm_nazca (127 qubits)</option>
-                      </optgroup>
-                      <optgroup label="Simulators">
-                        <option value="ibmq_qasm_simulator">ibmq_qasm_simulator</option>
-                      </optgroup>
+                      {devicesLoading ? (
+                        <option>Loading devices...</option>
+                      ) : devices.length === 0 ? (
+                        <option>No devices available</option>
+                      ) : (
+                        <>
+                          {devices.filter((d) => !d.is_simulator).length > 0 && (
+                            <optgroup label="Real Quantum Hardware">
+                              {devices
+                                .filter((d) => !d.is_simulator)
+                                .map((d) => (
+                                  <option key={d.name} value={d.name}>
+                                    {d.name}
+                                    {d.num_qubits ? ` (${d.num_qubits} qubits)` : ""}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          )}
+                          {devices.filter((d) => d.is_simulator).length > 0 && (
+                            <optgroup label="Simulators">
+                              {devices
+                                .filter((d) => d.is_simulator)
+                                .map((d) => (
+                                  <option key={d.name} value={d.name}>
+                                    {d.name}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          )}
+                        </>
+                      )}
                     </select>
                   </div>
                   <div>
@@ -148,12 +189,12 @@ export function PipelineExecution({
                 </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 Your code will be executed on the{" "}
                 <Badge variant="classical">Local Classical</Badge> Python
                 runtime. All standard Python libraries and installed packages are
                 available.
-              </p>
+              </div>
             )}
 
             {submitError && (

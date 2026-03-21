@@ -1,6 +1,8 @@
 from typing import List, Dict, Any, Union, Optional
 import logging
 import signal
+import statistics
+import time
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import BackendV2
@@ -37,8 +39,14 @@ class IBMQuantumProvider(QuantumProvider):
     A quantum provider for IBM Qiskit.
     """
 
+    # Calibration cache TTL: 1 hour (IBM recalibrates ~daily)
+    _CALIBRATION_CACHE_TTL = 3600
+
     def __init__(self):
         self.service = None
+        self._calibration_cache: Dict[str, Dict[str, Any]] = {}
+        self._calibration_cache_time: float = 0.0
+
         try:
             if settings.IBM_QUANTUM_TOKEN:
                 self.service = QiskitRuntimeService(
@@ -114,6 +122,9 @@ class IBMQuantumProvider(QuantumProvider):
                         if v not in adjacency_map[u]:
                             adjacency_map[u].append(v)
 
+            # Extract calibration data (cached)
+            calibration = self._get_calibration(backend)
+
             devices.append(
                 {
                     "name": backend.name,
@@ -125,9 +136,131 @@ class IBMQuantumProvider(QuantumProvider):
                     "pending_jobs": pending_jobs,
                     "basis_gates": basis_gates_info,
                     "coupling_map": adjacency_map,
+                    "calibration": calibration,
                 }
             )
         return devices
+
+    def _get_calibration(self, backend: Any) -> Dict[str, Any]:
+        """
+        Extract median calibration metrics from a backend.
+        Uses an in-memory cache with 1-hour TTL to avoid repeated slow fetches.
+
+        Returns dict with:
+          median_cx_error, median_sx_error, median_readout_error,
+          median_t1_us, median_t2_us, median_gate_time_ns
+        """
+        name = getattr(backend, 'name', 'unknown')
+
+        # Check cache
+        now = time.time()
+        if (
+            name in self._calibration_cache
+            and (now - self._calibration_cache_time) < self._CALIBRATION_CACHE_TTL
+        ):
+            return self._calibration_cache[name]
+
+        calibration = self._extract_calibration(backend)
+        self._calibration_cache[name] = calibration
+        self._calibration_cache_time = now
+
+        return calibration
+
+    @staticmethod
+    def _extract_calibration(backend: Any) -> Dict[str, Any]:
+        """
+        Extract median error rates and coherence times from backend.target
+        and backend.qubit_properties().
+        """
+        empty = {
+            "median_cx_error": None,
+            "median_sx_error": None,
+            "median_readout_error": None,
+            "median_t1_us": None,
+            "median_t2_us": None,
+            "median_gate_time_ns": None,
+        }
+
+        target = getattr(backend, 'target', None)
+        if target is None:
+            return empty
+
+        try:
+            op_names = target.operation_names
+
+            # Two-qubit gate errors (ECR, CX, or CZ — whichever the device uses)
+            cx_errors: list[float] = []
+            gate_times_ns: list[float] = []
+            for gate_name in ['ecr', 'cx', 'cz']:
+                if gate_name not in op_names:
+                    continue
+                for qargs, props in target[gate_name].items():
+                    if props is None:
+                        continue
+                    if props.error is not None:
+                        cx_errors.append(props.error)
+                    if props.duration is not None:
+                        gate_times_ns.append(props.duration * 1e9)
+
+            # Single-qubit gate errors (SX is the standard single-qubit gate)
+            sx_errors: list[float] = []
+            for gate_name in ['sx', 'x', 'rz']:
+                if gate_name not in op_names:
+                    continue
+                for qargs, props in target[gate_name].items():
+                    if props is None:
+                        continue
+                    if props.error is not None:
+                        sx_errors.append(props.error)
+                if sx_errors:
+                    break  # Use the first gate type that has data
+
+            # Readout errors
+            readout_errors: list[float] = []
+            if 'measure' in op_names:
+                for qargs, props in target['measure'].items():
+                    if props is not None and props.error is not None:
+                        readout_errors.append(props.error)
+
+            # T1/T2 coherence times from qubit properties
+            t1_values: list[float] = []
+            t2_values: list[float] = []
+            num_qubits = getattr(backend, 'num_qubits', 0)
+            for i in range(num_qubits):
+                try:
+                    qp = backend.qubit_properties(i)
+                    if qp is None:
+                        continue
+                    if qp.t1 is not None:
+                        t1_values.append(qp.t1 * 1e6)  # seconds → microseconds
+                    if qp.t2 is not None:
+                        t2_values.append(qp.t2 * 1e6)
+                except Exception:
+                    continue
+
+            result = {
+                "median_cx_error": statistics.median(cx_errors) if cx_errors else None,
+                "median_sx_error": statistics.median(sx_errors) if sx_errors else None,
+                "median_readout_error": statistics.median(readout_errors) if readout_errors else None,
+                "median_t1_us": round(statistics.median(t1_values), 2) if t1_values else None,
+                "median_t2_us": round(statistics.median(t2_values), 2) if t2_values else None,
+                "median_gate_time_ns": round(statistics.median(gate_times_ns), 2) if gate_times_ns else None,
+            }
+
+            logger.info(
+                "Calibration extracted for %s: cx_err=%.4f, sx_err=%.5f, ro_err=%.4f, T1=%.1fμs, T2=%.1fμs",
+                getattr(backend, 'name', '?'),
+                result['median_cx_error'] or 0,
+                result['median_sx_error'] or 0,
+                result['median_readout_error'] or 0,
+                result['median_t1_us'] or 0,
+                result['median_t2_us'] or 0,
+            )
+            return result
+
+        except Exception as e:
+            logger.warning("Failed to extract calibration for %s: %s", getattr(backend, 'name', '?'), e)
+            return empty
 
     def execute_circuit(
             self,

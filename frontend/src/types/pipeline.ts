@@ -1,6 +1,6 @@
 /**
  * Pipeline Types
- * Mirrors the API gateway pipeline response shape.
+ * Mirrors the Firestore pipeline_jobs document shape.
  */
 
 import type { AnalysisResult } from "./codeAnalysis";
@@ -15,32 +15,40 @@ export interface PipelineRequest {
   auto_execute?: boolean;
 }
 
-// ── Response ──
+// ── Response (from GET /status/:pipelineId) ──
 
-export type PipelineStatus = "completed" | "partial" | "failed";
+export type PipelineStatus =
+  | "processing"
+  | "analyzing"
+  | "deciding"
+  | "completed"
+  | "partial"
+  | "failed";
 
 export interface PipelineStepTiming {
   analysis_ms: number | null;
   decision_ms: number | null;
-  total_ms: number;
+  total_ms: number | null;
 }
 
 export interface PipelineResponse {
   pipeline_id: string;
+  user_id?: string;
   status: PipelineStatus;
   analysis: AnalysisResult | null;
   decision: (DecisionEngineResponse & { decision_id?: string | null }) | null;
   mapped_input: CodeAnalysisInput | null;
-  execution: null;
+  error?: string | null;
   timing: PipelineStepTiming;
-  error?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// ── Pipeline UI Stage ──
+// ── Pipeline UI Stage (maps from PipelineStatus) ──
 
 export type PipelineStage =
   | "idle"
-  | "running"
+  | "processing"
   | "analyzing"
   | "deciding"
   | "complete"

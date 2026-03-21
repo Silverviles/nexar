@@ -1,11 +1,12 @@
 /**
  * Pipeline Routes
  *
- * Orchestrates the end-to-end flow:
- *   Code → Analysis → Decision → (future: Execution)
+ * Async orchestration: Code → Analysis → Decision
  *
- * This is the integration layer that chains the independent microservices
- * into a single coherent pipeline, handling enum mapping between them.
+ * POST /run    — accepts code, stores job in Firestore, returns 202 immediately,
+ *                runs analysis + decision in the background.
+ * GET /status/:id — polls Firestore for current pipeline job status + results.
+ * GET /health  — checks downstream service health.
  */
 
 import { Router, type Request, type Response } from "express";
@@ -13,12 +14,14 @@ import axios from "axios";
 import crypto from "crypto";
 import { logger } from "@config/logger.js";
 import { mapAnalysisToDecisionInput } from "@/services/analysis-to-decision-mapper.js";
+import { logDecision } from "@/services/decision-log-service.js";
 import {
-  logDecision,
-} from "@/services/decision-log-service.js";
+  createPipelineJob,
+  updatePipelineJob,
+  getPipelineJob,
+} from "@/services/pipeline-job-service.js";
 import type {
   PipelineRequest,
-  PipelineResponse,
   CodeAnalysisResult,
   DecisionEngineResult,
   DecisionEngineInput,
@@ -31,7 +34,7 @@ const CODE_ANALYSIS_ENGINE_URL =
 const DECISION_ENGINE_URL =
   process.env.DECISION_ENGINE_URL || "http://localhost:8003";
 
-const ANALYSIS_TIMEOUT = 30_000;
+const ANALYSIS_TIMEOUT = 300_000; // 5 min — large circuits (100+ qubits)
 const DECISION_TIMEOUT = 30_000;
 
 logger.debug("Pipeline routes initialized", {
@@ -40,7 +43,7 @@ logger.debug("Pipeline routes initialized", {
 });
 
 // ─────────────────────────────────────────────
-//  POST /run — full pipeline orchestration
+//  POST /run — async pipeline (returns 202)
 // ─────────────────────────────────────────────
 
 router.post("/run", async (req: Request, res: Response) => {
@@ -49,34 +52,97 @@ router.post("/run", async (req: Request, res: Response) => {
   const userId = (req as any).user?.userId || "anonymous";
   const body = req.body as PipelineRequest;
 
-  logger.info("[Pipeline] Starting pipeline run", {
+  logger.info("[Pipeline] Starting async pipeline run", {
     requestId,
     pipelineId,
     userId,
     codeLength: body.code?.length ?? 0,
-    problemSizeStrategy: body.problem_size_strategy,
-    budgetLimit: body.budget_limit_usd,
-    autoExecute: body.auto_execute,
   });
 
   if (!body.code || typeof body.code !== "string" || body.code.trim() === "") {
-    logger.warn("[Pipeline] Empty or missing code in request", {
-      requestId,
-      pipelineId,
-    });
     return res.status(400).json({
       pipeline_id: pipelineId,
       status: "failed",
-      analysis: null,
-      decision: null,
-      mapped_input: null,
-      execution: null,
-      timing: { analysis_ms: null, decision_ms: null, total_ms: 0 },
       error: "Code is required and must be a non-empty string",
-    } satisfies PipelineResponse);
+    });
   }
 
+  // Write initial job to Firestore and return immediately
+  try {
+    await createPipelineJob(pipelineId, userId, body.code);
+  } catch (err: any) {
+    logger.error("[Pipeline] Failed to create Firestore job", {
+      requestId,
+      pipelineId,
+      error: err.message,
+    });
+    return res.status(500).json({
+      pipeline_id: pipelineId,
+      status: "failed",
+      error: "Failed to initialize pipeline job",
+    });
+  }
+
+  // Return 202 Accepted immediately
+  res.status(202).json({
+    pipeline_id: pipelineId,
+    status: "processing",
+  });
+
+  // Run the pipeline in the background (non-blocking)
+  runPipelineAsync(pipelineId, body, userId, requestId ?? pipelineId).catch((err) => {
+    logger.error("[Pipeline] Unhandled error in background pipeline", {
+      pipelineId,
+      error: err.message,
+    });
+  });
+});
+
+// ─────────────────────────────────────────────
+//  GET /status/:pipelineId — poll for results
+// ─────────────────────────────────────────────
+
+router.get("/status/:pipelineId", async (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  const pipelineId = req.params.pipelineId as string;
+
+  try {
+    const job = await getPipelineJob(pipelineId);
+
+    if (!job) {
+      return res.status(404).json({ error: "Pipeline job not found" });
+    }
+
+    // Verify ownership
+    if (job.user_id !== userId && userId !== "anonymous") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Don't send the full code back in status polls (save bandwidth)
+    const { code, ...jobWithoutCode } = job;
+
+    return res.json(jobWithoutCode);
+  } catch (err: any) {
+    logger.error("[Pipeline] Failed to fetch job status", {
+      pipelineId,
+      error: err.message,
+    });
+    return res.status(500).json({ error: "Failed to fetch pipeline status" });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  Background pipeline worker
+// ─────────────────────────────────────────────
+
+async function runPipelineAsync(
+  pipelineId: string,
+  body: PipelineRequest,
+  userId: string,
+  requestId: string
+): Promise<void> {
   const pipelineStart = Date.now();
+
   let analysisResult: CodeAnalysisResult | null = null;
   let decisionResult: DecisionEngineResult | null = null;
   let mappedInput: DecisionEngineInput | null = null;
@@ -86,6 +152,8 @@ router.post("/run", async (req: Request, res: Response) => {
   // ── Step 1: Code Analysis ──
 
   try {
+    await updatePipelineJob(pipelineId, { status: "analyzing" });
+
     const analysisStart = Date.now();
     const analysisUrl = `${CODE_ANALYSIS_ENGINE_URL}/api/v1/code-analysis-engine/analyze`;
 
@@ -113,35 +181,30 @@ router.post("/run", async (req: Request, res: Response) => {
       pipelineId,
       durationMs: analysisDuration,
       detectedLanguage: analysisResult.detected_language,
-      problemType: analysisResult.problem_type,
       isQuantum: analysisResult.is_quantum,
     });
+
+    // Persist analysis results
+    await updatePipelineJob(pipelineId, {
+      analysis: analysisResult,
+      timing: { analysis_ms: analysisDuration, decision_ms: null, total_ms: null },
+    });
   } catch (error: any) {
-    analysisDuration = Date.now() - (pipelineStart);
-    const totalMs = Date.now() - pipelineStart;
+    analysisDuration = Date.now() - pipelineStart;
 
     logger.error("[Pipeline] Step 1 failed: Code Analysis error", {
       requestId,
       pipelineId,
       errorCode: error.code,
       errorMessage: error.message,
-      statusCode: error.response?.status,
     });
 
-    return res.status(503).json({
-      pipeline_id: pipelineId,
+    await updatePipelineJob(pipelineId, {
       status: "failed",
-      analysis: null,
-      decision: null,
-      mapped_input: null,
-      execution: null,
-      timing: {
-        analysis_ms: analysisDuration,
-        decision_ms: null,
-        total_ms: totalMs,
-      },
       error: `Code Analysis failed: ${error.message}`,
-    } satisfies PipelineResponse);
+      timing: { analysis_ms: analysisDuration, decision_ms: null, total_ms: Date.now() - pipelineStart },
+    });
+    return;
   }
 
   // ── Step 2: Map Analysis → Decision Input ──
@@ -154,38 +217,31 @@ router.post("/run", async (req: Request, res: Response) => {
       pipelineId,
       originalProblemType: analysisResult.problem_type,
       mappedProblemType: mappedInput.problem_type,
-      originalTimeComplexity: analysisResult.time_complexity,
-      mappedTimeComplexity: mappedInput.time_complexity,
     });
   } catch (error: any) {
-    const totalMs = Date.now() - pipelineStart;
-
     logger.error("[Pipeline] Step 2 failed: Mapping error", {
       requestId,
       pipelineId,
       errorMessage: error.message,
     });
 
-    // Return partial result — analysis succeeded but mapping failed
-    return res.status(200).json({
-      pipeline_id: pipelineId,
-      status: "partial",
-      analysis: analysisResult,
-      decision: null,
+    await updatePipelineJob(pipelineId, {
+      status: "failed",
       mapped_input: null,
-      execution: null,
-      timing: {
-        analysis_ms: analysisDuration,
-        decision_ms: null,
-        total_ms: totalMs,
-      },
       error: `Mapping failed: ${error.message}`,
-    } satisfies PipelineResponse);
+      timing: { analysis_ms: analysisDuration, decision_ms: null, total_ms: Date.now() - pipelineStart },
+    });
+    return;
   }
 
   // ── Step 3: Decision Engine ──
 
   try {
+    await updatePipelineJob(pipelineId, {
+      status: "deciding",
+      mapped_input: mappedInput,
+    });
+
     const decisionStart = Date.now();
     const decisionUrl = `${DECISION_ENGINE_URL}/api/v1/decision-engine/predict`;
     const budgetParam = body.budget_limit_usd
@@ -196,7 +252,6 @@ router.post("/run", async (req: Request, res: Response) => {
       requestId,
       pipelineId,
       url: decisionUrl,
-      mappedInput,
     });
 
     const decisionResponse = await axios.post(
@@ -215,13 +270,10 @@ router.post("/run", async (req: Request, res: Response) => {
       requestId,
       pipelineId,
       durationMs: decisionDuration,
-      success: decisionResult.success,
-      recommended:
-        decisionResult.recommendation?.recommended_hardware ?? "none",
-      confidence: decisionResult.recommendation?.confidence ?? 0,
+      recommended: decisionResult.recommendation?.recommended_hardware ?? "none",
     });
 
-    // Log decision to Firestore (non-blocking, same as decision-engine route)
+    // Log decision to Firestore (non-blocking)
     if (decisionResult.success) {
       logDecision({
         userId,
@@ -231,8 +283,7 @@ router.post("/run", async (req: Request, res: Response) => {
           budgetLimitUsd: body.budget_limit_usd,
         }),
       }).catch((logError) => {
-        logger.error("[Pipeline] Failed to log decision to Firestore", {
-          requestId,
+        logger.error("[Pipeline] Failed to log decision", {
           pipelineId,
           error: logError.message,
         });
@@ -240,31 +291,25 @@ router.post("/run", async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     decisionDuration = Date.now() - pipelineStart - (analysisDuration ?? 0);
-    const totalMs = Date.now() - pipelineStart;
 
     logger.error("[Pipeline] Step 3 failed: Decision Engine error", {
       requestId,
       pipelineId,
       errorCode: error.code,
       errorMessage: error.message,
-      statusCode: error.response?.status,
     });
 
-    // Return partial result — analysis succeeded but decision failed
-    return res.status(200).json({
-      pipeline_id: pipelineId,
-      status: "partial",
-      analysis: analysisResult,
+    await updatePipelineJob(pipelineId, {
+      status: "failed",
       decision: null,
-      mapped_input: mappedInput,
-      execution: null,
+      error: `Decision Engine failed: ${error.message}`,
       timing: {
         analysis_ms: analysisDuration,
         decision_ms: decisionDuration,
-        total_ms: totalMs,
+        total_ms: Date.now() - pipelineStart,
       },
-      error: `Decision Engine failed: ${error.message}`,
-    } satisfies PipelineResponse);
+    });
+    return;
   }
 
   // ── Complete ──
@@ -275,24 +320,18 @@ router.post("/run", async (req: Request, res: Response) => {
     requestId,
     pipelineId,
     totalMs,
-    analysisDurationMs: analysisDuration,
-    decisionDurationMs: decisionDuration,
   });
 
-  return res.status(200).json({
-    pipeline_id: pipelineId,
+  await updatePipelineJob(pipelineId, {
     status: "completed",
-    analysis: analysisResult,
     decision: decisionResult,
-    mapped_input: mappedInput,
-    execution: null,
     timing: {
       analysis_ms: analysisDuration,
       decision_ms: decisionDuration,
       total_ms: totalMs,
     },
-  } satisfies PipelineResponse);
-});
+  });
+}
 
 // ─────────────────────────────────────────────
 //  GET /health — pipeline health check
@@ -301,7 +340,6 @@ router.post("/run", async (req: Request, res: Response) => {
 router.get("/health", async (_req: Request, res: Response) => {
   const checks: Record<string, string> = {};
 
-  // Check Code Analysis Engine
   try {
     await axios.get(
       `${CODE_ANALYSIS_ENGINE_URL}/api/v1/code-analysis-engine/health`,
@@ -312,7 +350,6 @@ router.get("/health", async (_req: Request, res: Response) => {
     checks.code_analysis = "unavailable";
   }
 
-  // Check Decision Engine
   try {
     await axios.get(
       `${DECISION_ENGINE_URL}/api/v1/decision-engine/health`,
@@ -332,7 +369,7 @@ router.get("/health", async (_req: Request, res: Response) => {
 });
 
 logger.debug("Pipeline routes registered", {
-  routes: ["POST /run", "GET /health"],
+  routes: ["POST /run (async)", "GET /status/:pipelineId", "GET /health"],
 });
 
 export default router;

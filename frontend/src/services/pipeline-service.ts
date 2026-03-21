@@ -1,6 +1,6 @@
 /**
  * Pipeline Service
- * Calls the unified pipeline orchestration endpoint.
+ * Calls the async pipeline orchestration endpoint.
  */
 
 import api from "@/lib/axios";
@@ -10,13 +10,20 @@ const API_BASE = "/v1/pipeline";
 
 export const pipelineService = {
   /**
-   * Run the full pipeline: analyze code → map → decide hardware.
-   * Returns a unified response with analysis + decision results.
+   * Start an async pipeline run.
+   * Returns immediately with { pipeline_id, status: "processing" }.
+   * Use getStatus() to poll for results.
    */
-  async run(request: PipelineRequest): Promise<PipelineResponse> {
-    const { data } = await api.post<PipelineResponse>(`${API_BASE}/run`, request, {
-      timeout: 60_000, // Pipeline chains two services, allow more time
-    });
+  async run(request: PipelineRequest): Promise<{ pipeline_id: string; status: string }> {
+    const { data } = await api.post(`${API_BASE}/run`, request);
+    return data;
+  },
+
+  /**
+   * Poll for pipeline job status and results.
+   */
+  async getStatus(pipelineId: string): Promise<PipelineResponse> {
+    const { data } = await api.get<PipelineResponse>(`${API_BASE}/status/${pipelineId}`);
     return data;
   },
 

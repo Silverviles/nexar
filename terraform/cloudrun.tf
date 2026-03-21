@@ -185,7 +185,8 @@ module "decision_engine" {
   allow_unauthenticated = var.allow_unauthenticated
 
   env_vars = {
-    HOST = "0.0.0.0"
+    HOST               = "0.0.0.0"
+    HARDWARE_LAYER_URL = local.service_urls["hardware-abstraction-layer"]
   }
 }
 

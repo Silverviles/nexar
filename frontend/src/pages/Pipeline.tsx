@@ -2,7 +2,7 @@
  * Unified Pipeline Page
  *
  * Drop code → Analyze → Decide → Execute
- * Single page that chains all Nexar services into one coherent flow.
+ * Uses async Firestore-backed pipeline with polling for progressive results.
  */
 
 import { useState } from "react";
@@ -18,87 +18,77 @@ import { PipelineAnalysisResults } from "@/components/pipeline/PipelineAnalysisR
 import { PipelineDecisionResults } from "@/components/pipeline/PipelineDecisionResults";
 import { PipelineExecution } from "@/components/pipeline/PipelineExecution";
 import { pipelineService } from "@/services/pipeline-service";
-import type { PipelineResponse, PipelineStage } from "@/types/pipeline";
+import { usePipelineStatus } from "@/hooks/usePipelineStatus";
+import type { PipelineStage } from "@/types/pipeline";
 import type { AnalysisResult } from "@/types/codeAnalysis";
 import type { DecisionEngineResponse, CodeAnalysisInput } from "@/types/decision-engine.tp";
 
 export default function Pipeline() {
   const [code, setCode] = useState("");
-  const [stage, setStage] = useState<PipelineStage>("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [pipelineId, setPipelineId] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Results from each pipeline step
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [decisionResult, setDecisionResult] = useState<DecisionEngineResponse | null>(null);
-  const [mappedInput, setMappedInput] = useState<CodeAnalysisInput | null>(null);
-  const [timing, setTiming] = useState<PipelineResponse["timing"] | null>(null);
+  // Poll for status once we have a pipeline ID
+  const pipelineStatus = usePipelineStatus({
+    pipelineId: pipelineId ?? "",
+    enabled: !!pipelineId,
+  });
+
+  // Map backend status to UI stage
+  const getStage = (): PipelineStage => {
+    if (!pipelineId) return "idle";
+    if (isSubmitting) return "processing";
+    if (!pipelineStatus.status) return "processing";
+
+    switch (pipelineStatus.status) {
+      case "processing":
+        return "processing";
+      case "analyzing":
+        return "analyzing";
+      case "deciding":
+        return "deciding";
+      case "completed":
+        return "complete";
+      case "failed":
+        return "error";
+      default:
+        return "processing";
+    }
+  };
+
+  const stage = getStage();
 
   const handleRunPipeline = async () => {
     if (!code.trim()) return;
 
-    // Reset state
-    setStage("running");
-    setError(null);
-    setAnalysisResult(null);
-    setDecisionResult(null);
-    setMappedInput(null);
-    setTiming(null);
-
-    // Show analyzing stage briefly for UX
-    setStage("analyzing");
+    setSubmitError(null);
+    setPipelineId(null);
+    setIsSubmitting(true);
 
     try {
-      const response = await pipelineService.run({ code });
-
-      setTiming(response.timing);
-
-      if (response.analysis) {
-        setAnalysisResult(response.analysis as AnalysisResult);
-      }
-
-      // Brief delay to show the analysis step before decision
-      if (response.status === "completed" || response.status === "partial") {
-        setStage("deciding");
-
-        // Small delay for visual feedback
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
-        if (response.decision) {
-          setDecisionResult(response.decision as DecisionEngineResponse);
-        }
-        if (response.mapped_input) {
-          setMappedInput(response.mapped_input as CodeAnalysisInput);
-        }
-      }
-
-      if (response.status === "completed") {
-        setStage("complete");
-      } else if (response.status === "partial") {
-        // Partial — show what we have + error
-        setStage("complete");
-        if (response.error) {
-          setError(response.error);
-        }
-      } else {
-        setStage("error");
-        setError(response.error || "Pipeline failed");
-      }
+      const { pipeline_id } = await pipelineService.run({ code });
+      setPipelineId(pipeline_id);
     } catch (err: any) {
-      setStage("error");
-      setError(err.message || "Pipeline request failed");
+      setSubmitError(err.message || "Failed to start pipeline");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleReset = () => {
-    setStage("idle");
-    setError(null);
-    setAnalysisResult(null);
-    setDecisionResult(null);
-    setMappedInput(null);
-    setTiming(null);
+    setPipelineId(null);
+    setSubmitError(null);
+    setIsSubmitting(false);
   };
 
-  const isRunning = stage === "running" || stage === "analyzing" || stage === "deciding";
+  const isRunning = stage === "processing" || stage === "analyzing" || stage === "deciding";
+
+  // Get typed results from polling state
+  const analysisResult = pipelineStatus.analysis as AnalysisResult | null;
+  const decisionResult = pipelineStatus.decision as DecisionEngineResponse | null;
+  const mappedInput = pipelineStatus.mappedInput as CodeAnalysisInput | null;
+  const error = pipelineStatus.error || submitError;
 
   return (
     <MainLayout
@@ -116,7 +106,7 @@ export default function Pipeline() {
           code={code}
           onCodeChange={setCode}
           onSubmit={handleRunPipeline}
-          isRunning={isRunning}
+          isRunning={isRunning || isSubmitting}
         />
 
         {/* Progress indicator while running */}
@@ -127,7 +117,7 @@ export default function Pipeline() {
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 {stage === "analyzing" && "Analyzing code..."}
                 {stage === "deciding" && "Getting hardware recommendation..."}
-                {stage === "running" && "Starting pipeline..."}
+                {stage === "processing" && "Starting pipeline..."}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -140,9 +130,10 @@ export default function Pipeline() {
                 className="h-2"
               />
               <p className="mt-2 text-sm text-muted-foreground">
-                {stage === "analyzing" && "Parsing code structure and detecting algorithms..."}
+                {stage === "analyzing" && "Parsing code structure, detecting algorithms, computing metrics..."}
                 {stage === "deciding" && "ML model predicting optimal hardware..."}
-                {stage === "running" && "Initializing pipeline..."}
+                {stage === "processing" && "Initializing pipeline..."}
+                {pipelineStatus.isPolling && " (polling every 3s)"}
               </p>
             </CardContent>
           </Card>
@@ -156,8 +147,18 @@ export default function Pipeline() {
           </Alert>
         )}
 
-        {/* Analysis Results */}
-        {analysisResult && !isRunning && (
+        {/* Poll error (network issues) */}
+        {pipelineStatus.pollError && !error && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Connection issue: {pipelineStatus.pollError}. Retrying...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Analysis Results (show as soon as available, even while deciding) */}
+        {analysisResult && (
           <PipelineAnalysisResults result={analysisResult} />
         )}
 
@@ -181,15 +182,17 @@ export default function Pipeline() {
         )}
 
         {/* Timing info */}
-        {timing && !isRunning && (
+        {pipelineStatus.timing && !isRunning && (
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            {timing.analysis_ms != null && (
-              <span>Analysis: {timing.analysis_ms}ms</span>
+            {pipelineStatus.timing.analysis_ms != null && (
+              <span>Analysis: {pipelineStatus.timing.analysis_ms}ms</span>
             )}
-            {timing.decision_ms != null && (
-              <span>Decision: {timing.decision_ms}ms</span>
+            {pipelineStatus.timing.decision_ms != null && (
+              <span>Decision: {pipelineStatus.timing.decision_ms}ms</span>
             )}
-            <span>Total: {timing.total_ms}ms</span>
+            {pipelineStatus.timing.total_ms != null && (
+              <span>Total: {pipelineStatus.timing.total_ms}ms</span>
+            )}
           </div>
         )}
 

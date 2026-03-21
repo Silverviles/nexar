@@ -26,7 +26,7 @@ function getStepState(
 ): "pending" | "active" | "complete" {
   const stageOrder: PipelineStage[] = [
     "idle",
-    "running",
+    "processing",
     "analyzing",
     "deciding",
     "complete",

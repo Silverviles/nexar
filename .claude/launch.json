@@ -1,0 +1,41 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Frontend (Vite)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "API Gateway (Express)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "AI Code Converter (FastAPI)",
+      "runtimeExecutable": ".venv/Scripts/uvicorn",
+      "runtimeArgs": ["main:app", "--port", "8001", "--reload", "--host", "0.0.0.0"],
+      "port": 8001
+    },
+    {
+      "name": "Code Analysis Engine (FastAPI)",
+      "runtimeExecutable": ".venv/Scripts/uvicorn",
+      "runtimeArgs": ["main:app", "--port", "8002", "--reload", "--host", "0.0.0.0"],
+      "port": 8002
+    },
+    {
+      "name": "Decision Engine (FastAPI)",
+      "runtimeExecutable": ".venv/Scripts/uvicorn",
+      "runtimeArgs": ["main:app", "--port", "8003", "--reload", "--host", "0.0.0.0"],
+      "port": 8003
+    },
+    {
+      "name": "Hardware Abstraction Layer (FastAPI)",
+      "runtimeExecutable": ".venv/Scripts/uvicorn",
+      "runtimeArgs": ["app.main:app", "--port", "8004", "--reload", "--host", "0.0.0.0"],
+      "port": 8004
+    }
+  ]
+}

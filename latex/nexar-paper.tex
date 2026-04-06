@@ -1,0 +1,610 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{hyperref}
+
+\begin{document}
+
+\title{NEXAR: Intelligent Quantum-Classical Workload Routing Platform}
+
+\author{
+\begin{tabular}[t]{@{}c@{\hspace{1.5em}}c@{\hspace{1.5em}}c@{}}
+\parbox[t]{0.29\textwidth}{\centering
+\textbf{Siriwardhana A H L T S}\\
+\textit{Dept. of Software Engineering}\\
+\textit{Sri Lanka Institute of Information}\\
+\textit{Technology}\\
+Malabe, Sri Lanka\\
+it21388002@my.sliit.lk}
+&
+\parbox[t]{0.29\textwidth}{\centering
+\textbf{Prasad H G A T}\\
+\textit{Dept. of Software Engineering}\\
+\textit{Sri Lanka Institute of Information}\\
+\textit{Technology}\\
+Malabe, Sri Lanka\\
+it21468674@my.sliit.lk}
+&
+\parbox[t]{0.29\textwidth}{\centering
+\textbf{Jayasinghe Y L}\\
+\textit{Dept. of Software Engineering}\\
+\textit{Sri Lanka Institute of Information}\\
+\textit{Technology}\\
+Malabe, Sri Lanka\\
+it21440236@my.sliit.lk}
+\\[8em]
+\parbox[t]{0.29\textwidth}{\centering
+\textbf{Hettiarachchi S R}\\
+\textit{Dept. of Software Engineering}\\
+\textit{Sri Lanka Institute of Information}\\
+\textit{Technology}\\
+Malabe, Sri Lanka\\
+it21445848@my.sliit.lk}
+&
+\parbox[t]{0.29\textwidth}{\centering
+\textbf{Supervisor Name 1}\\
+\textit{Dept. of [Department]}\\
+\textit{Sri Lanka Institute of Information}\\
+\textit{Technology}\\
+Malabe, Sri Lanka\\
+supervisor1@sliit.lk}
+&
+\parbox[t]{0.29\textwidth}{\centering
+\textbf{Supervisor Name 2}\\
+\textit{Dept. of [Department]}\\
+\textit{Sri Lanka Institute of Information}\\
+\textit{Technology}\\
+Malabe, Sri Lanka\\
+supervisor2@sliit.lk}
+\end{tabular}
+}
+
+\maketitle
+
+\begin{abstract}
+Determining whether a computational workload benefits from quantum or classical execution remains a key challenge in the current Noisy Intermediate-Scale Quantum (NISQ) era. This paper presents Nexar, an intelligent workload routing platform that analyzes source code characteristics and predicts the optimal execution target by jointly optimizing for cost and execution time. The system employs a hybrid decision framework combining: (1) a machine learning ensemble trained on a 16-feature vector capturing circuit complexity, entanglement properties, and NISQ viability metrics; (2) a physics-aware rule-based engine enforcing hardware constraints and algorithm-specific routing logic; and (3) a real-time cost analyzer estimating execution time and monetary cost across multiple quantum providers and classical compute. These components are unified through weighted voting to produce hardware recommendations with confidence scores. The platform incorporates automated code analysis, including algorithm classification via CodeBERT and quantum circuit characterization to extract workload features without manual annotation. We evaluate the system across 30 diverse workload types including search, factorization, optimization, and simulation problems, demonstrating that the framework consistently identifies cost-effective and time-efficient execution targets while serving as a practical decision-support tool for hybrid quantum-classical computing environments.
+\end{abstract}
+
+\begin{IEEEkeywords}
+quantum computing, workload routing, NISQ, decision engine, hybrid computing, cost analysis, CodeBERT, quantum advantage
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+The advent of Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018} has created an unprecedented challenge in computational resource allocation: given a workload, should it execute on classical hardware, a quantum simulator, or a real quantum device? This decision is non-trivial because it depends on a complex interplay of factors including problem structure, circuit complexity, hardware noise characteristics, execution cost, and available qubit counts.
+
+Current quantum devices -- such as IBM's 127-qubit Eagle processors -- operate in a regime where noise, limited connectivity, and decoherence constrain the problems that can be solved with quantum advantage. Classical simulation of quantum circuits remains feasible for systems up to approximately 50 qubits, beyond which memory requirements grow exponentially as $O(2^n)$. This creates a crossover point where classical simulation becomes intractable and quantum execution becomes the only viable path.
+
+However, simply having a quantum device does not guarantee advantage. The overhead of transpilation, measurement shots, queue times, and error rates means that for many problems, particularly those with polynomial classical solutions, classical execution remains orders of magnitude faster and cheaper. The challenge, therefore, is not whether quantum computing will eventually provide advantage, but rather when and for which problems it does so today.
+
+This paper addresses this challenge by presenting Nexar, a full-stack platform that automates the analysis, classification, and routing of computational workloads across quantum and classical execution backends. Nexar's contributions are:
+
+\begin{enumerate}
+    \item \textbf{Automated Code Analysis Pipeline:} A multi-dimensional analysis engine that detects programming languages across five quantum and classical frameworks, computes complexity metrics, and classifies algorithms using a three-tier approach combining CodeBERT transformers, ensemble machine learning, and rule-based pattern matching.
+    \item \textbf{Hybrid Decision Engine:} A three-component decision framework that merges ML predictions (50\% weight), physics-aware rules (35\% weight), and real-time cost analysis (15\% weight) through weighted voting to produce hardware recommendations with calibrated confidence scores.
+    \item \textbf{Provider-Agnostic Execution Layer:} A hardware abstraction layer supporting IBM Qiskit, AWS Braket, and Azure Quantum through a unified API, enabling transparent workload routing across heterogeneous quantum backends.
+    \item \textbf{Empirical Evaluation:} A comprehensive benchmark across 30 workloads spanning classical computation, hybrid quantum-classical algorithms, and pure quantum circuits, with cost and performance analysis demonstrating the system's routing accuracy and the current state of quantum-classical cost tradeoffs.
+\end{enumerate}
+
+\section{Related Work}
+
+\subsection{Quantum-Classical Hybrid Frameworks}
+
+Several frameworks have emerged to bridge quantum and classical computing. Weder et al.\ \cite{weder2021} proposed automated quantum hardware selection for quantum workflows. Qiskit Runtime \cite{ibm2023} provides session-based quantum execution with classical co-processing. Amazon Braket \cite{aws2023} offers a multi-provider interface but lacks automated workload analysis. Azure Quantum \cite{microsoft2023} provides resource estimation but does not perform code-level analysis for routing decisions. Tang et al.\ \cite{tang2024} proposed AlphaRouter, applying reinforcement learning and tree search to quantum circuit routing. Zhan et al.\ \cite{zhan2025} presented a full-stack framework for high-performance quantum-classical computing. Nexar differentiates itself by integrating code analysis, decision-making, and execution into a single automated pipeline.
+
+\subsection{Quantum Resource Estimation}
+
+Resource estimation for quantum algorithms has been studied extensively. Lammers et al.\ \cite{lammers2025} addressed quantum resource management challenges in the NISQ era \cite{hai2025}. Beverland et al.\ \cite{beverland2022} developed methods for estimating logical qubit requirements for fault-tolerant algorithms. Quetschlich et al.\ \cite{quetschlich2024} demonstrated practical resource estimation for quantum application development. However, these approaches focus on future error-corrected devices rather than current NISQ hardware. Nexar's cost analyzer operates on real NISQ pricing models and hardware constraints, providing immediately actionable cost estimates. Recent work by Kashif et al.\ \cite{kashif2026} has explored hardware-calibrated quantum cost modeling for resource-aware optimization.
+
+\subsection{Algorithm Classification and Code Analysis}
+
+Static code analysis for quantum programs has been explored in works such as ScaffCC \cite{javadiabhari2015} and Q\# compiler toolchains. CodeBERT \cite{feng2020}, a pre-trained model for programming language understanding, has shown strong performance on code classification tasks. Afrose et al.\ \cite{afrose2025} further applied CodeBERT for translating QASM to QIR. Nexar extends these approaches by combining AST-based analysis with CodeBERT for quantum algorithm detection, enabling classification across five quantum programming frameworks.
+
+\subsection{Quantum Advantage Thresholds}
+
+The question of when quantum advantage emerges has been studied through computational complexity theory \cite{aaronson2011} and empirical benchmarks \cite{arute2019}. Our work contributes empirical data on cost-based crossover points using real provider pricing, demonstrating that the quantum advantage threshold is approximately 50--60 qubits for cost parity and beyond 120 qubits for clear quantum superiority in simulation tasks.
+
+\section{System Architecture}
+
+Nexar is implemented as a microservices monorepo comprising six independently deployable services communicating through a central API Gateway. The architecture is designed for modularity, allowing each component to scale independently and be updated without affecting the overall system.
+
+\subsection{Architecture Overview}
+
+The system follows a pipeline architecture with the following request flow:
+
+\begin{enumerate}
+    \item \textbf{Code Submission:} Users submit source code through a React-based frontend.
+    \item \textbf{Authentication and Routing:} An Express.js API Gateway authenticates requests via JWT and routes them to backend services.
+    \item \textbf{Code Analysis:} The Code Analysis Engine performs multi-dimensional analysis including language detection, complexity computation, and algorithm classification.
+    \item \textbf{Routing Decision:} The Decision Engine consumes analysis metrics and produces a hardware recommendation.
+    \item \textbf{Code Conversion (optional):} If quantum execution is selected and the code is classical, the AI Code Converter translates it to quantum circuits.
+    \item \textbf{Execution:} The Hardware Abstraction Layer submits jobs to the selected quantum or classical backend.
+\end{enumerate}
+
+All services are containerized with Docker and deployed to Google Cloud Platform via Cloud Run, with infrastructure managed through Terraform.
+
+\section{Code Analysis Engine}
+
+The Code Analysis Engine serves as the analytical foundation of the pipeline, transforming raw source code into a structured feature set that downstream components consume.
+
+\subsection{Language Detection}
+
+The engine supports five programming languages and frameworks: Python, Qiskit, Cirq, Q\#, and OpenQASM. Detection uses an ML-based classifier achieving confidence scores above 0.85 across all evaluated workloads. In our benchmark, average language detection confidence was 0.955 (sd = 0.028) across 30 workloads.
+
+\subsection{Classical Metrics Extraction}
+
+For all detected code, the engine computes classical software metrics using tree-sitter-based AST parsing:
+
+\begin{itemize}
+    \item \textbf{Cyclomatic Complexity:} Measures the number of independent execution paths. Values in our benchmark ranged from 2 to 31.
+    \item \textbf{Cognitive Complexity:} Assesses human comprehension difficulty, ranging from 0 to 39 across workloads.
+    \item \textbf{Time Complexity Classification:} Inferred from loop structure and recursion patterns -- classes include $O(1)$, $O(n)$, $O(n \log n)$, $O(n^2)$, $O(n^3)$, $O(n^k)$, and $O(2^n)$.
+    \item \textbf{Space Complexity:} Estimated from data structure allocation patterns.
+    \item \textbf{Structural Metrics:} Loop count, conditional count, function count, and nesting depth.
+\end{itemize}
+
+\subsection{Quantum Metrics Extraction}
+
+For quantum code, additional metrics are extracted:
+
+\begin{itemize}
+    \item \textbf{Qubit Requirements:} The number of qubits needed for circuit execution.
+    \item \textbf{Circuit Depth:} The number of sequential gate layers, directly impacting decoherence.
+    \item \textbf{Gate Count and CX Gate Ratio:} Total gates and the proportion of two-qubit entangling gates (CNOT/CX), which are the primary source of noise on NISQ devices.
+    \item \textbf{Superposition Score (0--1):} Quantifies the degree of superposition in the circuit.
+    \item \textbf{Entanglement Score (0--1):} Measures entanglement density, a key indicator of quantum advantage potential.
+\end{itemize}
+
+\subsection{Algorithm Classification}
+
+Algorithm detection employs a three-tier approach:
+
+\begin{enumerate}
+    \item \textbf{CodeBERT Transformer:} A fine-tuned CodeBERT model classifies the algorithm family (e.g., search, optimization, factorization, simulation) based on code semantics.
+    \item \textbf{ML Ensemble Classifier:} A scikit-learn ensemble provides a secondary classification using extracted feature vectors.
+    \item \textbf{Rule-Based Pattern Matching:} Deterministic rules identify known quantum patterns (e.g., QFT patterns, Grover oracle structures, VQE ansatz patterns).
+\end{enumerate}
+
+The system selects the highest-confidence result, falling back through tiers when confidence is below threshold.
+
+\section{Decision Engine}
+
+The Decision Engine is the central intelligence of Nexar. It implements a hybrid prediction system combining three components through weighted voting.
+
+\subsection{Feature Vector Design}
+
+The engine operates on a 16-feature input vector composed of 10 raw features and 6 derived physics features:
+
+\begin{table}[htbp]
+\caption{Raw Code Analysis Features}
+\label{tab:raw-features}
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Feature} & \textbf{Description} \\
+\midrule
+Problem size & Number of elements or variables \\
+Qubits required & Quantum bits needed \\
+Circuit depth & Sequential quantum gate layers \\
+Gate count & Total quantum gates \\
+CX gate ratio & Proportion of entangling gates (0--1) \\
+Superposition score & Superposition potential (0--1) \\
+Entanglement score & Entanglement density (0--1) \\
+Memory requirement (MB) & Classical RAM required \\
+Problem type (encoded) & Factorization, search, optimization, etc. \\
+Time complexity (encoded) & Complexity class: exponential, polynomial, etc. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Derived Physics Features}
+\label{tab:derived-features}
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Feature} & \textbf{Formula} & \textbf{Purpose} \\
+\midrule
+Circuit Volume & Qubits $\times$ Depth & Quantum resource intensity \\
+Noise Sensitivity & Qubits $\times$ Depth $\times$ CX Ratio & Error accumulation prediction \\
+Quantum Overhead Ratio & Problem Size / Qubits & Encoding efficiency \\
+NISQ Viability Score & Composite penalty function & Feasibility on current hardware \\
+Gate Density & Gate Count / Qubits & Operational complexity per qubit \\
+Entanglement Factor & CX Ratio $\times$ Entanglement & Combined entanglement potential \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The NISQ Viability Score applies penalties when qubits exceed 50, circuit depth exceeds 1,000, or circuit volume exceeds 50,000, reflecting the practical limits of current hardware \cite{vinkhuijzen2023}.
+
+\subsection{ML Model Component (50\% Weight)}
+
+The ML component uses a Random Forest / Neural Network ensemble trained on 10,000+ synthetic problem instances. The model performs binary classification (Quantum=1, Classical=0) and outputs calibrated probability estimates \cite{simsek2023}.
+
+Training Process:
+\begin{enumerate}
+    \item Feature vectors are standardized using z-score normalization.
+    \item The model is trained with stratified cross-validation.
+    \item Output probabilities are calibrated using Platt scaling.
+\end{enumerate}
+
+The ML component achieves approximately 87\% accuracy on held-out test data with 50--100ms inference latency.
+
+\subsection{Rule-Based System (35\% Weight)}
+
+The rule-based component encodes physics constraints and domain knowledge:
+
+\textbf{Hardware Capability Constraints:}
+\begin{itemize}
+    \item Maximum qubits: 127 (IBM Eagle processor limit)
+    \item Maximum circuit depth: 10,000
+    \item Minimum qubits for quantum routing: 2
+\end{itemize}
+
+\textbf{Problem-Type Routing Rules:}
+\begin{itemize}
+    \item Quantum-favorable: Factorization (Shor's, exponential speedup), Search (Grover's, quadratic speedup), Simulation (natural quantum simulation), Optimization (QAOA \cite{farhi2014}/VQE)
+    \item Classical-favorable: Sorting ($O(n \log n)$ classical optimality), Dynamic Programming (sequential dependencies), Matrix Operations (mature classical libraries)
+\end{itemize}
+
+\textbf{Safety Constraints:}
+\begin{itemize}
+    \item Maximum circuit volume: 1,000,000
+    \item Maximum noise sensitivity: 50,000
+    \item Minimum NISQ viability: 0.1
+\end{itemize}
+
+The rule system can issue four decision types: quantum, classical, both or reject. Force decisions override the ML component, ensuring that physically impossible or clearly suboptimal configurations are not recommended.
+
+\subsection{Cost Analysis Component (15\% Weight)}
+
+The cost analyzer estimates execution time and monetary cost for both quantum and classical execution paths.
+
+Quantum Cost Model (based on real provider pricing):
+\begin{equation}
+C_q = C_{\text{base}} + (t_q \cdot r_{\text{QPU}}) + (n_{\text{shots}} \cdot r_{\text{shot}}) + (n_{\text{gates}} \cdot r_{\text{gate}})
+\end{equation}
+
+Where $C_{\text{base}} = \$0.30$ (job submission), $r_{\text{QPU}} = \$1.60/\text{s}$, $r_{\text{shot}} = \$0.00145$, $r_{\text{gate}} = \$0.0001$, and $n_{\text{shots}} = 1024$ (default).
+
+Classical Cost Model (AWS EC2 approximation):
+\begin{equation}
+C_c = (t_c \cdot r_{\text{compute}}) + (M_{\text{GB}} \cdot t_c \cdot r_{\text{memory}}) + C_{\text{overhead}}
+\end{equation}
+
+Where $r_{\text{compute}} = \$0.0001/\text{s}$ ($\sim$\$0.36/hr), $r_{\text{memory}} = \$0.00001/\text{GB} \cdot \text{s}$, and $C_{\text{overhead}} = \$0.001$.
+
+\subsection{Decision Merging}
+
+The three components are merged through a weighted voting algorithm:
+\begin{equation}
+S_{\text{quantum}} = w_{\text{ML}} \cdot P_{\text{ML}}^{q} + w_{\text{rules}} \cdot P_{\text{rules}}^{q} + w_{\text{cost}} \cdot P_{\text{cost}}^{q}
+\end{equation}
+
+where $w_{\text{ML}} = 0.50$, $w_{\text{rules}} = 0.35$, $w_{\text{cost}} = 0.15$.
+
+Rule overrides take highest priority and bypass the weighted calculation. The final recommendation includes the hardware target, confidence score, rationale string, cost estimates, and alternative options with their trade-offs.
+
+\section{AI Code Converter}
+
+The AI Code Converter enables the platform to accept classical Python code and automatically translate it into quantum circuits when quantum execution is recommended.
+
+\subsection{Translation Pipeline}
+
+The converter uses a transformer-based code generation model to produce quantum circuit code targeting. The translation pipeline operates in three stages:
+
+\begin{enumerate}
+    \item \textbf{Logic Extraction:} Core computational logic is isolated from boilerplate, I/O, and classical scaffolding code.
+    \item \textbf{Pattern Recognition:} The system identifies quantum-amenable patterns and matches them to known quantum algorithms:
+    \begin{itemize}
+        \item Linear search $\rightarrow$ Grover's algorithm \cite{grover1996} (quadratic speedup)
+        \item Integer factorization $\rightarrow$ Shor's algorithm \cite{shor1997} (exponential speedup)
+        \item Parity Check $\rightarrow$ Deutsch
+        \item Swap $\rightarrow$ Quantum Swap
+        \item Hidden Bitstring $\rightarrow$ Bernstein-Vazirani
+    \end{itemize}
+    \item \textbf{Circuit Generation:} The transformer model generates the target quantum circuit with appropriate gate sequences, measurements, and classical post-processing.
+\end{enumerate}
+
+\subsection{Suitability Scoring}
+
+Each translation candidate receives a suitability score (HIGH, MEDIUM, or LOW) with associated confidence and estimated speedup. This allows users to make informed decisions about whether quantum translation provides meaningful advantage.
+
+\section{Hardware Abstraction Layer}
+
+The Hardware Abstraction Layer (HAL) provides a provider-agnostic interface for quantum job submission and management. Supported providers include IBM, Azure Quantum and AWS Braket.
+
+The HAL manages the complete job lifecycle:
+
+\begin{enumerate}
+    \item \textbf{Device Discovery:} Queries of available devices across all providers, exposing qubit counts, connectivity maps, gate sets, and current status.
+    \item \textbf{Job Submission:} Accepts quantum circuits with execution parameters (target device, shot count, transpilation options) and submits through the appropriate provider SDK.
+    \item \textbf{Status Tracking:} Monitors job state transitions (queued, running, completed, failed) across providers.
+    \item \textbf{Result Retrieval:} Returns measurement distributions, performance metrics, and execution metadata through a unified response format.
+\end{enumerate}
+
+The factory-based architecture allows new quantum providers to be added by implementing a single provider interface, without modifications to the routing or analysis logic.
+
+\section{Experimental Evaluation}
+
+\subsection{Benchmark Design}
+
+We evaluated Nexar across 30 workloads organized into three categories:
+
+\begin{itemize}
+    \item \textbf{Classical workloads (10):} Neural network backpropagation, protein folding energy computation, molecular dynamics, genome sequence alignment, PCA dimensionality reduction, epidemic SIR modeling, FFT signal processing, k-means clustering, heat equation PDE solving, and decision tree classification.
+    \item \textbf{Hybrid workloads (5):} Quantum SVM kernel estimation, quantum Boltzmann sampling, variational quantum eigensolver (excited states), quantum GAN generator, and drug molecule screening.
+    \item \textbf{Quantum workloads (15):} H\textsubscript{2} molecule VQE \cite{kandala2017}, LiH molecule UCCSD, Ising model simulation, Heisenberg spin chain, Shor's factoring, QAOA portfolio optimization, variational quantum classifier, quantum walk on graphs, VQE water molecule, quantum error correction, GHZ state teleportation, Deutsch-Jozsa (8-qubit), quantum phase estimation, HHL algorithm, and 120-qubit VQE molecular simulation.
+\end{itemize}
+
+All workloads were executed through the complete Nexar pipeline, and analysis, decision, and timing metrics were recorded.
+
+\subsection{Routing Accuracy}
+
+The Decision Engine produced correct routing recommendations across all workload categories:
+
+\textbf{Classical Workloads (10/10 correct):} All 10 classical workloads were routed to classical hardware with confidence 1.0. The rule system correctly identified these as quantum-incompatible due to zero qubit requirements (rationale: ``Too few qubits (0 $<$ 2)''), demonstrating that the safety constraints prevent unnecessary quantum execution.
+
+\textbf{Hybrid Workloads (5/5 appropriate):} The hybrid workloads exhibited split routing. Three workloads with sufficient quantum characteristics (Boltzmann sampling, VQE excited states, quantum GAN) were routed to quantum hardware with confidence 0.85. The QSVM kernel estimation (4 qubits) was routed to classical despite quantum characteristics, reflecting the cost-aware decision that small circuits run more efficiently classically. Drug molecule screening was correctly identified as classical-dominant.
+
+\textbf{Quantum Workloads (15/15 appropriate):} Of 15 quantum workloads, 10 were routed to quantum hardware (confidence 0.85--1.0) and 5 were routed to classical. The classical routing for small circuits (3--4 qubits: GHZ teleportation, HHL, H\textsubscript{2} VQE, quantum walk) reflects the correct assessment that NISQ overhead makes small quantum circuits more expensive than classical simulation. The 120-qubit VQE was routed to quantum with confidence 1.0 -- the only workload where classical execution is physically intractable.
+
+\subsection{Cost Analysis Results}
+
+The cost analysis reveals the current economic landscape of quantum vs.\ classical computing:
+
+\begin{table}[htbp]
+\caption{Representative Cost Comparison}
+\label{tab:cost-comparison}
+\centering
+\begin{tabular}{lrlrr}
+\toprule
+\textbf{Workload} & \textbf{Qubits} & \textbf{Hardware} & \textbf{Cost (USD)} & \textbf{Time (ms)} \\
+\midrule
+Neural Net Backprop & 0 & Classical & \$0.001 & 11.37 \\
+Protein Folding & 0 & Classical & \$0.001 & 12.54 \\
+FFT Signal Proc. & 0 & Classical & \$0.001 & 1.42 \\
+Decision Tree ($O(2^n)$) & 0 & Classical & \$0.001 & 460.84 \\
+QSVM Kernel Est. & 4 & Classical & \$0.001 & 1.00 \\
+LiH Molecule UCCSD & 12 & Quantum & \$2.162 & 234.37 \\
+Ising Model (16q) & 16 & Quantum & \$2.321 & 319.42 \\
+Shor's Factoring (15) & 8 & Quantum & \$2.159 & 232.36 \\
+QEC Surface Code & 17 & Quantum & \$2.146 & 223.83 \\
+120-qubit VQE & 120 & Quantum & \$3.489 & 986.33 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The data demonstrates a clear cost disparity: classical execution costs approximately \$0.001 USD per workload, while quantum execution ranges from \$2.12 to \$3.49 USD -- a factor of approximately 2,000$\times$. This reflects the current state of NISQ economics where per-shot costs, QPU time charges, and base job fees dominate.
+
+\subsection{Cost Break-Even Analysis}
+
+Despite the current quantum cost premium, analysis of the cost scaling behavior reveals a fundamental crossover point driven by the exponential memory requirements of classical quantum simulation.
+
+For an $n$-qubit quantum state, classical simulation requires $2^n$ complex amplitudes, consuming approximately $2^n \times 16$ bytes of memory. This creates the following scaling:
+
+\begin{table}[htbp]
+\caption{Classical Simulation Memory Requirements}
+\label{tab:memory-scaling}
+\centering
+\begin{tabular}{rll}
+\toprule
+\textbf{Qubits} & \textbf{Classical Memory} & \textbf{Classical Feasibility} \\
+\midrule
+20 & 16 MB & Trivial \\
+30 & 16 GB & Desktop \\
+40 & 16 TB & Cluster \\
+50 & 16 PB & Supercomputer limit \\
+60 & 16 EB & Physically impossible \\
+120 & $\sim 2 \times 10^{31}$ MB & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The crossover occurs at approximately 50--57 qubits where classical simulation costs begin exceeding quantum execution costs, and by 120 qubits, the classical cost is estimated at $10^{50}$ USD (effectively infinite), while quantum execution remains at \$3.49 USD.
+
+This analysis identifies three zones:
+
+\begin{enumerate}
+    \item \textbf{Classical Advantage Zone ($<$ 50 qubits):} Classical hardware is $\sim$1,900$\times$ more cost-effective.
+    \item \textbf{Memory Wall (50--60 qubits):} Classical simulation costs grow exponentially; crossover occurs.
+    \item \textbf{Quantum Advantage Zone ($>$ 60 qubits):} Quantum execution is the only physically viable option for exact simulation.
+\end{enumerate}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{cost-scaling.png}
+\caption{Cost scaling comparison of quantum hardware versus classical simulation across problem sizes measured in qubits, showing the cost parity crossover at approximately 57 qubits.}
+\label{fig:cost-scaling}
+\end{figure}
+
+\subsection{Pipeline Performance}
+
+\begin{table}[htbp]
+\caption{Pipeline Timing Metrics}
+\label{tab:pipeline-timing}
+\centering
+\begin{tabular}{lrr}
+\toprule
+\textbf{Metric} & \textbf{Classical} & \textbf{Quantum} \\
+\midrule
+Avg. Analysis Time & 731 ms & 1,355 ms \\
+Avg. Decision Time & 12 ms & 10 ms \\
+Avg. Total Pipeline Time & 1,222 ms & 1,770 ms \\
+Language Detection Confidence & 0.942 & 0.966 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Quantum workloads require approximately 1.85$\times$ longer analysis time due to additional quantum metrics extraction (circuit parsing, entanglement scoring). Decision latency remains consistently below 15ms across all workloads, well within the 500ms requirement specified in the system design. Total pipeline throughput averages 1.5 seconds end-to-end.
+
+\subsection{Observations on Current Quantum Limitations}
+
+Our benchmark data honestly reflects the limitations of current NISQ hardware:
+
+\begin{enumerate}
+    \item \textbf{No workload is currently cheaper on quantum hardware.} Even the smallest quantum circuits ($\sim$3 qubits) cost approximately \$2 USD on real hardware versus \$0.001 classically. This is due to per-shot costs, queue times, and base job submission fees.
+    \item \textbf{Quantum hardware is consistently slower for small problems.} A single quantum gate takes approximately 100--500 nanoseconds, and 1,024 measurement shots are required for statistical results. Classical CPUs perform billions of operations per nanosecond with deterministic results.
+    \item \textbf{The value proposition is forward-looking.} Quantum advantages will emerge when:
+    \begin{itemize}
+        \item Error-corrected quantum computers arrive (estimated 2028--2035)
+        \item Problem sizes exceed 50+ qubits for exact simulation
+        \item Algorithmic speedups (exponential for factorization, quadratic for search) outweigh hardware cost premiums
+    \end{itemize}
+    \item \textbf{The routing framework is ready.} When quantum hardware crosses the advantage threshold, Nexar's pipeline will automatically route eligible workloads to quantum backends -- the decision infrastructure is in place.
+\end{enumerate}
+
+\section{Discussion}
+
+\subsection{Decision Engine Effectiveness}
+
+The hybrid decision approach -- combining ML predictions with physics-aware rules and cost analysis -- proves effective across the workload spectrum. The rule system's override capability is critical: it prevents the ML model from recommending quantum execution for zero-qubit classical problems and enforces hardware limits. The 87\% ML accuracy, while not perfect, is compensated by the rule system's deterministic constraints, resulting in appropriate routing for all 30 benchmark workloads. This aligns with the reference architecture for hybrid quantum-classical decision optimization proposed by Chinnaraju \cite{chinnaraju2025}.
+
+The weighted voting scheme (50\% ML, 35\% rules, 15\% cost) reflects the current state of quantum computing where physics constraints and hardware limitations are often more decisive than learned patterns. As quantum hardware matures and the decision boundary becomes more nuanced, the ML component's weight may increase. Alternative routing approaches such as interference-based mixture-of-experts \cite{heddad2025} may also be explored.
+
+\subsection{The Quantum Cost Paradox}
+
+Our results reveal what we term the ``Quantum Cost Paradox'' in the NISQ era: the decision engine correctly identifies workloads that would theoretically benefit from quantum execution, but the actual cost on current hardware is always higher than classical. This paradox resolves at scale -- for 120+ qubit problems, quantum is the only viable option regardless of cost. The platform's transparency in presenting both theoretical advantages and practical cost is a feature that aids informed decision-making.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+    \item \textbf{Synthetic Training Data:} The ML model is trained on synthetic problem instances rather than real quantum execution traces. As real quantum benchmark data becomes available, retraining the models on empirical data should improve routing accuracy.
+    \item \textbf{Static Cost Models:} Provider pricing is encoded as configuration parameters. Real-time pricing integration would improve cost accuracy.
+    \item \textbf{Limited Problem Types:} The current system focuses on optimization, search, simulation, and factorization. Extending to quantum chemistry, quantum machine learning, and cryptographic workloads would broaden applicability.
+    \item \textbf{NISQ-Era Constraints:} The system is designed for current NISQ hardware. Fault-tolerant quantum computing will require updated decision logic, cost models, and hardware constraints.
+\end{enumerate}
+
+\section{Conclusion}
+
+We presented Nexar, an intelligent quantum-classical workload routing platform that addresses the fundamental challenge of execution target selection in the NISQ era. Through the integration of automated code analysis, hybrid ML-and-rules-based decision-making, and provider-agnostic quantum execution, the platform provides a complete pipeline from source code submission to hardware recommendation and job execution.
+
+Our evaluation across 30 diverse workloads demonstrates that the system achieves correct routing decisions across all workload categories, with pipeline latency averaging 1.5 seconds and decision inference under 15ms. The cost analysis identifies a clear quantum-classical crossover at approximately 50--57 qubits, beyond which classical simulation becomes economically and physically intractable.
+
+The platform's honest assessment of current NISQ limitations -- where no workload is yet cheaper on quantum hardware for small circuits -- combined with its readiness to route workloads when quantum advantage materializes, positions Nexar as both a practical decision-support tool for today and an automated routing infrastructure for the fault-tolerant quantum era.
+
+\section{Future Work}
+
+\begin{enumerate}
+    \item \textbf{Real Quantum Execution Benchmarks:} Execute benchmark workloads on real IBM Quantum and AWS Braket devices to validate cost and timing estimates against actual hardware performance.
+    \item \textbf{Adaptive Model Retraining:} Implement a feedback loop where execution results are used to continuously retrain the decision model, improving routing accuracy over time.
+    \item \textbf{Error Mitigation Integration:} Incorporate quantum error mitigation techniques (zero-noise extrapolation, probabilistic error cancellation) into the cost model to reflect the true cost of obtaining reliable quantum results.
+    \item \textbf{Multi-Objective Optimization:} Extend the decision framework to jointly optimize for cost, time, accuracy, and carbon footprint, supporting user-defined priority weights.
+    \item \textbf{Fault-Tolerant Readiness:} Develop decision logic and cost models for fault-tolerant quantum computers, preparing the platform for the post-NISQ era.
+\end{enumerate}
+
+\begin{thebibliography}{99}
+
+\bibitem{preskill2018}
+J.~Preskill, ``Quantum Computing in the NISQ era and beyond,'' \emph{Quantum}, vol.~2, p.~79, 2018.
+
+\bibitem{ibm2023}
+IBM Quantum, ``Qiskit Runtime,'' IBM Research, 2023. Available: \url{https://quantum.ibm.com/}
+
+\bibitem{aws2023}
+Amazon Web Services, ``Amazon Braket -- Quantum Computing Service,'' 2023. Available: \url{https://aws.amazon.com/braket/}
+
+\bibitem{microsoft2023}
+Microsoft, ``Azure Quantum,'' 2023. Available: \url{https://azure.microsoft.com/en-us/products/quantum}
+
+\bibitem{beverland2022}
+M.~Beverland \emph{et~al.}, ``Assessing requirements to scale to practical quantum advantage,'' arXiv preprint arXiv:2211.07629, 2022.
+
+\bibitem{javadiabhari2015}
+A.~JavadiAbhari \emph{et~al.}, ``ScaffCC: Scalable compilation and analysis of quantum programs,'' \emph{Parallel Computing}, vol.~45, pp.~2--17, 2015.
+
+\bibitem{feng2020}
+Z.~Feng \emph{et~al.}, ``CodeBERT: A Pre-Trained Model for Programming and Natural Languages,'' in \emph{Findings of EMNLP}, 2020, pp.~1536--1547.
+
+\bibitem{aaronson2011}
+S.~Aaronson and A.~Arkhipov, ``The computational complexity of linear optics,'' in \emph{Proc. 43rd STOC}, 2011, pp.~333--342.
+
+\bibitem{arute2019}
+F.~Arute \emph{et~al.}, ``Quantum supremacy using a programmable superconducting processor,'' \emph{Nature}, vol.~574, pp.~505--510, 2019.
+
+\bibitem{kandala2017}
+A.~Kandala \emph{et~al.}, ``Hardware-efficient variational quantum eigensolver for small molecules and quantum magnets,'' \emph{Nature}, vol.~549, pp.~242--246, 2017.
+
+\bibitem{farhi2014}
+E.~Farhi, J.~Goldstone, and S.~Gutmann, ``A Quantum Approximate Optimization Algorithm,'' arXiv preprint arXiv:1411.4028, 2014.
+
+\bibitem{grover1996}
+L.~K.~Grover, ``A fast quantum mechanical algorithm for database search,'' in \emph{Proc. 28th STOC}, 1996, pp.~212--219.
+
+\bibitem{shor1997}
+P.~W.~Shor, ``Polynomial-time algorithms for prime factorization and discrete logarithms on a quantum computer,'' \emph{SIAM Journal on Computing}, vol.~26, no.~5, pp.~1484--1509, 1997.
+
+\bibitem{weder2021}
+B.~Weder, J.~Barzen, F.~Leymann, and M.~Salm, ``Automated Quantum Hardware Selection for Quantum Workflows,'' \emph{Electronics}, vol.~10, no.~8, p.~984, Apr. 2021.
+
+\bibitem{zhan2025}
+X.~Zhan \emph{et~al.}, ``A Full Stack Framework for High Performance Quantum-Classical Computing,'' arXiv preprint arXiv:2510.20128, Oct. 2025.
+
+\bibitem{lammers2025}
+M.~G.~Lammers, F.~H.~Holik, and A.~Fernandez, ``Quantum Resource Management in the NISQ Era: Challenges, Vision, and a Runtime Framework,'' arXiv preprint arXiv:2508.19276, Aug. 2025.
+
+\bibitem{afrose2025}
+S.~Afrose, V.~Leyton-Ortega, and T.~Humble, ``Learning-Based Quantum Compilation: Translating QASM to QIR with CodeBERT,'' in \emph{2025 IEEE International Conference on Quantum Computing and Engineering (QCE)}, 2025, pp.~576--577.
+
+\bibitem{kashif2026}
+M.~Kashif, A.~Marchisio, and M.~Shafique, ``Closing the Loop: Resource-aware Hybrid NAS Guided by Analytical and Hardware-Calibrated Quantum Cost Modeling,'' arXiv preprint arXiv:2603.00625, Mar. 2026.
+
+\bibitem{quetschlich2024}
+N.~Quetschlich, M.~Soeken, P.~Murali, and R.~Wille, ``Utilizing Resource Estimation for the Development of Quantum Computing Applications,'' arXiv preprint arXiv:2402.12434, Aug. 2024.
+
+\bibitem{tang2024}
+W.~Tang \emph{et~al.}, ``AlphaRouter: Quantum Circuit Routing with Reinforcement Learning and Tree Search,'' arXiv preprint arXiv:2410.05115, Oct. 2024.
+
+\bibitem{chinnaraju2025}
+A.~Chinnaraju, ``Hybrid Quantum-Classical Intelligence for Business: A Reference Architecture for Predictive Analytics and Decision Optimization,'' \emph{Journal of Advance and Future Research}, vol.~3, no.~12, Dec. 2025.
+
+\bibitem{heddad2025}
+R.~Heddad and L.~Bouanane, ``Hybrid Quantum-Classical Mixture of Experts: Unlocking Topological Advantage via Interference-Based Routing,'' arXiv preprint arXiv:2512.22296, Dec. 2025.
+
+\bibitem{hai2025}
+R.~Hai, S.-H.~Hung, T.~Coopmans, and F.~Geerts, ``Data Management in the Noisy Intermediate-Scale Quantum Era,'' \emph{Proceedings of the VLDB Endowment}, vol.~18, no.~6, 2025.
+
+\bibitem{osaba2024}
+E.~Osaba, E.~Villar-Rodriguez, A.~Gomez-Tejedor, and I.~Oregi, ``Hybrid quantum solvers in production: how to succeed in the NISQ era?,'' arXiv preprint arXiv:2401.10302, 2024.
+
+\bibitem{salm2022}
+M.~O.~Salm, J.~Barzen, F.~Leymann, and B.~Weder, ``Prioritization of Compiled Quantum Circuits for Different Quantum Computers,'' in \emph{IEEE International Conference on Software}, 2022.
+
+\bibitem{leonidas2023}
+I.~D.~Leonidas, A.~Dukakis, B.~Tan, and D.~G.~Angelakis, ``Qubit efficient quantum algorithms for the vehicle routing problem on quantum computers of the NISQ era,'' arXiv preprint arXiv:2306.08507, 2023.
+
+\bibitem{ammar2025}
+B.~B.~Ammar, ``SQL Injection Detection Using Fine-Tuned CodeBERT,'' \emph{Engineering, Technology and Applied Science Research}, vol.~15, no.~5, pp.~27852--27857, Oct. 2025.
+
+\bibitem{vinkhuijzen2023}
+L.~Vinkhuijzen, T.~Coopmans, D.~Elkouss, V.~Dunjko, and A.~Laarman, ``LIMDD: A Decision Diagram for Simulation of Quantum Computing Including Stabilizer States,'' \emph{Quantum}, vol.~7, p.~1108, Sep. 2023.
+
+\bibitem{tannu2020}
+S.~S.~Tannu and M.~K.~Qureshi, ``A case for quantum-aware resource management in hybrid quantum-classical systems,'' \emph{Cluster Computing}, vol.~23, no.~2, pp.~1041--1056, 2020.
+
+\bibitem{salavatov2023}
+V.~Salavatov and A.~Palacios, ``Pilot-Quantum: A quantum-HPC middleware for resource, workload and task management,'' in \emph{Proc. IEEE Int. Conf. Quantum Softw. (QSW)}, pp.~1--8, Jul. 2023.
+
+\bibitem{khammassi2018}
+N.~Khammassi \emph{et~al.}, ``OpenQL: A portable quantum programming framework for quantum accelerators,'' in \emph{Proc. IEEE Int. Conf. Quantum Comput. Eng. (QCE)}, pp.~139--146, Sep. 2018.
+
+\bibitem{simsek2023}
+S.~Simsek, A.~Ceran, and F.~Yildiz, ``Quantum circuit optimization using machine learning,'' arXiv preprint arXiv:2305.06585, May 2023.
+
+\bibitem{nielsen2010}
+M.~A.~Nielsen and I.~L.~Chuang, \emph{Quantum Computation and Quantum Information}. Cambridge University Press, 2010.
+
+\bibitem{kim2022}
+J.~Kim, J.~Lee, and S.~Kim, ``Quantum resource estimation for quantum algorithms,'' in \emph{Proc. IEEE Int. Conf. Quantum Comput. Eng. (QCE)}, pp.~512--519, Sep. 2022.
+
+\bibitem{ibmpricing2024}
+IBM, ``IBM Quantum Pricing,'' 2024. [Online]. Available: \url{https://quantum-computing.ibm.com/pricing}
+
+\end{thebibliography}
+
+\end{document}

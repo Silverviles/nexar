@@ -227,18 +227,33 @@ The AI Code Converter enables the platform to accept classical Python code and a
 
 ### 6.1 Translation Pipeline
 
-The converter uses a transformer-based code generation model to produce quantum circuit code targeting Qiskit or Cirq frameworks. The translation pipeline operates in three stages:
+The AI Code Converter operates as a focused component of the broader Quantum-Classical Code Router (QCCR) system. It exposes two independent REST APIs—an AST analysis API and a model inference API—which together form a two-stage translation pipeline for converting classical Python code into quantum circuit implementations.
 
-1. **Logic Extraction**: Core computational logic is isolated from boilerplate, I/O, and classical scaffolding code.
-2. **Pattern Recognition**: The system identifies quantum-amenable patterns and matches them to known quantum algorithms:
-   - Linear search $\rightarrow$ Grover's algorithm (quadratic speedup)
-   - Combinatorial optimization $\rightarrow$ QAOA (potential exponential speedup)
-   - Integer factorization $\rightarrow$ Shor's algorithm (exponential speedup)
-3. **Circuit Generation**: The transformer model generates the target quantum circuit with appropriate gate sequences, measurements, and classical post-processing.
+#### Stage 1 — Logic Extraction and AST Analysis
+
+When classical Python code is submitted, the AST API parses it into an Abstract Syntax Tree using Python's built-in `ast` module. The tree is traversed to isolate core computational logic from surrounding boilerplate, I/O operations, and variable scaffolding. Structural features—loop constructs, branching patterns, function signatures, and iteration depth—are extracted as a feature vector representing the algorithmic pattern of the input.
+
+#### Stage 2 — Pattern Recognition and Suitability Scoring
+
+The extracted AST features are matched against a predefined pattern database of five recognized algorithmic signatures: linear search, integer factorization, parity check, element swap, and hidden bitstring detection. Each match produces a suitability score (HIGH, MEDIUM, or LOW) with an associated confidence value derived from feature overlap with the target pattern. This score is returned directly by the AST API and represents the system's recommendation on whether quantum translation offers a meaningful advantage. The recognized mappings are as follows:
+
+| Classical pattern | Quantum equivalent | Expected advantage |
+|-------------------|--------------------|--------------------|
+| Linear search | Grover's algorithm [12] | Quadratic speedup $O(\sqrt{N})$ |
+| Integer factorization | Shor's algorithm [13] | Exponential speedup |
+| Parity check | Deutsch's algorithm [14] | Constant vs. linear |
+| Element swap | Quantum SWAP gate | Equivalent, native |
+| Hidden bitstring | Bernstein-Vazirani algorithm [15] | Linear vs. exponential |
+
+#### Stage 3 — Quantum Circuit Generation and Simulation
+
+For inputs that receive a HIGH or MEDIUM suitability score, the model API is invoked. A fine-tuned CodeT5-base model [9], trained on 200–500 curated classical-to-quantum algorithm pairs, generates the target Qiskit circuit. Importantly, the conversion follows a fixed template mapping: any input code identified as a linear search pattern, regardless of its specific implementation details, produces the same parameterized Grover's search circuit. This design decision is intentional—it ensures circuit correctness for NISQ devices by avoiding unconstrained generative output for patterns where a well-verified canonical quantum implementation already exists. The same fixed-template approach applies across all five supported algorithm categories.
+
+The generated Qiskit circuit is then executed on the Qiskit Aer simulator with a basic noise model to estimate qubit count, gate depth, and expected execution time under realistic NISQ conditions [1]. Simulation results, alongside the suitability score and confidence value from the AST stage, are returned to the user as a unified response.
 
 ### 6.2 Suitability Scoring
 
-Each translation candidate receives a suitability score (HIGH, MEDIUM, or LOW) with associated confidence and estimated speedup. This allows users to make informed decisions about whether the quantum translation provides meaningful advantage.
+The scores and confidence values from Stage 2 are combined in the unified response with simulation metrics from Stage 3 and, where applicable, estimated speedup relative to a classical baseline, so users can judge whether quantum translation is worth pursuing for a given workload.
 
 ---
 

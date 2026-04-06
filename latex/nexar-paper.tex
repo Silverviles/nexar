@@ -248,7 +248,7 @@ The AI Code Converter enables the platform to accept classical Python code and a
 The converter uses a transformer-based code generation model to produce quantum circuit code targeting. The translation pipeline operates in three stages:
 
 \begin{enumerate}
-    \item \textbf{Logic Extraction:} Core computational logic is isolated from boilerplate, I/O, and classical scaffolding code.
+    \item \textbf{Logic Extraction:} Classical Python code is parsed into an Abstract Syntax Tree via Python's \texttt{ast} module. The tree is traversed to isolate core computational logic from boilerplate and I/O, extracting structural features (loop constructs, branching patterns, function signatures, iteration depth) as an algorithmic feature vector.
     \item \textbf{Pattern Recognition:} The system identifies quantum-amenable patterns and matches them to known quantum algorithms:
     \begin{itemize}
         \item Linear search $\rightarrow$ Grover's algorithm \cite{grover1996} (quadratic speedup)
@@ -262,7 +262,7 @@ The converter uses a transformer-based code generation model to produce quantum 
 
 \subsection{Suitability Scoring}
 
-Each translation candidate receives a suitability score (HIGH, MEDIUM, or LOW) with associated confidence and estimated speedup. This allows users to make informed decisions about whether quantum translation provides meaningful advantage.
+Each translation candidate receives a three-tier suitability score (HIGH, MEDIUM, or LOW) with associated confidence and estimated speedup. Speedup estimates are derived from theoretical complexity comparisons --- for example, $O(N)$ classical versus $O(\sqrt{N})$ quantum for Grover's search [12] — combined with simulator resource metrics from the Qiskit Aer execution. Confidence values reflect the degree of structural overlap between the submitted code's AST feature vector and the matched pattern signature in the database. This allows users to make informed decisions about whether quantum translation provides a meaningful computational advantage for their specific use case.
 
 \section{Hardware Abstraction Layer}
 
@@ -552,6 +552,18 @@ IBM, ``IBM Quantum Pricing,'' 2024. [Online]. Available: \url{https://quantum-co
 
 \bibitem{mccabe1976}
 T.~J.~McCabe, ``A complexity measure,'' \emph{IEEE Trans. Softw. Eng.}, vol.~SE-2, no.~4, pp.~308--320, Dec. 1976.
+
+\bibitem{cirq2021}
+Cirq Developers, ``Cirq: A Python framework for creating, editing, and invoking Noisy Intermediate Scale Quantum (NISQ) circuits,'' 2021. [Online]. Available: \url{https://github.com/quantumlib/Cirq}
+
+\bibitem{ma2025}
+N.~Ma and H.~Li, ``Understanding and Estimating the Execution Time of Quantum Circuits,'' \emph{ACM Trans. Softw. Eng. Methodol.}, 2025. DOI: 10.1145/3778031.
+
+\bibitem{chen2021}
+M.~Chen \emph{et~al.}, ``Evaluating Large Language Models Trained on Code,'' arXiv preprint arXiv:2107.03374, Jul. 2021.
+
+\bibitem{wang2021}
+Y.~Wang \emph{et~al.}, ``CodeT5: Identifier-Aware Unified Pre-Trained Encoder-Decoder Models for Code Understanding and Generation,'' arXiv preprint arXiv:2109.00859, Sep. 2021.
 
 \end{thebibliography}
 

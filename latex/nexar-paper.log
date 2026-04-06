@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  6 APR 2026 12:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  6 APR 2026 12:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -542,12 +542,11 @@ r/m/n/10 =
  []
 
 [3]
-Underfull \hbox (badness 1571) in paragraph at lines 265--266
-[]\OT1/ptm/m/n/10 Each trans-la-tion can-di-date re-ceives a suit-abil-ity scor
-e
- []
-
-
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 2
+51.
+ (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
 Underfull \hbox (badness 3780) in paragraph at lines 269--270
 []\OT1/ptm/m/n/10 The Hard-ware Ab-strac-tion Layer (HAL) pro-vides a
  []
@@ -573,7 +572,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 319--319
  []
 
 [4]
-<cost-scaling.png, id=246, 638.8668pt x 422.0568pt>
+<cost-scaling.png, id=247, 638.8668pt x 422.0568pt>
 File: cost-scaling.png Graphic file (type png)
 <use cost-scaling.png>
 Package pdftex.def Info: cost-scaling.png  used on input line 365.
@@ -621,13 +620,13 @@ Package rerunfilecheck Info: File `nexar-paper.out' has not changed.
 (rerunfilecheck)             Checksum: B6B581C767511755F91C15A2438517DA;5987.
  ) 
 Here is how much of TeX's memory you used:
- 11374 strings out of 467871
- 177111 string characters out of 5418377
- 612842 words of memory out of 5000000
- 39993 multiletter control sequences out of 15000+600000
- 673745 words of font info for 130 fonts, out of 8000000 for 9000
+ 11420 strings out of 467871
+ 177780 string characters out of 5418377
+ 612964 words of memory out of 5000000
+ 40030 multiletter control sequences out of 15000+600000
+ 674260 words of font info for 132 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,15n,79p,1489b,580s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,15n,79p,1489b,632s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmmi10.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmmi7.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/pu
@@ -638,13 +637,14 @@ type1/public/amsfonts/cm/cmr6.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX
 rograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/sudar/AppDat
 a/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/suda
 r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Us
-ers/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Us
-ers/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/U
-sers/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/U
-sers/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on nexar-paper.pdf (7 pages, 432470 bytes).
+ers/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/
+Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/
+Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:
+/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:
+/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on nexar-paper.pdf (7 pages, 441807 bytes).
 PDF statistics:
- 388 PDF objects out of 1000 (max. 8388607)
- 122 named destinations out of 1000 (max. 500000)
+ 398 PDF objects out of 1000 (max. 8388607)
+ 126 named destinations out of 1000 (max. 500000)
  294 words of extra memory for PDF output out of 10000 (max. 10000000)
 

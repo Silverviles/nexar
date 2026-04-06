@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  6 APR 2026 10:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  6 APR 2026 11:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -466,6 +466,21 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 68.
 (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
+Overfull \hbox (19.67351pt too wide) in paragraph at lines 68--68
+ []\OT1/ptm/m/n/11 yashodhalasithjayasinghe@gmail.com 
+ []
+
+
+Overfull \hbox (19.67351pt too wide) in paragraph at lines 68--68
+ []\OT1/ptm/m/n/11 yashodhalasithjayasinghe@gmail.com 
+ []
+
+
+Overfull \hbox (19.67351pt too wide) in paragraph at lines 68--68
+ []\OT1/ptm/m/n/11 yashodhalasithjayasinghe@gmail.com 
+ []
+
+
 Underfull \hbox (badness 7221) in paragraph at lines 88--89
 []\OT1/ptm/b/n/10 Automated Code Anal-y-sis Pipeline: \OT1/ptm/m/n/10 A multi-
  []
@@ -475,22 +490,47 @@ dar/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ] [2]
-Overfull \hbox (17.69409pt too wide) in paragraph at lines 187--203
- [][] 
+Underfull \hbox (badness 2591) in paragraph at lines 201--202
+[]\OT1/ptm/m/n/8 Complexity class: ex-po-nen-tial, poly-no-
  []
 
 
-Overfull \hbox (74.2844pt too wide) in paragraph at lines 209--221
+Underfull \hbox (badness 10000) in paragraph at lines 216--217
+[]\OT1/ptm/m/n/8 Error ac-cu-mu-la-tion
+ []
+
+
+Underfull \hbox (badness 5217) in paragraph at lines 217--217
+[]\OT1/ptm/m/n/8 Quantum Over-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 218--218
+[]\OT1/ptm/m/n/8 NISQ Vi-a-bil-ity
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 220--220
+[]\OT1/ptm/m/n/8 Entanglement
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 220--221
+[]\OT1/ptm/m/n/8 Combined
+ []
+
+
+Overfull \hbox (10.8023pt too wide) in paragraph at lines 211--223
  [][] 
  []
 
 [3]
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2
-80.
+82.
  (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-Underfull \hbox (badness 1448) in paragraph at lines 280--281
+Underfull \hbox (badness 1448) in paragraph at lines 282--283
 []\OT1/ptm/m/n/10 Where $\OML/cmm/m/it/10 r[] \OT1/cmr/m/n/10 = $0\OML/cmm/m/it
 /10 :\OT1/cmr/m/n/10 0001\OML/cmm/m/it/10 =[]$ \OT1/ptm/m/n/10 ($\OMS/cmsy/m/n/
 10 ^^X$\TS1/ptm/m/n/10 $\OT1/ptm/m/n/10 0.36/hr), $\OML/cmm/m/it/10 r[] \OT1/cm
@@ -498,44 +538,64 @@ r/m/n/10 =
  []
 
 
-Underfull \hbox (badness 1571) in paragraph at lines 316--317
+Underfull \hbox (badness 1571) in paragraph at lines 318--319
 []\OT1/ptm/m/n/10 Each trans-la-tion can-di-date re-ceives a suit-abil-ity scor
 e
  []
 
 
-Underfull \hbox (badness 3780) in paragraph at lines 320--321
+Underfull \hbox (badness 3780) in paragraph at lines 322--323
 []\OT1/ptm/m/n/10 The Hard-ware Ab-strac-tion Layer (HAL) pro-vides a
  []
 
 
-Underfull \hbox (badness 6493) in paragraph at lines 331--332
+Underfull \hbox (badness 6493) in paragraph at lines 333--334
 []\OT1/ptm/m/n/10 The factory-based ar-chi-tec-ture al-lows new quan-tum
  []
 
 [4]
-Overfull \hbox (17.98344pt too wide) in paragraph at lines 365--381
- [][] 
+Overfull \hbox (4.60107pt too wide) in paragraph at lines 370--370
+[]\OT1/ptm/b/n/8 Hardware| 
  []
 
-<cost-scaling.png, id=253, 638.8668pt x 422.0568pt>
+
+Underfull \hbox (badness 10000) in paragraph at lines 375--375
+[]\OT1/ptm/m/n/8 Decision Tree
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 377--377
+[]\OT1/ptm/m/n/8 LiH Molecule
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 379--379
+[]\OT1/ptm/m/n/8 Shor's Fac-tor-ing
+ []
+
+<cost-scaling.png, id=255, 638.8668pt x 422.0568pt>
 File: cost-scaling.png Graphic file (type png)
 <use cost-scaling.png>
-Package pdftex.def Info: cost-scaling.png  used on input line 421.
+Package pdftex.def Info: cost-scaling.png  used on input line 425.
 (pdftex.def)             Requested size: 252.0pt x 166.47554pt.
-[5 <./cost-scaling.png>]
-Underfull \hbox (badness 1412) in paragraph at lines 455--456
+
+Underfull \hbox (badness 10000) in paragraph at lines 444--444
+[]\OT1/ptm/m/n/8 Language De-tec-tion
+ []
+
+[5]
+Underfull \hbox (badness 1412) in paragraph at lines 460--461
 []\OT1/ptm/m/n/10 Error-corrected quan-tum com-put-ers ar-rive (es-ti-
  []
 
-
-Underfull \hbox (badness 2717) in paragraph at lines 494--495
+[6 <./cost-scaling.png>]
+Underfull \hbox (badness 2717) in paragraph at lines 499--500
 []\OT1/ptm/b/n/10 Real Quan-tum Ex-e-cu-tion Bench-marks: \OT1/ptm/m/n/10 Ex-e-
 cute
  []
 
-[6]
-Underfull \hbox (badness 2521) in paragraph at lines 498--499
+
+Underfull \hbox (badness 2521) in paragraph at lines 503--504
 []\OT1/ptm/b/n/10 Fault-Tolerant Readi-ness: \OT1/ptm/m/n/10 De-velop de-ci-sio
 n logic
  []
@@ -560,13 +620,13 @@ Package rerunfilecheck Info: File `nexar-paper.out' has not changed.
 (rerunfilecheck)             Checksum: FDE09E27105D8C67D9B4AB57763BA974;6234.
  ) 
 Here is how much of TeX's memory you used:
- 11380 strings out of 467871
- 177156 string characters out of 5418377
- 612809 words of memory out of 5000000
- 39993 multiletter control sequences out of 15000+600000
+ 11382 strings out of 467871
+ 177183 string characters out of 5418377
+ 614842 words of memory out of 5000000
+ 39994 multiletter control sequences out of 15000+600000
  673745 words of font info for 130 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,15n,79p,1488b,549s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,15n,79p,1489b,548s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmmi10.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmmi6.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/pu
@@ -584,9 +644,9 @@ tmb8a.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/u
 tmbi8a.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/
 utmr8a.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/
 utmri8a.pfb>
-Output written on nexar-paper.pdf (7 pages, 452811 bytes).
+Output written on nexar-paper.pdf (7 pages, 453661 bytes).
 PDF statistics:
- 406 PDF objects out of 1000 (max. 8388607)
- 128 named destinations out of 1000 (max. 500000)
+ 408 PDF objects out of 1000 (max. 8388607)
+ 129 named destinations out of 1000 (max. 500000)
  302 words of extra memory for PDF output out of 10000 (max. 10000000)
 

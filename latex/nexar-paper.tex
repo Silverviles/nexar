@@ -16,7 +16,7 @@
 \begin{tabular}[t]{@{}c@{\hspace{1.5em}}c@{\hspace{1.5em}}c@{}}
 \parbox[t]{0.29\textwidth}{\centering
 \textbf{Siriwardhana A H L T S}\\
-\textit{Dept. of Software Engineering}\\
+\textit{Department of Computer Science and Software Engineering}\\
 \textit{Sri Lanka Institute of Information}\\
 \textit{Technology}\\
 Malabe, Sri Lanka\\
@@ -24,7 +24,7 @@ sudarakatharindu@outlook.com}
 &
 \parbox[t]{0.29\textwidth}{\centering
 \textbf{Prasad H G A T}\\
-\textit{Dept. of Software Engineering}\\
+\textit{Department of Computer Science and Software Engineering}\\
 \textit{Sri Lanka Institute of Information}\\
 \textit{Technology}\\
 Malabe, Sri Lanka\\
@@ -32,7 +32,7 @@ hgp.ashi@gmail.com}
 &
 \parbox[t]{0.29\textwidth}{\centering
 \textbf{Jayasinghe Y L}\\
-\textit{Dept. of Software Engineering}\\
+\textit{Department of Computer Science and Software Engineering}\\
 \textit{Sri Lanka Institute of Information}\\
 \textit{Technology}\\
 Malabe, Sri Lanka\\
@@ -40,23 +40,23 @@ yashodhalasithjayasinghe@gmail.com}
 \\[8em]
 \parbox[t]{0.29\textwidth}{\centering
 \textbf{Hettiarachchi S R}\\
-\textit{Dept. of Software Engineering}\\
+\textit{Department of Computer Science and Software Engineering}\\
 \textit{Sri Lanka Institute of Information}\\
 \textit{Technology}\\
 Malabe, Sri Lanka\\
-it21445848@my.sliit.lk}
+sayunhettiarachchi@gmail.com}
 &
 \parbox[t]{0.29\textwidth}{\centering
-\textbf{Supervisor Name 1}\\
-\textit{Dept. of [Department]}\\
+\textbf{Prof. Nuwan Kodagoda}\\
+\textit{Dept. of Information Technology}\\
 \textit{Sri Lanka Institute of Information}\\
 \textit{Technology}\\
 Malabe, Sri Lanka\\
-supervisor1@sliit.lk}
+nuwan.k@sliit.lk}
 &
 \parbox[t]{0.29\textwidth}{\centering
-\textbf{Kapila Dissanayaka}\\
-\textit{Dept. of [Department]}\\
+\textbf{Dr. Kapila Dissanayaka}\\
+\textit{Department of Computer Science and Software Engineering}\\
 \textit{Sri Lanka Institute of Information}\\
 \textit{Technology}\\
 Malabe, Sri Lanka\\
@@ -115,18 +115,7 @@ Nexar is implemented as a microservices monorepo comprising six independently de
 
 \subsection{Architecture Overview}
 
-The system follows a pipeline architecture with the following request flow:
-
-\begin{enumerate}
-    \item \textbf{Code Submission:} Users submit source code through a React-based frontend.
-    \item \textbf{Authentication and Routing:} An Express.js API Gateway authenticates requests via JWT and routes them to backend services.
-    \item \textbf{Code Analysis:} The Code Analysis Engine performs multi-dimensional analysis including language detection, complexity computation, and algorithm classification.
-    \item \textbf{Routing Decision:} The Decision Engine consumes analysis metrics and produces a hardware recommendation.
-    \item \textbf{Code Conversion (optional):} If quantum execution is selected and the code is classical, the AI Code Converter translates it to quantum circuits.
-    \item \textbf{Execution:} The Hardware Abstraction Layer submits jobs to the selected quantum or classical backend.
-\end{enumerate}
-
-All services are containerized with Docker and deployed to Google Cloud Platform via Cloud Run, with infrastructure managed through Terraform.
+The system follows a pipeline architecture: submitted source code passes through an Express.js API Gateway (JWT-authenticated), then to the Code Analysis Engine for language detection, complexity computation, and algorithm classification. The Decision Engine consumes these metrics to produce a hardware recommendation. If quantum execution is selected for classical code, the AI Code Converter translates it to quantum circuits before the Hardware Abstraction Layer submits the job to the selected backend. All services are containerized with Docker and deployed to Google Cloud Platform via Cloud Run, with infrastructure managed through Terraform.
 
 \section{Code Analysis Engine}
 
@@ -136,29 +125,9 @@ The Code Analysis Engine serves as the analytical foundation of the pipeline, tr
 
 The engine supports five programming languages and frameworks: Python, Qiskit, Cirq, Q\#, and OpenQASM. Detection uses an ML-based classifier achieving confidence scores above 0.85 across all evaluated workloads. In our benchmark, average language detection confidence was 0.955 (sd = 0.028) across 100 workloads.
 
-\subsection{Classical Metrics Extraction}
+\subsection{Metrics Extraction}
 
-For all detected code, the engine computes classical software metrics using tree-sitter-based AST parsing:
-
-\begin{itemize}
-    \item \textbf{Cyclomatic Complexity:} Measures the number of independent execution paths \cite{mccabe1976}. Values in our benchmark ranged from 2 to 31.
-    \item \textbf{Cognitive Complexity:} Assesses human comprehension difficulty, ranging from 0 to 39 across workloads.
-    \item \textbf{Time Complexity Classification:} Inferred from loop structure and recursion patterns -- classes include $O(1)$, $O(n)$, $O(n \log n)$, $O(n^2)$, $O(n^3)$, $O(n^k)$, and $O(2^n)$.
-    \item \textbf{Space Complexity:} Estimated from data structure allocation patterns.
-    \item \textbf{Structural Metrics:} Loop count, conditional count, function count, and nesting depth.
-\end{itemize}
-
-\subsection{Quantum Metrics Extraction}
-
-For quantum code, additional metrics are extracted:
-
-\begin{itemize}
-    \item \textbf{Qubit Requirements:} The number of qubits needed for circuit execution.
-    \item \textbf{Circuit Depth:} The number of sequential gate layers, directly impacting decoherence.
-    \item \textbf{Gate Count and CX Gate Ratio:} Total gates and the proportion of two-qubit entangling gates (CNOT/CX), which are the primary source of noise on NISQ devices.
-    \item \textbf{Superposition Score (0--1):} Quantifies the degree of superposition in the circuit.
-    \item \textbf{Entanglement Score (0--1):} Measures entanglement density, a key indicator of quantum advantage potential.
-\end{itemize}
+For all detected code, the engine computes classical software metrics via tree-sitter-based AST parsing, including cyclomatic complexity \cite{mccabe1976}, cognitive complexity, time and space complexity classification (from $O(1)$ to $O(2^n)$), and structural metrics (loop count, nesting depth). For quantum code, additional circuit-level metrics are extracted: qubit requirements, circuit depth, gate count, CX gate ratio (the primary noise source on NISQ devices), superposition score, and entanglement density. The complete feature set is summarized in Table~\ref{tab:raw-features}.
 
 \subsection{Algorithm Classification}
 
@@ -239,29 +208,7 @@ The ML component achieves approximately 87\% accuracy on held-out test data with
 
 \subsection{Rule-Based System (35\% Weight)}
 
-The rule-based component encodes physics constraints and domain knowledge:
-
-\textbf{Hardware Capability Constraints:}
-\begin{itemize}
-    \item Maximum qubits: 127 (IBM Eagle processor limit)
-    \item Maximum circuit depth: 10,000
-    \item Minimum qubits for quantum routing: 2
-\end{itemize}
-
-\textbf{Problem-Type Routing Rules:}
-\begin{itemize}
-    \item Quantum-favorable: Factorization (Shor's, exponential speedup), Search (Grover's, quadratic speedup), Simulation (natural quantum simulation), Optimization (QAOA \cite{farhi2014}/VQE)
-    \item Classical-favorable: Sorting ($O(n \log n)$ classical optimality), Dynamic Programming (sequential dependencies), Matrix Operations (mature classical libraries)
-\end{itemize}
-
-\textbf{Safety Constraints:}
-\begin{itemize}
-    \item Maximum circuit volume: 1,000,000
-    \item Maximum noise sensitivity: 50,000
-    \item Minimum NISQ viability: 0.1
-\end{itemize}
-
-The rule system can issue four decision types: quantum, classical, both or reject. Force decisions override the ML component, ensuring that physically impossible or clearly suboptimal configurations are not recommended.
+The rule-based component encodes physics constraints and domain knowledge. Hardware limits enforce a maximum of 127 qubits (IBM Eagle), circuit depth $\leq$ 10,000, and a minimum of 2 qubits for quantum routing. Problem-type rules favor quantum execution for factorization (Shor's), search (Grover's), simulation, and optimization (QAOA \cite{farhi2014}/VQE), while routing sorting, dynamic programming, and matrix operations classically. Safety constraints cap circuit volume at $10^6$, noise sensitivity at 50,000, and require NISQ viability $\geq$ 0.1. The rule system can issue four decision types: quantum, classical, both, or reject -- force decisions override the ML component to prevent physically impossible or clearly suboptimal configurations.
 
 \subsection{Cost Analysis Component (15\% Weight)}
 
@@ -336,25 +283,19 @@ The factory-based architecture allows new quantum providers to be added by imple
 
 \subsection{Benchmark Design}
 
-We evaluated Nexar across 100 workloads organized into three categories:
+We evaluated Nexar across 100 synthetic workloads organized into three categories:
 
 \begin{itemize}
-    \item \textbf{Classical workloads (10):} Neural network backpropagation, protein folding energy computation, molecular dynamics, genome sequence alignment, PCA dimensionality reduction, epidemic SIR modeling, FFT signal processing, k-means clustering, heat equation PDE solving, and decision tree classification.
-    \item \textbf{Hybrid workloads (5):} Quantum SVM kernel estimation, quantum Boltzmann sampling, variational quantum eigensolver (excited states), quantum GAN generator, and drug molecule screening.
-    \item \textbf{Quantum workloads (15):} H\textsubscript{2} molecule VQE \cite{kandala2017}, LiH molecule UCCSD, Ising model simulation, Heisenberg spin chain, Shor's factoring, QAOA portfolio optimization, variational quantum classifier, quantum walk on graphs, VQE water molecule, quantum error correction, GHZ state teleportation, Deutsch-Jozsa (8-qubit), quantum phase estimation, HHL algorithm, and 120-qubit VQE molecular simulation.
+    \item \textbf{Classical (32):} Deep learning (CNN, transformer, GAN), scientific computing (molecular dynamics, CFD, N-body, PDE), ML (k-means, gradient boosting, reinforcement learning), cryptography (RSA, AES), and combinatorial optimization (TSP, graph coloring, A* pathfinding).
+    \item \textbf{Hybrid (23):} Quantum-classical algorithms including VQE variants (caffeine, scheduling), QAOA (supply chain, graph partitioning), quantum ML (QSVM, QNN, quantum transfer learning), and quantum error mitigation (ZNE). Qubit counts range from 0--24.
+    \item \textbf{Quantum (45):} Molecular simulation (H\textsubscript{2}, LiH, H\textsubscript{2}O, iron-sulfur protein at 60 qubits, 120-qubit VQE) \cite{kandala2017}, factoring (Shor's for 15, 21, 35), search (Grover's 20-qubit, 3-SAT), optimization (QAOA MaxCut 50-qubit, vehicle routing), and foundational algorithms (Deutsch-Jozsa, Bernstein-Vazirani, Simon's, QFT, QPE). Qubit counts range from 1--150.
 \end{itemize}
 
 All workloads were executed through the complete Nexar pipeline, and analysis, decision, and timing metrics were recorded.
 
 \subsection{Routing Accuracy}
 
-The Decision Engine produced correct routing recommendations across all workload categories:
-
-\textbf{Classical Workloads (10/10 correct):} All 10 classical workloads were routed to classical hardware with confidence 1.0. The rule system correctly identified these as quantum-incompatible due to zero qubit requirements (rationale: ``Too few qubits (0 $<$ 2)''), demonstrating that the safety constraints prevent unnecessary quantum execution.
-
-\textbf{Hybrid Workloads (5/5 appropriate):} The hybrid workloads exhibited split routing. Three workloads with sufficient quantum characteristics (Boltzmann sampling, VQE excited states, quantum GAN) were routed to quantum hardware with confidence 0.85. The QSVM kernel estimation (4 qubits) was routed to classical despite quantum characteristics, reflecting the cost-aware decision that small circuits run more efficiently classically. Drug molecule screening was correctly identified as classical-dominant.
-
-\textbf{Quantum Workloads (15/15 appropriate):} Of 15 quantum workloads, 10 were routed to quantum hardware (confidence 0.85--1.0) and 5 were routed to classical. The classical routing for small circuits (3--4 qubits: GHZ teleportation, HHL, H\textsubscript{2} VQE, quantum walk) reflects the correct assessment that NISQ overhead makes small quantum circuits more expensive than classical simulation. The 120-qubit VQE was routed to quantum with confidence 1.0 -- the only workload where classical execution is physically intractable.
+The Decision Engine produced appropriate routing recommendations across all 100 workloads. All 32 classical workloads were routed to classical with confidence 1.0, correctly identified as quantum-incompatible due to zero qubit requirements. Of 23 hybrid workloads, 19 were routed to classical and 4 to quantum (confidence 0.63--0.81); the quantum-routed workloads (e.g., QAOA graph partitioning at 20 qubits, ZNE error mitigation at 24 qubits) exhibited sufficient circuit complexity, while smaller hybrids (e.g., QSVM at 4 qubits) were correctly kept classical. Of 45 quantum workloads, 16 were routed to quantum (confidence 0.54--1.0) and 29 to classical. Quantum routing targeted workloads with sufficient scale -- QAOA MaxCut (50 qubits), iron-sulfur protein VQE (60 qubits), and 120-qubit VQE (confidence 1.0) -- while small circuits (2--4 qubits) were correctly routed classically where NISQ overhead exceeds simulation cost. One oversize 150-qubit workload was rejected as it exceeds current hardware limits.
 
 \subsection{Cost Analysis Results}
 
@@ -369,21 +310,20 @@ The cost analysis reveals the current economic landscape of quantum vs.\ classic
 \toprule
 \textbf{Workload} & \textbf{Qubits} & \textbf{Hardware} & \textbf{Cost (USD)} & \textbf{Time (ms)} \\
 \midrule
-Neural Net Backprop & 0 & Classical & \$0.001 & 11.37 \\
-Protein Folding & 0 & Classical & \$0.001 & 12.54 \\
 FFT Signal Proc. & 0 & Classical & \$0.001 & 1.42 \\
-Decision Tree ($O(2^n)$) & 0 & Classical & \$0.001 & 460.84 \\
+Sorting Suite & 0 & Classical & \$0.001 & 806.49 \\
+RSA Key Gen. & 0 & Classical & \$0.001 & 24.29 \\
 QSVM Kernel Est. & 4 & Classical & \$0.001 & 1.00 \\
+QAOA Graph Part. & 20 & Quantum & \$2.237 & 274.36 \\
 LiH Molecule UCCSD & 12 & Quantum & \$2.162 & 234.37 \\
-Ising Model (16q) & 16 & Quantum & \$2.321 & 319.42 \\
-Shor's Factoring (15) & 8 & Quantum & \$2.159 & 232.36 \\
-QEC Surface Code & 17 & Quantum & \$2.146 & 223.83 \\
+QAOA MaxCut (50q) & 50 & Quantum & \$2.718 & 573.18 \\
+Iron-Sulfur VQE & 60 & Quantum & \$3.375 & 888.31 \\
 120-qubit VQE & 120 & Quantum & \$3.489 & 986.33 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The data demonstrates a clear cost disparity: classical execution costs approximately \$0.001 USD per workload, while quantum execution ranges from \$2.12 to \$3.49 USD -- a factor of approximately 2,000$\times$. This reflects the current state of NISQ economics where per-shot costs, QPU time charges, and base job fees dominate.
+Across all 100 workloads, classical execution costs consistently approximate \$0.001 USD (range \$0.001--\$0.001), while quantum-routed workloads range from \$2.13 to \$3.49 USD -- a factor of approximately 2,000$\times$. Quantum costs scale with qubit count: 10--20 qubit circuits average \$2.17, while 50+ qubit workloads reach \$2.72--\$3.49. This reflects the current state of NISQ economics where per-shot costs, QPU time charges, and base job fees dominate.
 
 \subsection{Cost Break-Even Analysis}
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  6 APR 2026 12:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.6)  8 APR 2026 20:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -395,48 +395,513 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip55
 )
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcolorbox.sty
+Package: tcolorbox 2025/11/28 version 6.9.0 text color boxes
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz.
+sty
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.st
+y
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
+-common.tex
+\pgfutil@everybye=\toks24
+\pgfutil@tempdima=\dimen256
+\pgfutil@tempdimb=\dimen257
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
+-latex.def
+\pgfutil@abb=\box57
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs.
+code.tex
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex)
+Package: pgfrcs 2025-08-29 v3.1.11a (3.1.11a)
+))
+Package: pgf 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore.
+sty
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/systemlayer\pgfsys.
+sty
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+s.code.tex
+Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys
+.code.tex
+\pgfkeys@pathtoks=\toks25
+\pgfkeys@temptoks=\toks26
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys
+libraryfiltered.code.tex
+\pgfkeys@tmptoks=\toks27
+))
+\pgf@x=\dimen258
+\pgf@y=\dimen259
+\pgf@xa=\dimen260
+\pgf@ya=\dimen261
+\pgf@xb=\dimen262
+\pgf@yb=\dimen263
+\pgf@xc=\dimen264
+\pgf@yc=\dimen265
+\pgf@xd=\dimen266
+\pgf@yd=\dimen267
+\w@pgf@writea=\write3
+\r@pgf@reada=\read2
+\c@pgf@counta=\count318
+\c@pgf@countb=\count319
+\c@pgf@countc=\count320
+\c@pgf@countd=\count321
+\t@pgf@toka=\toks28
+\t@pgf@tokb=\toks29
+\t@pgf@tokc=\toks30
+\pgf@sys@id@count=\count322
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.c
+fg
+File: pgf.cfg 2025-08-29 v3.1.11a (3.1.11a)
+)
+Driver file for pgf: pgfsys-pdftex.def
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+s-pdftex.def
+File: pgfsys-pdftex.def 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+s-common-pdf.def
+File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+ssoftpath.code.tex
+File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfsyssoftpath@smallbuffer@items=\count323
+\pgfsyssoftpath@bigbuffer@items=\count324
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+sprotocol.code.tex
+File: pgfsysprotocol.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+e.code.tex
+Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.code
+.tex
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathutil.
+code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathparse
+r.code.tex
+\pgfmath@dimen=\dimen268
+\pgfmath@count=\count325
+\pgfmath@box=\box58
+\pgfmath@toks=\toks31
+\pgfmath@stack@operand=\toks32
+\pgfmath@stack@operation=\toks33
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.basic.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.trigonometric.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.random.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.comparison.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.base.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.round.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.misc.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.integerarithmetics.code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathcalc.
+code.tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloat
+.code.tex
+\c@pgfmathroundto@lastzeros=\count326
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code.
+tex)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epoints.code.tex
+File: pgfcorepoints.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@picminx=\dimen269
+\pgf@picmaxx=\dimen270
+\pgf@picminy=\dimen271
+\pgf@picmaxy=\dimen272
+\pgf@pathminx=\dimen273
+\pgf@pathmaxx=\dimen274
+\pgf@pathminy=\dimen275
+\pgf@pathmaxy=\dimen276
+\pgf@xx=\dimen277
+\pgf@xy=\dimen278
+\pgf@yx=\dimen279
+\pgf@yy=\dimen280
+\pgf@zx=\dimen281
+\pgf@zy=\dimen282
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epathconstruct.code.tex
+File: pgfcorepathconstruct.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@path@lastx=\dimen283
+\pgf@path@lasty=\dimen284
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epathusage.code.tex
+File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@shorten@end@additional=\dimen285
+\pgf@shorten@start@additional=\dimen286
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+escopes.code.tex
+File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfpic=\box59
+\pgf@hbox=\box60
+\pgf@layerbox@main=\box61
+\pgf@picture@serial@count=\count327
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+egraphicstate.code.tex
+File: pgfcoregraphicstate.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgflinewidth=\dimen287
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+etransformations.code.tex
+File: pgfcoretransformations.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@pt@x=\dimen288
+\pgf@pt@y=\dimen289
+\pgf@pt@temp=\dimen290
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+equick.code.tex
+File: pgfcorequick.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eobjects.code.tex
+File: pgfcoreobjects.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epathprocessing.code.tex
+File: pgfcorepathprocessing.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+earrows.code.tex
+File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfarrowsep=\dimen291
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eshade.code.tex
+File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@max=\dimen292
+\pgf@sys@shading@range@num=\count328
+\pgf@shadingcount=\count329
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eimage.code.tex
+File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eexternal.code.tex
+File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfexternal@startupbox=\box62
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+elayers.code.tex
+File: pgfcorelayers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+etransparency.code.tex
+File: pgfcoretransparency.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epatterns.code.tex
+File: pgfcorepatterns.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+erdf.code.tex
+File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
+shapes.code.tex
+File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfnodeparttextbox=\box63
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
+plot.code.tex
+File: pgfmoduleplot.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfco
+mp-version-0-65.sty
+Package: pgfcomp-version-0-65 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@nodesepstart=\dimen293
+\pgf@nodesepend=\dimen294
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfco
+mp-version-1-18.sty
+Package: pgfcomp-version-1-18 2025-08-29 v3.1.11a (3.1.11a)
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgffor.st
+y
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.s
+ty
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys
+.code.tex))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pgf/math\pgfmath.sty
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.code
+.tex))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor.
+code.tex
+Package: pgffor 2025-08-29 v3.1.11a (3.1.11a)
+\pgffor@iter=\dimen295
+\pgffor@skip=\dimen296
+\pgffor@stack=\toks34
+\pgffor@toks=\toks35
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
+z\tikz.code.tex
+Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibr
+aryplothandlers.code.tex
+File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@plot@mark@count=\count330
+\pgfplotmarksize=\dimen297
+)
+\tikz@lastx=\dimen298
+\tikz@lasty=\dimen299
+\tikz@lastxsaved=\dimen300
+\tikz@lastysaved=\dimen301
+\tikz@lastmovetox=\dimen302
+\tikz@lastmovetoy=\dimen303
+\tikzleveldistance=\dimen304
+\tikzsiblingdistance=\dimen305
+\tikz@figbox=\box64
+\tikz@figbox@bg=\box65
+\tikz@tempbox=\box66
+\tikz@tempbox@bg=\box67
+\tikztreelevel=\count331
+\tikznumberofchildren=\count332
+\tikznumberofcurrentchild=\count333
+\tikz@fig@count=\count334
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
+matrix.code.tex
+File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfmatrixcurrentrow=\count335
+\pgfmatrixcurrentcolumn=\count336
+\pgf@matrix@numberofcolumns=\count337
+)
+\tikz@expandcount=\count338
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
+z/libraries\tikzlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tools\verbatim.sty
+Package: verbatim 2024-01-22 v1.5x LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks36
+\verbatim@line=\toks37
+\verbatim@in@stream=\read3
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/environ\environ.sty
+Package: environ 2014/05/04 v0.3 A new way to define environments
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/trimspaces\trimspaces.s
+ty
+Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
+))
+\tcb@titlebox=\box68
+\tcb@upperbox=\box69
+\tcb@lowerbox=\box70
+\tcb@phantombox=\box71
+\c@tcbbreakpart=\count339
+\c@tcblayer=\count340
+\c@tcolorbox@number=\count341
+\l__tcobox_tmpa_box=\box72
+\l__tcobox_tmpa_dim=\dimen306
+\tcb@temp=\box73
+\tcb@temp=\box74
+\tcb@temp=\box75
+\tcb@temp=\box76
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbraster.cod
+e.tex
+Library (tcolorbox): 'tcbraster.code.tex' version '6.9.0'
+\c@tcbrastercolumn=\count342
+\c@tcbrasterrow=\count343
+\c@tcbrasternum=\count344
+\c@tcbraster=\count345
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbskins.code
+.tex
+Library (tcolorbox): 'tcbskins.code.tex' version '6.9.0'
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tikzfill\tikzfill.image
+.sty
+Package: tikzfill.image 2026/03/26 v1.1.0 Image filling library for TikZ
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tikzfill\tikzlibraryfil
+l.image.code.tex
+File: tikzlibraryfill.image.code.tex 2026/03/26 v1.1.0 Image filling library
+\l__tikzfill_tmpa_dim=\dimen307
+\l__tikzfill_tmpb_dim=\dimen308
+\l__tikzfill_img_box=\box77
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbskinsjigsa
+w.code.tex
+Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '6.9.0'
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbbreakable.
+code.tex
+Library (tcolorbox): 'tcbbreakable.code.tex' version '6.9.0'
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/pdfcol\pdfcol.sty
+Package: pdfcol 2022-09-21 v1.7 Handle new color stacks for pdfTeX (HO)
+)
+Package pdfcol Info: New color stack `tcb@breakable' = 1 on input line 23.
+\tcb@testbox=\box78
+\tcb@totalupperbox=\box79
+\tcb@totallowerbox=\box80
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbhooks.code
+.tex
+Library (tcolorbox): 'tcbhooks.code.tex' version '6.9.0'
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbtheorems.c
+ode.tex
+Library (tcolorbox): 'tcbtheorems.code.tex' version '6.9.0'
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbfitting.co
+de.tex
+Library (tcolorbox): 'tcbfitting.code.tex' version '6.9.0'
+\tcbfitdim=\dimen309
+\tcb@lowerfitdim=\dimen310
+\tcb@upperfitdim=\dimen311
+\tcb@cur@hbadness=\count346
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcblistingsut
+f8.code.tex
+Library (tcolorbox): 'tcblistingsutf8.code.tex' version '6.9.0'
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcblistings.c
+ode.tex
+Library (tcolorbox): 'tcblistings.code.tex' version '6.9.0'
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/listings\listings.sty
+\lst@mode=\count347
+\lst@gtempboxa=\box81
+\lst@token=\toks38
+\lst@length=\count348
+\lst@currlwidth=\dimen312
+\lst@column=\count349
+\lst@pos=\count350
+\lst@lostspace=\dimen313
+\lst@width=\dimen314
+\lst@newlines=\count351
+\lst@lineno=\count352
+\lst@maxwidth=\dimen315
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstpatch.sty
+File: lstpatch.sty 2025/11/14 1.11b (Carsten Heinz)
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstmisc.sty
+File: lstmisc.sty 2025/11/14 1.11b (Carsten Heinz)
+\c@lstnumber=\count353
+\lst@skipnumbers=\count354
+\lst@framebox=\box82
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/listings\listings.cfg
+File: listings.cfg 2025/11/14 1.11b listings configuration
+))
+Package: listings 2025/11/14 1.11b (Carsten Heinz)
+==> First Aid for listings.sty no longer applied!
+    Expected:
+        2024/09/23 1.10c (Carsten Heinz)
+    but found:
+        2025/11/14 1.11b (Carsten Heinz)
+    so I'm assuming it got fixed.
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcblistingsco
+re.code.tex
+Library (tcolorbox): 'tcblistingscore.code.tex' version '6.9.0'
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbprocessing
+.code.tex
+Library (tcolorbox): 'tcbprocessing.code.tex' version '6.9.0'
+)
+\c@tcblisting=\count355
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/listingsutf8\listingsut
+f8.sty
+Package: listingsutf8 2019-12-10 v1.5 Allow UTF-8 in listings input (HO)
+))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbexternal.c
+ode.tex
+Library (tcolorbox): 'tcbexternal.code.tex' version '6.9.0'
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbmagazine.c
+ode.tex
+Library (tcolorbox): 'tcbmagazine.code.tex' version '6.9.0'
+)
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbvignette.c
+ode.tex
+Library (tcolorbox): 'tcbvignette.code.tex' version '6.9.0'
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
+z/libraries\tikzlibraryfadings.code.tex
+File: tikzlibraryfadings.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibr
+aryfadings.code.tex
+File: pgflibraryfadings.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbposter.cod
+e.tex
+Library (tcolorbox): 'tcbposter.code.tex' version '6.9.0'
+))
 (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
 tex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count318
+\l__color_backend_stack_int=\count356
 ) (nexar-paper.aux)
 \openout1 = `nexar-paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 11.
-LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
 
 -- Lines per column: 56 (exact).
 
 (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
 ii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count319
-\scratchdimen=\dimen256
-\scratchbox=\box57
-\nofMPsegments=\count320
-\nofMParguments=\count321
-\everyMPshowfont=\toks24
-\MPscratchCnt=\count322
-\MPscratchDim=\dimen257
-\MPnumerator=\count323
-\makeMPintoPDFobject=\count324
-\everyMPtoPDFconversion=\toks25
+\scratchcounter=\count357
+\scratchdimen=\dimen316
+\scratchbox=\box83
+\nofMPsegments=\count358
+\nofMParguments=\count359
+\everyMPshowfont=\toks39
+\MPscratchCnt=\count360
+\MPscratchDim=\dimen317
+\MPnumerator=\count361
+\makeMPintoPDFobject=\count362
+\everyMPtoPDFconversion=\toks40
 )
 (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-b
 ase.sty
@@ -448,40 +913,47 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-Package hyperref Info: Link coloring OFF on input line 11.
+Package hyperref Info: Link coloring OFF on input line 12.
  (nexar-paper.out) (nexar-paper.out)
-\@outlinefile=\write3
-\openout3 = `nexar-paper.out'.
+\@outlinefile=\write4
+\openout4 = `nexar-paper.out'.
 
-LaTeX Font Info:    Calculating math sizes for size <11> on input line 68.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 68.
+\c@lstlisting=\count363
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+Package: inputenc 2024/02/08 v1.3d Input encoding file
+\inpenc@prehook=\toks41
+\inpenc@posthook=\toks42
+)
+LaTeX Font Info:    Calculating math sizes for size <11> on input line 69.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 69.
 
 
 (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 68.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 69.
 
 
 (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Overfull \hbox (19.67351pt too wide) in paragraph at lines 68--68
+Overfull \hbox (19.67351pt too wide) in paragraph at lines 69--69
  []\OT1/ptm/m/n/11 yashodhalasithjayasinghe@gmail.com 
  []
 
 
-Overfull \hbox (19.67351pt too wide) in paragraph at lines 68--68
+Overfull \hbox (19.67351pt too wide) in paragraph at lines 69--69
  []\OT1/ptm/m/n/11 yashodhalasithjayasinghe@gmail.com 
  []
 
 
-Overfull \hbox (19.67351pt too wide) in paragraph at lines 68--68
+Overfull \hbox (19.67351pt too wide) in paragraph at lines 69--69
  []\OT1/ptm/m/n/11 yashodhalasithjayasinghe@gmail.com 
  []
 
 
-Underfull \hbox (badness 7221) in paragraph at lines 88--89
+Underfull \hbox (badness 7221) in paragraph at lines 89--90
 []\OT1/ptm/b/n/10 Automated Code Anal-y-sis Pipeline: \OT1/ptm/m/n/10 A multi-
  []
 
@@ -490,116 +962,275 @@ dar/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Underfull \hbox (badness 1383) in paragraph at lines 118--119
-\OT1/ptm/m/n/10 code passes through an Ex-press.js API Gate-way (JWT-
+Underfull \hbox (badness 1565) in paragraph at lines 90--91
+\OT1/ptm/m/n/10 weight), and real-time cost anal-y-sis (15% weight)
  []
 
-[2]
-Underfull \hbox (badness 2591) in paragraph at lines 170--171
+<system-architecture.png, id=229, 1215.54124pt x 693.59125pt>
+File: system-architecture.png Graphic file (type png)
+<use system-architecture.png>
+Package pdftex.def Info: system-architecture.png  used on input line 119.
+(pdftex.def)             Requested size: 252.0pt x 143.7852pt.
+[2 <./system-architecture.png (PNG copy)>]
+<code-analysis.png, id=254, 1346.02875pt x 743.77875pt>
+File: code-analysis.png Graphic file (type png)
+<use code-analysis.png>
+Package pdftex.def Info: code-analysis.png  used on input line 134.
+(pdftex.def)             Requested size: 252.0pt x 139.24254pt.
+<decision-engine.png, id=258, 1245.65375pt x 473.77pt>
+File: decision-engine.png Graphic file (type png)
+<use decision-engine.png>
+Package pdftex.def Info: decision-engine.png  used on input line 165.
+(pdftex.def)             Requested size: 252.0pt x 95.84392pt.
+
+Underfull \hbox (badness 1448) in paragraph at lines 166--166
+\OT1/ptm/m/n/8 Fig. 3.  []Decision En-gine ar-chi-tec-ture il-lus-trat-ing the 
+three-component
+ []
+
+
+Underfull \hbox (badness 2591) in paragraph at lines 192--193
 []\OT1/ptm/m/n/8 Complexity class: ex-po-nen-tial, poly-no-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 185--186
+Underfull \hbox (badness 10000) in paragraph at lines 207--208
 []\OT1/ptm/m/n/8 Error ac-cu-mu-la-tion
  []
 
 
-Underfull \hbox (badness 5217) in paragraph at lines 186--186
+Underfull \hbox (badness 5217) in paragraph at lines 208--208
 []\OT1/ptm/m/n/8 Quantum Over-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 187--187
+Underfull \hbox (badness 10000) in paragraph at lines 209--209
 []\OT1/ptm/m/n/8 NISQ Vi-a-bil-ity
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 189--189
+Underfull \hbox (badness 10000) in paragraph at lines 211--211
 []\OT1/ptm/m/n/8 Entanglement
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 189--190
+Underfull \hbox (badness 10000) in paragraph at lines 211--212
 []\OT1/ptm/m/n/8 Combined
  []
 
 
-Overfull \hbox (10.8023pt too wide) in paragraph at lines 180--192
+Overfull \hbox (0.72015pt too wide) in paragraph at lines 202--214
  [][] 
  []
 
+[3 <./code-analysis.png (PNG copy)> <./decision-engine.png>]
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 2
+22.
+
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2
-29.
+53.
+
 (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-Underfull \hbox (badness 1448) in paragraph at lines 229--230
-[]\OT1/ptm/m/n/10 Where $\OML/cmm/m/it/10 r[] \OT1/cmr/m/n/10 = $0\OML/cmm/m/it
-/10 :\OT1/cmr/m/n/10 0001\OML/cmm/m/it/10 =[]$ \OT1/ptm/m/n/10 ($\OMS/cmsy/m/n/
-10 ^^X$\TS1/ptm/m/n/10 $\OT1/ptm/m/n/10 0.36/hr), $\OML/cmm/m/it/10 r[] \OT1/cm
-r/m/n/10 =
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 mean-ing-ful de-ci-sion bound-aries rather than spu-ri-ous
  []
 
-[3]
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 2
-51.
- (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
-File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+
+Underfull \hbox (badness 3240) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 cor-re-la-tions, we an-a-lyzed the Ran-dom For-est's fea-ture
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 im-por-tances us-ing Gini im-pu-rity re-duc-tion. The
+ []
+
+
+Underfull \hbox (badness 3168) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 anal-y-sis re-vealed that \OT1/pcr/m/n/10 qubits_required \OT1/
+ptm/m/n/10 (im-por-tance
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 0.31) and \OT1/pcr/m/n/10 circuit_volume \OT1/ptm/m/n/10 (0.24)
+ are the most
+ []
+
+
+Underfull \hbox (badness 7273) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 dis-crim-i-na-tive fea-tures, di-rectly re-flect-ing the pri-ma
+ry
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 re-source con-straints of NISQ de-vices. Al-go-rith-mic
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 fea-tures \OT1/pcr/m/n/10 time_complexity_encoded \OT1/ptm/m/n/
+10 (0.15) and
+ []
+
+
+Underfull \hbox (badness 3568) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 to as-so-ciate ex-po-nen-tial clas-si-cal com-plex-ity and high
+
+ []
+
+
+Underfull \hbox (badness 6284) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 (0.08), im-plic-itly dis-cov-er-ing the re-la-tion-ship be-twee
+n
+ []
+
+
+Underfull \hbox (badness 4416) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 two-qubit en-tan-gling gate den-sity and hard-ware noise
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/pcr/m/n/10 gate_density \OT1/ptm/m/n/10 (0.03), \OT1/pcr/m/n/10 nisq_viabi
+lity_score
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 (0.02), and \OT1/pcr/m/n/10 quantum_overhead_ratio \OT1/ptm/m/n
+/10 (0.02) ---
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 con-tribute in-cre-men-tal re-fine-ment. This in-ter-pretabil-i
+ty
+ []
+
+
+Underfull \hbox (badness 5288) in paragraph at lines 268--269
+\OT1/ptm/m/n/10 physics-based bound-aries gov-ern-ing quan-tum ad-van-tage
+ []
+
+<ai-code-convertor.png, id=278, 1115.16624pt x 482.80376pt>
+File: ai-code-convertor.png Graphic file (type png)
+<use ai-code-convertor.png>
+Package pdftex.def Info: ai-code-convertor.png  used on input line 276.
+(pdftex.def)             Requested size: 252.0pt x 109.09764pt.
+[4]
+LaTeX Font Info:    Trying to load font information for OMS+pcr on input line 2
+95.
+ (C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omspcr.fd
+File: omspcr.fd 
 )
-Underfull \hbox (badness 3780) in paragraph at lines 269--270
-[]\OT1/ptm/m/n/10 The Hard-ware Ab-strac-tion Layer (HAL) pro-vides a
+LaTeX Font Info:    Font shape `OMS/pcr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 295.
+
+Underfull \hbox (badness 7012) in paragraph at lines 295--296
+\OT1/pcr/m/n/10 circuit:\OMS/cmsy/m/n/10 n\OT1/pcr/m/n/10 n\OMS/cmsy/m/n/10 f\O
+T1/pcr/m/n/10 code\OMS/cmsy/m/n/10 g\OT1/pcr/m/n/10 "\OT1/ptm/m/n/10 , to-k-eni
+zed with trun-ca-tion
  []
 
 
-Underfull \hbox (badness 6493) in paragraph at lines 280--281
+Underfull \hbox (badness 3954) in paragraph at lines 295--296
+\OT1/ptm/m/n/10 at 256 to-kens, and de-coded us-ing beam search
+ []
+
+<hardware-abstraction.png, id=298, 1215.54124pt x 744.7825pt>
+File: hardware-abstraction.png Graphic file (type png)
+<use hardware-abstraction.png>
+Package pdftex.def Info: hardware-abstraction.png  used on input line 308.
+(pdftex.def)             Requested size: 252.0pt x 154.39743pt.
+
+Underfull \hbox (badness 6493) in paragraph at lines 322--323
 []\OT1/ptm/m/n/10 The factory-based ar-chi-tec-ture al-lows new quan-tum
  []
 
-
-Overfull \hbox (4.60107pt too wide) in paragraph at lines 311--311
+[5 <./ai-code-convertor.png (PNG copy)> <./hardware-abstraction.png>]
+Overfull \hbox (4.60107pt too wide) in paragraph at lines 353--353
 []\OT1/ptm/b/n/8 Hardware| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 318--318
-[]\OT1/ptm/m/n/8 LiH Molecule
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 319--319
+Underfull \hbox (badness 10000) in paragraph at lines 361--361
 []\OT1/ptm/m/n/8 QAOA Max-Cut
  []
 
-[4]
-<cost-scaling.png, id=247, 638.8668pt x 422.0568pt>
+[6]
+<cost-scaling.png, id=333, 638.8668pt x 422.0568pt>
 File: cost-scaling.png Graphic file (type png)
 <use cost-scaling.png>
-Package pdftex.def Info: cost-scaling.png  used on input line 365.
+Package pdftex.def Info: cost-scaling.png  used on input line 409.
 (pdftex.def)             Requested size: 252.0pt x 166.47554pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 384--384
-[]\OT1/ptm/m/n/8 Language De-tec-tion
- []
-
-
-Underfull \hbox (badness 1412) in paragraph at lines 400--401
+Underfull \hbox (badness 1412) in paragraph at lines 444--445
 []\OT1/ptm/m/n/10 Error-corrected quan-tum com-put-ers ar-rive (es-ti-
  []
 
-[5 <./cost-scaling.png>]
-Underfull \hbox (badness 2717) in paragraph at lines 439--440
+
+Underfull \hbox (badness 2707) in paragraph at lines 455--456
+[]\OT1/ptm/b/n/10 Case B: 120-Qubit VQE $\OMS/cmsy/m/n/10 !$ \OT1/ptm/b/n/10 Qu
+an-tum Over-ride.
+ []
+
+
+Underfull \hbox (badness 2744) in paragraph at lines 455--456
+\OT1/ptm/m/n/10 A 120-qubit VQE ansatz with three vari-a-tional lay-ers
+ []
+
+
+Underfull \hbox (badness 2617) in paragraph at lines 455--456
+\OT1/ptm/m/n/10 y-sis ex-tracts \OT1/pcr/m/n/10 qubits$\OT1/cmr/m/n/10 = 120$\O
+T1/ptm/m/n/10 , \OT1/pcr/m/n/10 circuit_depth$\OT1/cmr/m/n/10 = 14$\OT1/ptm/m/n
+/10 ,
+ []
+
+LaTeX Font Info:    Trying to load font information for OT1+phv on input line 4
+68.
+(C:\Users\sudar\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1phv.fd
+File: ot1phv.fd 2020/03/25 scalable font definitions for OT1/phv.
+)
+Overfull \hbox (14.46265pt too wide) in paragraph at lines 489--496
+[] 
+ []
+
+<system-output.png, id=334, 1114.1625pt x 546.04pt>
+File: system-output.png Graphic file (type png)
+<use system-output.png>
+Package pdftex.def Info: system-output.png  used on input line 503.
+(pdftex.def)             Requested size: 252.0pt x 123.49525pt.
+[7 <./cost-scaling.png>]
+Underfull \hbox (badness 2717) in paragraph at lines 544--545
 []\OT1/ptm/b/n/10 Real Quan-tum Ex-e-cu-tion Bench-marks: \OT1/ptm/m/n/10 Ex-e-
 cute
  []
 
-
-Underfull \hbox (badness 2521) in paragraph at lines 443--444
+[8 <./system-output.png>]
+Underfull \hbox (badness 2521) in paragraph at lines 548--549
 []\OT1/ptm/b/n/10 Fault-Tolerant Readi-ness: \OT1/ptm/m/n/10 De-velop de-ci-sio
 n logic
  []
 
-[6]
+[9]
+Underfull \hbox (badness 3168) in paragraph at lines 717--718
+[]\OT1/ptm/m/n/8 Xanadu, ``Pen-ny-lane plu-g-ins,'' 2024. [On-line]. Avail-able
+: []$https : / /
+ []
+
+
+Underfull \hbox (badness 1694) in paragraph at lines 750--751
+[]\OT1/ptm/m/n/8 A. Cross, A. W. Javadi-Abhari, T. Alexan-der, N. de Beau-drap,
+
+ []
+
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -611,40 +1242,45 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[7] (nexar-paper.aux)
+[10] (nexar-paper.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
 Package rerunfilecheck Info: File `nexar-paper.out' has not changed.
-(rerunfilecheck)             Checksum: B6B581C767511755F91C15A2438517DA;5987.
+(rerunfilecheck)             Checksum: 3D9E51331174B210FCE12446FDB12727;6648.
  ) 
 Here is how much of TeX's memory you used:
- 11420 strings out of 467871
- 177780 string characters out of 5418377
- 612980 words of memory out of 5000000
- 40030 multiletter control sequences out of 15000+600000
- 674260 words of font info for 132 fonts, out of 8000000 for 9000
+ 28148 strings out of 467871
+ 571987 string characters out of 5418377
+ 1004938 words of memory out of 5000000
+ 56401 multiletter control sequences out of 15000+600000
+ 680838 words of font info for 142 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,15n,79p,1489b,632s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
-cmmi10.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmmi7.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/amsfonts/cm/cmr10.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/
-type1/public/amsfonts/cm/cmr6.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX
-/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/sudar/AppData/Local/Programs
-/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/sudar/AppData/Local/P
-rograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/sudar/AppDat
-a/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/suda
-r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Us
-ers/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/
-Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/
-Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:
-/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:
-/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on nexar-paper.pdf (7 pages, 441807 bytes).
+ 98i,18n,108p,1479b,673s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+pdfTeX warning (dest): name{Hfootnote.1} has been referenced but does not exist
+, replaced by a fixed one
+
+<C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cm
+mi10.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
+nts/cm/cmmi7.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/publ
+ic/amsfonts/cm/cmr10.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/public/amsfonts/cm/cmr6.pfb><C:/Users/sudar/AppData/Local/Programs/MiKTeX/f
+onts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/sudar/AppData/Local/Programs/M
+iKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/sudar/AppData/Local/Pro
+grams/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/sudar/AppData/
+Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/sudar/
+AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/User
+s/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Us
+ers/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvb8a.pfb><C:
+/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:
+/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C
+:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C
+:/Users/sudar/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on nexar-paper.pdf (10 pages, 872772 bytes).
 PDF statistics:
- 398 PDF objects out of 1000 (max. 8388607)
- 126 named destinations out of 1000 (max. 500000)
- 294 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 534 PDF objects out of 1000 (max. 8388607)
+ 172 named destinations out of 1000 (max. 500000)
+ 504 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -297,7 +297,7 @@ The converter uses a fine-tuned CodeT5-base model \cite{wang2021} --- a T5ForCon
 
 \subsection{Suitability Scoring}
 
-Each translation candidate receives a three-tier suitability score (HIGH, MEDIUM, or LOW) with associated confidence and estimated speedup. Speedup estimates are derived from theoretical complexity comparisons. For example, $O(N)$ classical versus $O(\sqrt{N})$ quantum for Grover's search \cite{grover1996}, combined with simulator resource metrics from the Qiskit Aer execution. Confidence values reflect the degree of structural overlap between the submitted code's AST feature vector and the matched pattern signature in the database. This allows users to make informed decisions about whether quantum translation provides a meaningful computational advantage for their specific use case.
+Each translation candidate receives a three-tier suitability score (HIGH, MEDIUM, or LOW) with associated confidence and estimated speedup. Speedup estimates are derived from theoretical complexity comparisons. For example, $O(N)$ classical versus $O(\sqrt{N})$ quantum for Grover's search \cite{grover1996}, where $N$ denotes the size of the search space, combined with simulator resource metrics from the Qiskit Aer execution. Confidence values reflect the degree of structural overlap between the submitted code's AST feature vector and the matched pattern signature in the database. This allows users to make informed decisions about whether quantum translation provides a meaningful computational advantage for their specific use case.
 
 \section{Hardware Abstraction Layer}
 
@@ -450,7 +450,7 @@ Our benchmark data reflects the limitations of current NISQ hardware:
 
 \subsection{End-to-End Case Studies}
 
-\textbf{Case A: Linear Search $\rightarrow$ Classical Routing.} A Python \texttt{for}-loop searching an unsorted 1,024-element array is submitted. The Code Analysis Engine detects $O(n)$ time complexity and CodeBERT classifies it as ``search'' (confidence 0.92). The AI Code Converter maps it to a 10-qubit Grover circuit. However, the cost analyzer estimates \$0.001 classical versus \$1.95 quantum. The weighted vote routes to Classical (confidence 0.88): the $O(\sqrt{N})$ speedup does not justify the 1,950$\times$ cost premium at this problem size.
+\textbf{Case A: Linear Search $\rightarrow$ Classical Routing.} A Python \texttt{for}-loop searching an unsorted 1,024-element array is submitted. The Code Analysis Engine detects $O(N)$ time complexity and CodeBERT classifies it as ``search'' (confidence 0.92). The AI Code Converter maps it to a 10-qubit Grover circuit. However, the cost analyzer estimates \$0.001 classical versus \$1.95 quantum. The weighted vote routes to Classical (confidence 0.88): the $O(\sqrt{N})$ speedup does not justify the 1,950$\times$ cost premium at this problem size, where $N = 1{,}024$ is the number of elements.
 
 \textbf{Case B: 120-Qubit VQE $\rightarrow$ Quantum Override.} A 120-qubit VQE ansatz with three variational layers and a nearest-neighbor CNOT ladder is submitted. Analysis extracts \texttt{qubits}$= 120$, \texttt{circuit\_depth}$= 14$, \texttt{cx\_gate\_ratio}$= 0.33$. The rule engine calculates that classical state-vector simulation would require $2^{120} \times 16$ bytes ($\sim$$10^{31}$ MB), triggering a \texttt{FORCE\_QUANTUM} override (confidence 1.0) that bypasses ML voting entirely. The HAL routes the job to a 127-qubit IBM Eagle processor.
 

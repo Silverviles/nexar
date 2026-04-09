@@ -45,19 +45,19 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Feature Vector Design}{3}{subsection.5.1}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Raw Code Analysis Features}}{3}{table.1}\protected@file@percent }
 \newlabel{tab:raw-features}{{I}{3}{Raw Code Analysis Features}{table.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Derived Physics Features}}{3}{table.2}\protected@file@percent }
-\newlabel{tab:derived-features}{{II}{3}{Derived Physics Features}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}ML Model Component (50\% Weight)}{3}{subsection.5.2}\protected@file@percent }
 \citation{farhi2014}
-\citation{wang2021}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}ML Model Component (50\% Weight)}{4}{subsection.5.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Derived Physics Features}}{4}{table.2}\protected@file@percent }
+\newlabel{tab:derived-features}{{II}{4}{Derived Physics Features}{table.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Rule-Based System (35\% Weight)}{4}{subsection.5.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Cost Analysis Component (15\% Weight)}{4}{subsection.5.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Decision Merging}{4}{subsection.5.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Feature Importance and Interpretability}{4}{subsection.5.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VI}AI Code Converter}{4}{section.6}\protected@file@percent }
+\citation{wang2021}
 \citation{grover1996}
 \citation{shor1997}
 \citation{grover1996}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}AI Code Converter}{5}{section.6}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces AI Code Converter pipeline: classical Python code is parsed into an AST, matched against known quantum algorithm patterns, and translated into Qiskit circuits via a fine-tuned CodeT5 model.}}{5}{figure.4}\protected@file@percent }
 \newlabel{fig:ai-code-converter}{{4}{5}{AI Code Converter pipeline: classical Python code is parsed into an AST, matched against known quantum algorithm patterns, and translated into Qiskit circuits via a fine-tuned CodeT5 model}{figure.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Translation Pipeline}{5}{subsection.6.1}\protected@file@percent }
@@ -65,10 +65,9 @@
 \@writefile{toc}{\contentsline {section}{\numberline {VII}Hardware Abstraction Layer}{5}{section.7}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Hardware Abstraction Layer architecture showing provider-agnostic job submission through a factory-based interface supporting IBM Qiskit, AWS Braket, and Azure Quantum backends.}}{5}{figure.5}\protected@file@percent }
 \newlabel{fig:hardware-abstraction}{{5}{5}{Hardware Abstraction Layer architecture showing provider-agnostic job submission through a factory-based interface supporting IBM Qiskit, AWS Braket, and Azure Quantum backends}{figure.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VIII}Experimental Evaluation}{5}{section.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-A}}Benchmark Design}{5}{subsection.8.1}\protected@file@percent }
 \citation{kandala2017}
-\citation{vinkhuijzen2023}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Experimental Evaluation}{6}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-A}}Benchmark Design}{6}{subsection.8.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-B}}Routing Accuracy}{6}{subsection.8.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-C}}Cost Analysis Results}{6}{subsection.8.3}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Representative Cost Comparison}}{6}{table.3}\protected@file@percent }
@@ -76,6 +75,7 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-D}}Cost Break-Even Analysis}{6}{subsection.8.4}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Classical Simulation Memory Requirements}}{6}{table.4}\protected@file@percent }
 \newlabel{tab:memory-scaling}{{IV}{6}{Classical Simulation Memory Requirements}{table.4}{}}
+\citation{vinkhuijzen2023}
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Cost scaling comparison of quantum hardware versus classical simulation across problem sizes measured in qubits, showing the cost parity crossover at approximately 57 qubits.}}{7}{figure.6}\protected@file@percent }
 \newlabel{fig:cost-scaling}{{6}{7}{Cost scaling comparison of quantum hardware versus classical simulation across problem sizes measured in qubits, showing the cost parity crossover at approximately 57 qubits}{figure.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-E}}Pipeline Performance}{7}{subsection.8.5}\protected@file@percent }
@@ -83,19 +83,18 @@
 \newlabel{tab:pipeline-timing}{{V}{7}{Pipeline Timing Metrics}{table.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-F}}Observations on Current Quantum Limitations}{7}{subsection.8.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-G}}End-to-End Case Studies}{7}{subsection.8.7}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Example system output for a 20-qubit QAOA graph partitioning workload. The pipeline extracts quantum features, detects high superposition and entanglement, and routes to quantum hardware via rule override at 0.805 confidence despite the \$2,240$\times $ cost premium over classical execution.}}{7}{figure.7}\protected@file@percent }
-\newlabel{fig:system-output}{{7}{7}{Example system output for a 20-qubit QAOA graph partitioning workload. The pipeline extracts quantum features, detects high superposition and entanglement, and routes to quantum hardware via rule override at 0.805 confidence despite the \$2,240$\times $ cost premium over classical execution}{figure.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-H}}System Latency and Cold Starts}{7}{subsection.8.8}\protected@file@percent }
 \citation{chinnaraju2025}
 \citation{heddad2025}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Example system output for a 20-qubit QAOA graph partitioning workload. The pipeline extracts quantum features, detects high superposition and entanglement, and routes to quantum hardware via rule override at 0.805 confidence despite the \$2,240$\times $ cost premium over classical execution.}}{8}{figure.7}\protected@file@percent }
+\newlabel{fig:system-output}{{7}{8}{Example system output for a 20-qubit QAOA graph partitioning workload. The pipeline extracts quantum features, detects high superposition and entanglement, and routes to quantum hardware via rule override at 0.805 confidence despite the \$2,240$\times $ cost premium over classical execution}{figure.7}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Nexar web interface showing analysis and routing results for the 20-qubit QAOA graph partitioning workload from Fig.~\ref {fig:system-output}.}}{8}{figure.8}\protected@file@percent }
 \newlabel{fig:frontend-screenshot}{{8}{8}{Nexar web interface showing analysis and routing results for the 20-qubit QAOA graph partitioning workload from Fig.~\ref {fig:system-output}}{figure.8}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-H}}System Latency and Cold Starts}{8}{subsection.8.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {IX}Discussion}{8}{section.9}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-A}}Decision Engine Effectiveness}{8}{subsection.9.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-B}}The Quantum Cost Paradox}{8}{subsection.9.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-C}}Limitations}{8}{subsection.9.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {X}Conclusion}{8}{section.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {XI}Future Work}{8}{section.11}\protected@file@percent }
 \bibcite{preskill2018}{1}
 \bibcite{ibm2023}{2}
 \bibcite{aws2023}{3}
@@ -132,6 +131,8 @@
 \bibcite{ibmpricing2024}{34}
 \bibcite{mccabe1976}{35}
 \bibcite{cirq2021}{36}
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Future Work}{9}{section.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{9}{section*.1}\protected@file@percent }
 \bibcite{ma2025}{37}
 \bibcite{chen2021}{38}
 \bibcite{wang2021}{39}
@@ -141,7 +142,6 @@
 \bibcite{zhou2020}{43}
 \bibcite{hothem2024}{44}
 \bibcite{scholten2024}{45}
-\@writefile{toc}{\contentsline {section}{References}{9}{section*.1}\protected@file@percent }
 \bibcite{jaschke2023}{46}
 \bibcite{szalay2021}{47}
 \bibcite{ascigil2022}{48}

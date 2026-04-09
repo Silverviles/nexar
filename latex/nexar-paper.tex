@@ -113,6 +113,7 @@ The question of when quantum advantage emerges has been studied through computat
 \section{System Architecture}
 
 Nexar is implemented as a microservices monorepo comprising six independently deployable services communicating through a central API Gateway. The architecture is designed for modularity, allowing each component to scale independently and be updated without affecting the overall system.
+The end-to-end service topology is illustrated in Fig.~\ref{fig:system-architecture}.
 
 \begin{figure}[htbp]
 \centering
@@ -128,6 +129,7 @@ The system follows a pipeline architecture: submitted source code passes through
 \section{Code Analysis Engine}
 
 The Code Analysis Engine serves as the analytical foundation of the pipeline, transforming raw source code into a structured feature set that downstream components consume.
+Its internal processing stages are shown in Fig.~\ref{fig:code-analysis}.
 
 \begin{figure}[htbp]
 \centering
@@ -159,6 +161,7 @@ The system selects the highest-confidence result, falling back through tiers whe
 \section{Decision Engine}
 
 The Decision Engine is the core component of Nexar. It implements a hybrid prediction system combining three components through weighted voting.
+Fig.~\ref{fig:decision-engine} summarizes the interaction among these components.
 
 \begin{figure}[htbp]
 \centering
@@ -193,6 +196,8 @@ Time complexity (encoded) & Complexity class: exponential, polynomial, etc. \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+The derived feature engineering used by the model is formally defined in Table~\ref{tab:derived-features}.
 
 \begin{table}[htbp]
 \caption{Derived Physics Features}
@@ -270,6 +275,7 @@ To verify that the ML component captures physically meaningful decision boundari
 \section{AI Code Converter}
 
 The AI Code Converter enables the platform to accept classical Python code and automatically translate it into quantum circuits when quantum execution is recommended.
+The converter workflow is presented in Fig.~\ref{fig:ai-code-converter}.
 
 \begin{figure}[htbp]
 \centering
@@ -302,6 +308,7 @@ Each translation candidate receives a three-tier suitability score (HIGH, MEDIUM
 \section{Hardware Abstraction Layer}
 
 The Hardware Abstraction Layer provides a provider-agnostic interface for quantum job submission and management. Supported providers include IBM, Azure Quantum and AWS Braket.
+Its provider-agnostic integration pattern is shown in Fig.~\ref{fig:hardware-abstraction}.
 
 \begin{figure}[htbp]
 \centering
@@ -341,7 +348,7 @@ The Decision Engine produced appropriate routing recommendations across all 100 
 
 \subsection{Cost Analysis Results}
 
-The cost analysis reveals the current economic landscape of quantum vs.\ classical computing:
+The cost analysis reveals the current economic landscape of quantum vs.\ classical computing, as summarized in Table~\ref{tab:cost-comparison}:
 
 \begin{table}[htbp]
 \caption{Representative Cost Comparison}
@@ -372,6 +379,7 @@ Across all 100 workloads, classical execution costs consistently approximate \$0
 Despite the current quantum cost premium, analysis of the cost scaling behavior reveals a fundamental crossover point driven by the exponential memory requirements of classical quantum simulation.
 
 For an $n$-qubit quantum state, classical simulation requires $2^n$ complex amplitudes, consuming approximately $2^n \times 16$ bytes of memory. This creates the following scaling:
+These simulation memory thresholds are summarized in Table~\ref{tab:memory-scaling}.
 
 \begin{table}[htbp]
 \caption{Classical Simulation Memory Requirements}
@@ -403,6 +411,7 @@ This analysis identifies three zones:
 \end{enumerate}
 
 It is important to note that the 50--60 qubit memory wall applies specifically to \emph{full state-vector simulation} of high-entanglement circuits. Approximate classical methods such as Tensor Network simulators --- in particular Matrix Product State (MPS) representations --- can simulate much larger circuits (100+ qubits) efficiently when the entanglement entropy remains bounded \cite{vinkhuijzen2023}. However, the algorithms central to Nexar's benchmark suite --- Shor's factoring, deep VQE ans\"{a}tze with nearest-neighbor CNOT ladders, and QAOA at high circuit depth --- generate entanglement that grows with circuit depth, rendering Tensor Network shortcuts inapplicable. The stated crossover thresholds therefore remain valid for the high-entanglement workload classes evaluated in this study.
+The crossover trend is visualized in Fig.~\ref{fig:cost-scaling}.
 
 \begin{figure}[htbp]
 \centering
@@ -412,6 +421,8 @@ It is important to note that the 50--60 qubit memory wall applies specifically t
 \end{figure}
 
 \subsection{Pipeline Performance}
+
+End-to-end timing metrics for both routing paths are reported in Table~\ref{tab:pipeline-timing}.
 
 \begin{table}[htbp]
 \caption{Pipeline Timing Metrics}
@@ -453,6 +464,7 @@ Our benchmark data reflects the limitations of current NISQ hardware:
 \textbf{Case A: Linear Search $\rightarrow$ Classical Routing.} A Python \texttt{for}-loop searching an unsorted 1,024-element array is submitted. The Code Analysis Engine detects $O(N)$ time complexity and CodeBERT classifies it as ``search'' (confidence 0.92). The AI Code Converter maps it to a 10-qubit Grover circuit. However, the cost analyzer estimates \$0.001 classical versus \$1.95 quantum. The weighted vote routes to Classical (confidence 0.88): the $O(\sqrt{N})$ speedup does not justify the 1,950$\times$ cost premium at this problem size, where $N = 1{,}024$ is the number of elements.
 
 \textbf{Case B: 120-Qubit VQE $\rightarrow$ Quantum Override.} A 120-qubit VQE ansatz with three variational layers and a nearest-neighbor CNOT ladder is submitted. Analysis extracts \texttt{qubits}$= 120$, \texttt{circuit\_depth}$= 14$, \texttt{cx\_gate\_ratio}$= 0.33$. The rule engine calculates that classical state-vector simulation would require $2^{120} \times 16$ bytes ($\sim$$10^{31}$ MB), triggering a \texttt{FORCE\_QUANTUM} override (confidence 1.0) that bypasses ML voting entirely. The HAL routes the job to a 127-qubit IBM Eagle processor.
+An example machine-readable decision trace is shown in Fig.~\ref{fig:system-output}.
 
 \begin{figure}[htbp]
 \centering
@@ -497,6 +509,8 @@ Classical Alt:& \$0.001 \;\;|\;\; Pipeline: 4.8s \\
 \caption{Example system output for a 20-qubit QAOA graph partitioning workload. The pipeline extracts quantum features, detects high superposition and entanglement, and routes to quantum hardware via rule override at 0.805 confidence despite the \$2,240$\times$ cost premium over classical execution.}
 \label{fig:system-output}
 \end{figure}
+
+The corresponding user-facing dashboard rendering is shown in Fig.~\ref{fig:frontend-screenshot}.
 
 \begin{figure}[htbp]
 \centering

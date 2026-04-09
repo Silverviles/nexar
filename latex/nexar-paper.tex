@@ -146,6 +146,29 @@ The engine supports five programming languages and frameworks: Python, Qiskit, C
 
 For all detected code, the engine computes classical software metrics via tree-sitter-based AST parsing, including cyclomatic complexity \cite{mccabe1976}, cognitive complexity, time and space complexity classification (from $O(1)$ to $O(2^n)$, where $n$ denotes the input size), and structural metrics (loop count, nesting depth). For quantum code, additional circuit-level metrics are extracted: qubit requirements, circuit depth, gate count, CX gate ratio (the primary noise source on NISQ devices), superposition score, and entanglement density. The complete feature set is summarized in Table~\ref{tab:raw-features}.
 
+\begin{table}[htbp]
+\caption{Raw Code Analysis Features}
+\label{tab:raw-features}
+\centering
+\footnotesize
+\begin{tabular}{p{0.35\columnwidth} p{0.55\columnwidth}}
+\toprule
+\textbf{Feature} & \textbf{Description} \\
+\midrule
+Problem size & Number of elements or variables \\
+Qubits required & Quantum bits needed \\
+Circuit depth & Sequential quantum gate layers \\
+Gate count & Total quantum gates \\
+CX gate ratio & Proportion of entangling gates (0--1) \\
+Superposition score & Superposition potential (0--1) \\
+Entanglement score & Entanglement density (0--1) \\
+Memory requirement (MB) & Classical RAM required \\
+Problem type (encoded) & Factorization, search, optimization, etc. \\
+Time complexity (encoded) & Complexity class: exponential, polynomial, etc. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Algorithm Classification}
 
 Algorithm detection employs a three-tier approach:
@@ -172,32 +195,7 @@ Fig.~\ref{fig:decision-engine} summarizes the interaction among these components
 
 \subsection{Feature Vector Design}
 
-The engine operates on a 16-feature input vector composed of 10 raw features and 6 derived physics features:
-
-\begin{table}[htbp]
-\caption{Raw Code Analysis Features}
-\label{tab:raw-features}
-\centering
-\footnotesize
-\begin{tabular}{p{0.35\columnwidth} p{0.55\columnwidth}}
-\toprule
-\textbf{Feature} & \textbf{Description} \\
-\midrule
-Problem size & Number of elements or variables \\
-Qubits required & Quantum bits needed \\
-Circuit depth & Sequential quantum gate layers \\
-Gate count & Total quantum gates \\
-CX gate ratio & Proportion of entangling gates (0--1) \\
-Superposition score & Superposition potential (0--1) \\
-Entanglement score & Entanglement density (0--1) \\
-Memory requirement (MB) & Classical RAM required \\
-Problem type (encoded) & Factorization, search, optimization, etc. \\
-Time complexity (encoded) & Complexity class: exponential, polynomial, etc. \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The derived feature engineering used by the model is formally defined in Table~\ref{tab:derived-features}.
+The engine operates on a 16-feature input vector composed of 10 raw features (Table~\ref{tab:raw-features}) and 6 derived physics features (Table~\ref{tab:derived-features}):
 
 \begin{table}[htbp]
 \caption{Derived Physics Features}

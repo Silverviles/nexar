@@ -27,7 +27,14 @@
       "Bash(curl -s http://localhost:8004/api/quantum/ibm-quantum/devices)",
       "Bash(python -m json.tool)",
       "Bash(npx tsc:*)",
-      "Bash(.venv/Scripts/python -c \":*)"
+      "Bash(.venv/Scripts/python -c \":*)",
+      "Bash(python 19_monte_carlo_option_pricing.py)",
+      "Bash(python benchmarks/workloads/classical/26_wavelet_transform_signal.py)",
+      "Bash(python benchmarks/workloads/classical/27_pagerank_algorithm.py)",
+      "Bash(python benchmarks/workloads/classical/28_rna_secondary_structure.py)",
+      "Bash(python benchmarks/workloads/classical/29_hidden_markov_viterbi.py)",
+      "Bash(python benchmarks/workloads/classical/30_matrix_inversion_gauss.py)",
+      "Bash(python 20_traveling_salesman_branch_bound.py)"
     ]
   }
 }

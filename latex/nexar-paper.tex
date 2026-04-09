@@ -8,6 +8,7 @@
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
 \usepackage[most]{tcolorbox}
+\usepackage{placeins}
 
 \begin{document}
 
@@ -463,8 +464,9 @@ Our benchmark data reflects the limitations of current NISQ hardware:
 
 \textbf{Case B: 120-Qubit VQE $\rightarrow$ Quantum Override.} A 120-qubit VQE ansatz with three variational layers and a nearest-neighbor CNOT ladder is submitted. Analysis extracts \texttt{qubits}$= 120$, \texttt{circuit\_depth}$= 14$, \texttt{cx\_gate\_ratio}$= 0.33$. The rule engine calculates that classical state-vector simulation would require $2^{120} \times 16$ bytes ($\sim$$10^{31}$ MB), triggering a \texttt{FORCE\_QUANTUM} override (confidence 1.0) that bypasses ML voting entirely. The HAL routes the job to a 127-qubit IBM Eagle processor.
 An example machine-readable decision trace is shown in Fig.~\ref{fig:system-output}.
+\FloatBarrier
 
-\begin{figure}[htbp]
+\begin{figure}[!h]
 \centering
 \begin{tcolorbox}[
   colback=white,
@@ -509,13 +511,15 @@ Classical Alt:& \$0.001 \;\;|\;\; Pipeline: 4.8s \\
 \end{figure}
 
 The corresponding user-facing dashboard rendering is shown in Fig.~\ref{fig:frontend-screenshot}.
+\FloatBarrier
 
-\begin{figure}[htbp]
+\begin{figure}[!h]
 \centering
 \includegraphics[width=\columnwidth]{system-output.png}
 \caption{Nexar web interface showing analysis and routing results for the 20-qubit QAOA graph partitioning workload from Fig.~\ref{fig:system-output}.}
 \label{fig:frontend-screenshot}
 \end{figure}
+\FloatBarrier
 
 \subsection{System Latency and Cold Starts}
 

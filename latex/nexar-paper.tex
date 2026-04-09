@@ -473,8 +473,8 @@ An example machine-readable decision trace is shown in Fig.~\ref{fig:system-outp
   colframe=black,
   boxrule=0.4pt,
   arc=1pt,
-  width=0.95\columnwidth,
-  left=3pt, right=3pt, top=3pt, bottom=3pt,
+  width=\columnwidth,
+  left=2pt, right=2pt, top=2pt, bottom=2pt,
   fontupper=\scriptsize\ttfamily
 ]
 \textsf{\textbf{INPUT}}\\[2pt]
@@ -499,7 +499,7 @@ Time Complexity:& O(n\textsuperscript{2}) & Memory: & 8 MB \\
 \vspace{3pt}
 
 \textsf{\textbf{DECISION}} \hfill \textsf{\textbf{QUANTUM}} (conf: 0.805)\\[2pt]
-\begin{tabular}{@{}l@{\;\;}l@{}}
+\begin{tabular}{@{}l@{\;\;}p{0.68\columnwidth}@{}}
 Rationale:    & {[RULE OVERRIDE]} High superposition \\
               & potential (1.00); Strong entanglement (0.51) \\
 Est. Cost:    & \$2.24 \;\;|\;\; Est. Time: 274ms \\

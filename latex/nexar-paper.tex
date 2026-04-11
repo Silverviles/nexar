@@ -240,29 +240,29 @@ The rule-based component encodes physics constraints and domain knowledge. Hardw
 
 \subsection{Cost Analysis Component (15\% Weight)}
 
-The cost analyzer estimates execution time and monetary cost for both quantum and classical execution paths.
+The cost analyzer estimates execution time and monetary cost for both quantum and classical execution paths, formalized by \eqref{eq:quantum-cost} and \eqref{eq:classical-cost}.
 
 Quantum Cost Model (based on real provider pricing):
 \begin{equation}
-C_q = C_{\text{base}} + (t_q \cdot r_{\text{QPU}}) + (n_{\text{shots}} \cdot r_{\text{shot}}) + (n_{\text{gates}} \cdot r_{\text{gate}})
+C_q = C_{\text{base}} + (t_q\, r_{\text{QPU}}) + (n_{\text{shots}}\, r_{\text{shot}}) + (n_{\text{gates}}\, r_{\text{gate}}),
+\label{eq:quantum-cost}
 \end{equation}
-
-Where $C_q$ is the total estimated quantum execution cost, $C_{\text{base}} = \$0.30$ (job submission fee), $t_q$ is the estimated quantum execution time in seconds, $r_{\text{QPU}} = \$1.60/\text{s}$ (Quantum Processing Unit (QPU) time rate), $n_{\text{shots}} = 1024$ (default shot count), $r_{\text{shot}} = \$0.00145$ (per-shot cost), $n_{\text{gates}}$ is the total gate count, and $r_{\text{gate}} = \$0.0001$ (per-gate cost).
+where $C_q$ is the total estimated quantum execution cost, $C_{\text{base}} = \$0.30$ (job submission fee), $t_q$ is the estimated quantum execution time in seconds, $r_{\text{QPU}} = \$1.60/\text{s}$ (Quantum Processing Unit (QPU) time rate), $n_{\text{shots}} = 1024$ (default shot count), $r_{\text{shot}} = \$0.00145$ (per-shot cost), $n_{\text{gates}}$ is the total gate count, and $r_{\text{gate}} = \$0.0001$ (per-gate cost).
 
 Classical Cost Model (AWS EC2 approximation):
 \begin{equation}
-C_c = (t_c \cdot r_{\text{compute}}) + (M_{\text{GB}} \cdot t_c \cdot r_{\text{memory}}) + C_{\text{overhead}}
+C_c = (t_c\, r_{\text{compute}}) + (M_{\text{GB}}\, t_c\, r_{\text{memory}}) + C_{\text{overhead}},
+\label{eq:classical-cost}
 \end{equation}
-
-Where $C_c$ is the total estimated classical execution cost, $t_c$ is the estimated classical execution time in seconds, $r_{\text{compute}} = \$0.0001/\text{s}$ ($\sim$\$0.36/hr) is the compute rate, $M_{\text{GB}}$ is the estimated memory usage in gigabytes, $r_{\text{memory}} = \$0.00001/\text{GB} \cdot \text{s}$ is the memory rate, and $C_{\text{overhead}} = \$0.001$ is the fixed overhead cost.
+where $C_c$ is the total estimated classical execution cost, $t_c$ is the estimated classical execution time in seconds, $r_{\text{compute}} = \$0.0001/\text{s}$ ($\sim$\$0.36/hr) is the compute rate, $M_{\text{GB}}$ is the estimated memory usage in gigabytes, $r_{\text{memory}} = \$0.00001/(\text{GB}\cdot\text{s})$ is the memory rate, and $C_{\text{overhead}} = \$0.001$ is the fixed overhead cost.
 
 \subsection{Decision Merging}
 
-The three components are merged through a weighted voting algorithm:
+The three components are merged through a weighted voting algorithm,
 \begin{equation}
-S_{\text{quantum}} = w_{\text{ML}} \cdot P_{\text{ML}}^{q} + w_{\text{rules}} \cdot P_{\text{rules}}^{q} + w_{\text{cost}} \cdot P_{\text{cost}}^{q}
+S_{\text{quantum}} = w_{\text{ML}}\, P_{\text{ML}}^{q} + w_{\text{rules}}\, P_{\text{rules}}^{q} + w_{\text{cost}}\, P_{\text{cost}}^{q},
+\label{eq:decision-score}
 \end{equation}
-
 where $S_{\text{quantum}}$ is the final quantum suitability score, $P_{\text{ML}}^{q}$ is the ML component's quantum probability, $P_{\text{rules}}^{q}$ is the rule-based component's quantum score, $P_{\text{cost}}^{q}$ is the cost component's quantum preference score, and $w_{\text{ML}} = 0.50$, $w_{\text{rules}} = 0.35$, $w_{\text{cost}} = 0.15$ are the respective component weights.
 
 Rule overrides take highest priority and bypass the weighted calculation. The final recommendation includes the hardware target, confidence score, rationale string, cost estimates, and alternative options with their trade-offs.
@@ -297,7 +297,7 @@ The converter uses a fine-tuned CodeT5-base model \cite{wang2021} --- a T5ForCon
         \item Swap $\rightarrow$ Quantum Swap
         \item Hidden Bitstring $\rightarrow$ Bernstein-Vazirani
     \end{itemize}
-    \item \textbf{Circuit Generation:} The matched code is formatted as the prompt \texttt{"Translate Python to quantum circuit:\textbackslash n\{code\}"}, tokenized with truncation at 256 tokens, and decoded using beam search (\texttt{num\_beams}$= 3$, \texttt{do\_sample}$=$True) with a maximum output length of 300 tokens. The model generates the target Qiskit circuit code including gate sequences, measurements, and classical register allocation. The training corpus comprises 1,500 curated examples across four algorithm families (factoring, search, period-finding, and random walk), generated from 12 base classical-to-quantum pairs augmented with 13 code-level transforms.
+    \item \textbf{Circuit Generation:} The matched code is formatted as the prompt \texttt{"Translate Python to quantum circuit:\textbackslash n\{code\}"}, tokenized with truncation at 256 tokens, and decoded using beam search (\texttt{num\_beams}=3, \texttt{do\_sample}=\texttt{True}) with a maximum output length of 300 tokens. The model generates the target Qiskit circuit code including gate sequences, measurements, and classical register allocation. The training corpus comprises 1,500 curated examples across four algorithm families (factoring, search, period-finding, and random walk), generated from 12 base classical-to-quantum pairs augmented with 13 code-level transforms.
 \end{enumerate}
 
 \subsection{Suitability Scoring}
@@ -462,7 +462,7 @@ Our benchmark data reflects the limitations of current NISQ hardware:
 
 \textbf{Case A: Linear Search $\rightarrow$ Classical Routing.} A Python \texttt{for}-loop searching an unsorted 1,024-element array is submitted. The Code Analysis Engine detects $O(N)$ time complexity and CodeBERT classifies it as ``search'' (confidence 0.92). The AI Code Converter maps it to a 10-qubit Grover circuit. However, the cost analyzer estimates \$0.001 classical versus \$1.95 quantum. The weighted vote routes to Classical (confidence 0.88): the $O(\sqrt{N})$ speedup does not justify the 1,950$\times$ cost premium at this problem size, where $N = 1{,}024$ is the number of elements.
 
-\textbf{Case B: 120-Qubit VQE $\rightarrow$ Quantum Override.} A 120-qubit VQE ansatz with three variational layers and a nearest-neighbor CNOT ladder is submitted. Analysis extracts \texttt{qubits}$= 120$, \texttt{circuit\_depth}$= 14$, \texttt{cx\_gate\_ratio}$= 0.33$. The rule engine calculates that classical state-vector simulation would require $2^{120} \times 16$ bytes ($\sim$$10^{31}$ MB), triggering a \texttt{FORCE\_QUANTUM} override (confidence 1.0) that bypasses ML voting entirely. The HAL routes the job to a 127-qubit IBM Eagle processor.
+\textbf{Case B: 120-Qubit VQE $\rightarrow$ Quantum Override.} A 120-qubit VQE ansatz with three variational layers and a nearest-neighbor CNOT ladder is submitted. Analysis extracts \texttt{qubits=120}, \texttt{circuit\_depth=14}, \texttt{cx\_gate\_ratio=0.33}. The rule engine calculates that classical state-vector simulation would require $2^{120} \times 16$ bytes ($\sim$$10^{31}$ MB), triggering a \texttt{FORCE\_QUANTUM} override (confidence 1.0) that bypasses ML voting entirely. The HAL routes the job to a 127-qubit IBM Eagle processor.
 An example machine-readable decision trace is shown in Fig.~\ref{fig:system-output}.
 \FloatBarrier
 
@@ -565,220 +565,89 @@ The platform's transparent assessment of current NISQ limitations -- where no wo
     \item \textbf{Dynamic Pricing Integration:} The current cost analyzer relies on static provider parameters (\$0.30 base fee, \$1.60/s QPU rate, \$0.00145/shot). As quantum cloud marketplaces mature, these should be replaced with real-time pricing oracles that query provider APIs for current spot-instance availability, queue-length-dependent pricing, and regional cost variations. This would improve cost estimate fidelity and enable the decision engine to exploit transient pricing windows where quantum execution becomes cost-competitive at lower qubit counts.
 \end{enumerate}
 
-\begin{thebibliography}{99}
+\begin{thebibliography}{27}
+% Entries are ordered by first citation in the manuscript (IEEEtran convention).
 
 \bibitem{preskill2018}
-J.~Preskill, ``Quantum Computing in the NISQ era and beyond,'' \emph{Quantum}, vol.~2, p.~79, 2018.
+J.~Preskill, ``Quantum computing in the NISQ era and beyond,'' \emph{Quantum}, vol.~2, p.~79, 2018.
+
+\bibitem{weder2021}
+B.~Weder, J.~Barzen, F.~Leymann, and M.~Salm, ``Automated quantum hardware selection for quantum workflows,'' \emph{Electronics}, vol.~10, no.~8, p.~984, Apr. 2021.
 
 \bibitem{ibm2023}
-IBM Quantum, ``Qiskit Runtime,'' IBM Research, 2023. Available: \url{https://quantum.ibm.com/}
+IBM Quantum, ``Qiskit Runtime,'' IBM Research, 2023. [Online]. Available: \url{https://quantum.ibm.com/}
 
 \bibitem{aws2023}
-Amazon Web Services, ``Amazon Braket -- Quantum Computing Service,'' 2023. Available: \url{https://aws.amazon.com/braket/}
+Amazon Web Services, ``Amazon Braket---quantum computing service,'' 2023. [Online]. Available: \url{https://aws.amazon.com/braket/}
 
 \bibitem{microsoft2023}
-Microsoft, ``Azure Quantum,'' 2023. Available: \url{https://azure.microsoft.com/en-us/products/quantum}
+Microsoft, ``Azure Quantum,'' 2023. [Online]. Available: \url{https://azure.microsoft.com/en-us/products/quantum}
+
+\bibitem{tang2024}
+W.~Tang \emph{et~al.}, ``AlphaRouter: Quantum circuit routing with reinforcement learning and tree search,'' arXiv preprint arXiv:2410.05115, Oct. 2024.
+
+\bibitem{zhan2025}
+X.~Zhan \emph{et~al.}, ``A full stack framework for high performance quantum-classical computing,'' arXiv preprint arXiv:2510.20128, Oct. 2025.
+
+\bibitem{lammers2025}
+M.~G.~Lammers, F.~H.~Holik, and A.~Fernandez, ``Quantum resource management in the NISQ era: Challenges, vision, and a runtime framework,'' arXiv preprint arXiv:2508.19276, Aug. 2025.
+
+\bibitem{hai2025}
+R.~Hai, S.-H.~Hung, T.~Coopmans, and F.~Geerts, ``Data management in the noisy intermediate-scale quantum era,'' \emph{Proc. VLDB Endow.}, vol.~18, no.~6, 2025.
 
 \bibitem{beverland2022}
 M.~Beverland \emph{et~al.}, ``Assessing requirements to scale to practical quantum advantage,'' arXiv preprint arXiv:2211.07629, 2022.
 
+\bibitem{quetschlich2024}
+N.~Quetschlich, M.~Soeken, P.~Murali, and R.~Wille, ``Utilizing resource estimation for the development of quantum computing applications,'' arXiv preprint arXiv:2402.12434, Aug. 2024.
+
+\bibitem{kashif2026}
+M.~Kashif, A.~Marchisio, and M.~Shafique, ``Closing the loop: Resource-aware hybrid NAS guided by analytical and hardware-calibrated quantum cost modeling,'' arXiv preprint arXiv:2603.00625, Mar. 2026.
+
 \bibitem{javadiabhari2015}
-A.~JavadiAbhari \emph{et~al.}, ``ScaffCC: Scalable compilation and analysis of quantum programs,'' \emph{Parallel Computing}, vol.~45, pp.~2--17, 2015.
+A.~JavadiAbhari \emph{et~al.}, ``ScaffCC: Scalable compilation and analysis of quantum programs,'' \emph{Parallel Comput.}, vol.~45, pp.~2--17, 2015.
 
 \bibitem{feng2020}
-Z.~Feng \emph{et~al.}, ``CodeBERT: A Pre-Trained Model for Programming and Natural Languages,'' in \emph{Findings of EMNLP}, 2020, pp.~1536--1547.
+Z.~Feng \emph{et~al.}, ``CodeBERT: A pre-trained model for programming and natural languages,'' in \emph{Findings of the Association for Computational Linguistics: EMNLP}, 2020, pp.~1536--1547.
+
+\bibitem{afrose2025}
+S.~Afrose, V.~Leyton-Ortega, and T.~Humble, ``Learning-based quantum compilation: Translating QASM to QIR with CodeBERT,'' in \emph{Proc. IEEE Int. Conf. Quantum Comput. Eng. (QCE)}, 2025, pp.~576--577.
 
 \bibitem{aaronson2011}
-S.~Aaronson and A.~Arkhipov, ``The computational complexity of linear optics,'' in \emph{Proc. 43rd STOC}, 2011, pp.~333--342.
+S.~Aaronson and A.~Arkhipov, ``The computational complexity of linear optics,'' in \emph{Proc. 43rd Annu. ACM Symp. Theory Comput. (STOC)}, 2011, pp.~333--342.
 
 \bibitem{arute2019}
 F.~Arute \emph{et~al.}, ``Quantum supremacy using a programmable superconducting processor,'' \emph{Nature}, vol.~574, pp.~505--510, 2019.
 
-\bibitem{kandala2017}
-A.~Kandala \emph{et~al.}, ``Hardware-efficient variational quantum eigensolver for small molecules and quantum magnets,'' \emph{Nature}, vol.~549, pp.~242--246, 2017.
-
-\bibitem{farhi2014}
-E.~Farhi, J.~Goldstone, and S.~Gutmann, ``A Quantum Approximate Optimization Algorithm,'' arXiv preprint arXiv:1411.4028, 2014.
-
-\bibitem{grover1996}
-L.~K.~Grover, ``A fast quantum mechanical algorithm for database search,'' in \emph{Proc. 28th STOC}, 1996, pp.~212--219.
-
-\bibitem{shor1997}
-P.~W.~Shor, ``Polynomial-time algorithms for prime factorization and discrete logarithms on a quantum computer,'' \emph{SIAM Journal on Computing}, vol.~26, no.~5, pp.~1484--1509, 1997.
-
-\bibitem{weder2021}
-B.~Weder, J.~Barzen, F.~Leymann, and M.~Salm, ``Automated Quantum Hardware Selection for Quantum Workflows,'' \emph{Electronics}, vol.~10, no.~8, p.~984, Apr. 2021.
-
-\bibitem{zhan2025}
-X.~Zhan \emph{et~al.}, ``A Full Stack Framework for High Performance Quantum-Classical Computing,'' arXiv preprint arXiv:2510.20128, Oct. 2025.
-
-\bibitem{lammers2025}
-M.~G.~Lammers, F.~H.~Holik, and A.~Fernandez, ``Quantum Resource Management in the NISQ Era: Challenges, Vision, and a Runtime Framework,'' arXiv preprint arXiv:2508.19276, Aug. 2025.
-
-\bibitem{afrose2025}
-S.~Afrose, V.~Leyton-Ortega, and T.~Humble, ``Learning-Based Quantum Compilation: Translating QASM to QIR with CodeBERT,'' in \emph{2025 IEEE International Conference on Quantum Computing and Engineering (QCE)}, 2025, pp.~576--577.
-
-\bibitem{kashif2026}
-M.~Kashif, A.~Marchisio, and M.~Shafique, ``Closing the Loop: Resource-aware Hybrid NAS Guided by Analytical and Hardware-Calibrated Quantum Cost Modeling,'' arXiv preprint arXiv:2603.00625, Mar. 2026.
-
-\bibitem{quetschlich2024}
-N.~Quetschlich, M.~Soeken, P.~Murali, and R.~Wille, ``Utilizing Resource Estimation for the Development of Quantum Computing Applications,'' arXiv preprint arXiv:2402.12434, Aug. 2024.
-
-\bibitem{tang2024}
-W.~Tang \emph{et~al.}, ``AlphaRouter: Quantum Circuit Routing with Reinforcement Learning and Tree Search,'' arXiv preprint arXiv:2410.05115, Oct. 2024.
-
-\bibitem{chinnaraju2025}
-A.~Chinnaraju, ``Hybrid Quantum-Classical Intelligence for Business: A Reference Architecture for Predictive Analytics and Decision Optimization,'' \emph{Journal of Advance and Future Research}, vol.~3, no.~12, Dec. 2025.
-
-\bibitem{heddad2025}
-R.~Heddad and L.~Bouanane, ``Hybrid Quantum-Classical Mixture of Experts: Unlocking Topological Advantage via Interference-Based Routing,'' arXiv preprint arXiv:2512.22296, Dec. 2025.
-
-\bibitem{hai2025}
-R.~Hai, S.-H.~Hung, T.~Coopmans, and F.~Geerts, ``Data Management in the Noisy Intermediate-Scale Quantum Era,'' \emph{Proceedings of the VLDB Endowment}, vol.~18, no.~6, 2025.
-
-\bibitem{osaba2024}
-E.~Osaba, E.~Villar-Rodriguez, A.~Gomez-Tejedor, and I.~Oregi, ``Hybrid quantum solvers in production: how to succeed in the NISQ era?,'' arXiv preprint arXiv:2401.10302, 2024.
-
-\bibitem{salm2022}
-M.~O.~Salm, J.~Barzen, F.~Leymann, and B.~Weder, ``Prioritization of Compiled Quantum Circuits for Different Quantum Computers,'' in \emph{IEEE International Conference on Software}, 2022.
-
-\bibitem{leonidas2023}
-I.~D.~Leonidas, A.~Dukakis, B.~Tan, and D.~G.~Angelakis, ``Qubit efficient quantum algorithms for the vehicle routing problem on quantum computers of the NISQ era,'' arXiv preprint arXiv:2306.08507, 2023.
-
-\bibitem{ammar2025}
-B.~B.~Ammar, ``SQL Injection Detection Using Fine-Tuned CodeBERT,'' \emph{Engineering, Technology and Applied Science Research}, vol.~15, no.~5, pp.~27852--27857, Oct. 2025.
+\bibitem{mccabe1976}
+T.~J.~McCabe, ``A complexity measure,'' \emph{IEEE Trans. Softw. Eng.}, vol.~SE-2, no.~4, pp.~308--320, Dec. 1976.
 
 \bibitem{vinkhuijzen2023}
-L.~Vinkhuijzen, T.~Coopmans, D.~Elkouss, V.~Dunjko, and A.~Laarman, ``LIMDD: A Decision Diagram for Simulation of Quantum Computing Including Stabilizer States,'' \emph{Quantum}, vol.~7, p.~1108, Sep. 2023.
-
-\bibitem{tannu2020}
-S.~S.~Tannu and M.~K.~Qureshi, ``A case for quantum-aware resource management in hybrid quantum-classical systems,'' \emph{Cluster Computing}, vol.~23, no.~2, pp.~1041--1056, 2020.
-
-\bibitem{khammassi2018}
-N.~Khammassi \emph{et~al.}, ``OpenQL: A portable quantum programming framework for quantum accelerators,'' in \emph{Proc. IEEE Int. Conf. Quantum Comput. Eng. (QCE)}, pp.~139--146, Sep. 2018.
+L.~Vinkhuijzen, T.~Coopmans, D.~Elkouss, V.~Dunjko, and A.~Laarman, ``LIMDD: A decision diagram for simulation of quantum computing including stabilizer states,'' \emph{Quantum}, vol.~7, p.~1108, Sep. 2023.
 
 \bibitem{simsek2023}
 S.~Simsek, A.~Ceran, and F.~Yildiz, ``Quantum circuit optimization using machine learning,'' arXiv preprint arXiv:2305.06585, May 2023.
 
-\bibitem{nielsen2010}
-M.~A.~Nielsen and I.~L.~Chuang, \emph{Quantum Computation and Quantum Information}. Cambridge University Press, 2010.
-
-\bibitem{kim2022}
-J.~Kim, J.~Lee, and S.~Kim, ``Quantum resource estimation for quantum algorithms,'' in \emph{Proc. IEEE Int. Conf. Quantum Comput. Eng. (QCE)}, pp.~512--519, Sep. 2022.
-
-\bibitem{ibmpricing2024}
-IBM, ``IBM Quantum Pricing,'' 2024. [Online]. Available: \url{https://quantum-computing.ibm.com/pricing}
-
-\bibitem{mccabe1976}
-T.~J.~McCabe, ``A complexity measure,'' \emph{IEEE Trans. Softw. Eng.}, vol.~SE-2, no.~4, pp.~308--320, Dec. 1976.
-
-\bibitem{cirq2021}
-Cirq Developers, ``Cirq: A Python framework for creating, editing, and invoking Noisy Intermediate Scale Quantum (NISQ) circuits,'' 2021. [Online]. Available: \url{https://github.com/quantumlib/Cirq}
-
-\bibitem{ma2025}
-N.~Ma and H.~Li, ``Understanding and Estimating the Execution Time of Quantum Circuits,'' \emph{ACM Trans. Softw. Eng. Methodol.}, 2025. DOI: 10.1145/3778031.
-
-\bibitem{chen2021}
-M.~Chen \emph{et~al.}, ``Evaluating Large Language Models Trained on Code,'' arXiv preprint arXiv:2107.03374, Jul. 2021.
+\bibitem{farhi2014}
+E.~Farhi, J.~Goldstone, and S.~Gutmann, ``A quantum approximate optimization algorithm,'' arXiv preprint arXiv:1411.4028, 2014.
 
 \bibitem{wang2021}
-Y.~Wang \emph{et~al.}, ``CodeT5: Identifier-Aware Unified Pre-Trained Encoder-Decoder Models for Code Understanding and Generation,'' arXiv preprint arXiv:2109.00859, Sep. 2021.
+Y.~Wang \emph{et~al.}, ``CodeT5: Identifier-aware unified pre-trained encoder-decoder models for code understanding and generation,'' arXiv preprint arXiv:2109.00859, Sep. 2021.
 
-\bibitem{byrd2023}
-G.~T.~Byrd and Y.~Ding, ``Quantum Computing: Progress and Innovation,'' \emph{IEEE Computer}, vol.~56, pp.~20--29, Jan. 2023.
+\bibitem{grover1996}
+L.~K.~Grover, ``A fast quantum mechanical algorithm for database search,'' in \emph{Proc. 28th Annu. ACM Symp. Theory Comput. (STOC)}, 1996, pp.~212--219.
 
-\bibitem{belkhir2022}
-M.~Belkhir, H.~Benkaouha, and E.~Benkhelifa, ``Quantum Vs Classical Computing: a Comparative Analysis,'' in \emph{2022 Seventh International Conference on Fog and Mobile Edge Computing (FMEC)}, 2022.
+\bibitem{shor1997}
+P.~W.~Shor, ``Polynomial-time algorithms for prime factorization and discrete logarithms on a quantum computer,'' \emph{SIAM J. Comput.}, vol.~26, no.~5, pp.~1484--1509, 1997.
 
-\bibitem{proctor2022}
-T.~Proctor, K.~Rudinger, K.~Young \emph{et~al.}, ``Measuring the capabilities of quantum computers,'' \emph{Nature Physics}, vol.~18, pp.~75--79, 2022.
+\bibitem{kandala2017}
+A.~Kandala \emph{et~al.}, ``Hardware-efficient variational quantum eigensolver for small molecules and quantum magnets,'' \emph{Nature}, vol.~549, pp.~242--246, 2017.
 
-\bibitem{zhou2020}
-Y.~Zhou, E.~M.~Stoudenmire, and X.~Waintal, ``What Limits the Simulation of Quantum Computers?,'' \emph{Physical Review X}, vol.~10, no.~4, Nov. 2020.
+\bibitem{chinnaraju2025}
+A.~Chinnaraju, ``Hybrid quantum-classical intelligence for business: A reference architecture for predictive analytics and decision optimization,'' \emph{J. Adv. Future Res.}, vol.~3, no.~12, Dec. 2025.
 
-\bibitem{hothem2024}
-D.~Hothem, A.~Miller, and T.~Proctor, ``What is my quantum computer good for? Quantum capability learning with physics-aware neural networks,'' in \emph{38th Conference on Neural Information Processing Systems (NeurIPS 2024)}, 2024.
-
-\bibitem{scholten2024}
-T.~L.~Scholten, C.~J.~Williams, D.~Moody, M.~Mosca, W.~Hurley, W.~J.~Zeng, M.~Troyer, and J.~M.~Gambetta, ``Assessing the Benefits and Risks of Quantum Computers,'' arXiv preprint, 2024.
-
-\bibitem{jaschke2023}
-D.~Jaschke and S.~Montangero, ``Is quantum computing green? An estimate for an energy-efficiency quantum advantage,'' \emph{Quantum Science and Technology}, vol.~8, no.~2, Jan. 2023.
-
-\bibitem{szalay2021}
-M.~Szalay, P.~M\'{a}tray, and L.~Toka, ``Real-time task scheduling in a FaaS cloud,'' in \emph{2021 IEEE 14th International Conference on Cloud Computing (CLOUD)}, 2021.
-
-\bibitem{ascigil2022}
-O.~Ascigil, A.~G.~Tasiopoulos, T.~K.~Phan, V.~Sourlas, I.~Psaras, and G.~Pavlou, ``Resource Provisioning and Allocation in Function-as-a-Service Edge-Clouds,'' \emph{IEEE Transactions on Services Computing}, vol.~15, no.~4, pp.~2410--2424, 2022.
-
-\bibitem{mantha2024}
-P.~Mantha, F.~J.~Kiwit, N.~Saurabh, S.~Jha, and A.~Luckow, ``Pilot-Quantum: A Quantum-HPC Middleware for Resource, Workload and Task Management,'' arXiv preprint, 2024.
-
-\bibitem{bova2021}
-F.~Bova, A.~Goldfarb, and R.~G.~Melko, ``Commercial applications of quantum computing,'' \emph{EPJ Quantum Technology}, vol.~8, no.~2, 2021.
-
-\bibitem{golec2024}
-M.~Golec, E.~S.~Hatay, M.~Golec, M.~Uyar, M.~Golec, and S.~S.~Gill, ``Quantum cloud computing: Trends and challenges,'' \emph{Journal of Economy and Technology}, vol.~2, pp.~190--199, 2024.
-
-\bibitem{adhikari2022}
-M.~Adhikari, ``Hybrid Computing Models Integrating Classical and Quantum Systems for Enhanced Computational Power: A Comprehensive Analysis,'' \emph{Journal of Advanced Computing Systems}, vol.~2, no.~12, pp.~1--9, 2022.
-
-\bibitem{asadi2024}
-A.~Asadi, A.~Dusko, C.-Y.~Park, V.~Michaud-Rioux, I.~Schoch, S.~Shu, T.~Vincent, and L.~J.~O'Riordan, ``Hybrid quantum programming with PennyLane Lightning on HPC platforms,'' arXiv preprint, 2024.
-
-\bibitem{mccaskey2020}
-A.~J.~McCaskey, D.~I.~Lyakh, E.~F.~Dumitrescu, S.~S.~Powers, and T.~S.~Humble, ``XACC: a system-level software infrastructure for heterogeneous quantum-classical computing,'' \emph{Quantum Science and Technology}, vol.~5, no.~2, 2020.
-
-\bibitem{xanadu2024}
-Xanadu, ``Pennylane plugins,'' 2024. [Online]. Available: \url{https://pennylane.ai/plugins/}
-
-\bibitem{rajan2018}
-R.~A.~P.~Rajan, ``Serverless Architecture -- A Revolution in Cloud Computing,'' in \emph{2018 Tenth International Conference on Advanced Computing (ICoAC)}, 2018.
-
-\bibitem{hamza2024}
-M.~Hamza, M.~A.~Akbar, and R.~Capilla, ``Understanding Cost Dynamics of Serverless Computing: An Empirical Study,'' in \emph{Lecture Notes in Business Information Processing}, vol.~500, Springer, Cham, 2024, pp.~456--470.
-
-\bibitem{sharker2024}
-M.~H.~Sharker and H.~A.~Karimi, ``Distributed and Parallel Computing,'' in \emph{Big Data}, 2nd ed., CRC Press, 2024, pp.~1--22.
-
-\bibitem{wang2015}
-D.~Wang, G.~Joshi, and G.~Wornell, ``Using Straggler Replication to Reduce Latency in Large-scale Parallel Computing,'' \emph{ACM SIGMETRICS Performance Evaluation Review}, vol.~43, no.~3, pp.~7--11, 2015.
-
-\bibitem{murali2019}
-P.~Murali, J.~M.~Baker, A.~Javadi-Abhari, F.~T.~Chong, and M.~Martonosi, ``Noise-adaptive compiler mappings for noisy intermediate-scale quantum computers,'' in \emph{Proceedings of the Twenty-Fourth International Conference on Architectural Support for Programming Languages and Operating Systems}, 2019, pp.~1015--1029.
-
-\bibitem{glos2022}
-A.~Glos, A.~Krawiec, and Z.~Zimbor\'{a}s, ``Space-efficient binary optimization for variational quantum computing,'' \emph{npj Quantum Information}, vol.~8, no.~39, Apr. 2022. DOI: 10.1038/s41534-022-00546-y.
-
-\bibitem{schuld2015}
-M.~Schuld, I.~Sinayskiy, and F.~Petruccione, ``An introduction to quantum machine learning,'' \emph{Contemporary Physics}, vol.~56, no.~2, 2015.
-
-\bibitem{zhao2023}
-P.~Zhao, X.~Wu, Z.~Li, and J.~Zhao, ``QChecker: Detecting Bugs in Quantum Programs via Static Analysis,'' in \emph{2023 IEEE/ACM 4th International Workshop on Quantum Software Engineering (Q-SE)}, 2023. DOI: 10.1109/Q-SE59154.2023.00014.
-
-\bibitem{lenovo2024}
-Lenovo, ``AST: Hierarchical Code Structure for Analysis,'' Lenovo US. [Online]. Available: \url{https://www.lenovo.com/}
-
-\bibitem{alexander2020}
-T.~Alexander, N.~Kanazawa, D.~J.~Egger, L.~Capelluto, C.~J.~Wood, A.~Javadi-Abhari, and D.~C.~McKay, ``Qiskit Pulse: programming quantum computers through the cloud with pulses, gates, and circuits,'' \emph{Quantum Science and Technology}, vol.~5, no.~4, p.~044006, 2020.
-
-\bibitem{cross2022}
-A.~Cross, A.~W.~Javadi-Abhari, T.~Alexander, N.~de~Beaudrap, L.~S.~Bishop, S.~Heidel, C.~A.~Ryan, P.~Sivarajah, J.~Smolin, J.~M.~Gambetta, and B.~R.~Johnson, ``OpenQASM 3: A broader and deeper quantum assembly language,'' \emph{ACM Transactions on Quantum Computing}, vol.~3, no.~3, pp.~1--50, 2022.
-
-\bibitem{nayak2023}
-P.~K.~Nayak, K.~V.~Kher, M.~B.~Chandra, M.~V.~Panduranga~Rao, and L.~Zhang, ``Q-PAC: Automated Detection of Quantum Bug-Fix Patterns,'' arXiv preprint arXiv:2311.17705, 2023.
-
-\bibitem{smith2016}
-R.~S.~Smith, M.~J.~Curtis, and W.~J.~Zeng, ``A Practical Quantum Instruction Set Architecture,'' arXiv preprint arXiv:1608.03355, Aug. 2016.
-
-\bibitem{chamberland2022}
-C.~Chamberland \emph{et~al.}, ``Universal quantum computing with twist-free and temporally encoded lattice surgery,'' \emph{PRX Quantum}, vol.~3, no.~1, p.~010331, 2022.
-
-\bibitem{pednault2017}
-E.~Pednault \emph{et~al.}, ``Pareto-Efficient Quantum Circuit Simulation Using Tensor Contraction Deferral,'' arXiv preprint arXiv:1710.05867, Oct. 2017.
-
-\bibitem{khammassi2018cqasm}
-N.~Khammassi, G.~G.~Guerreschi, I.~Ashraf, J.~W.~Hogaboam, C.~G.~Almudever, and K.~Bertels, ``cQASM v1.0: Towards a Common Quantum Assembly Language,'' arXiv preprint arXiv:1805.09607, May 2018.
+\bibitem{heddad2025}
+R.~Heddad and L.~Bouanane, ``Hybrid quantum-classical mixture of experts: Unlocking topological advantage via interference-based routing,'' arXiv preprint arXiv:2512.22296, Dec. 2025.
 
 \end{thebibliography}
 

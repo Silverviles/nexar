@@ -226,10 +226,21 @@ class QiskitParser(BaseParser):
         for child in ast.iter_child_nodes(node):
             self._extract_gates_with_loop_expansion(child, gates, loop_ctx)
 
+    # Number of leading rotation-parameter args to skip before qubit args.
+    # Qiskit API: circuit.ry(theta, qubit), circuit.cx(ctrl, tgt), etc.
+    _GATE_PARAM_COUNTS: Dict[str, int] = {
+        "rx": 1, "ry": 1, "rz": 1,
+        "cp": 1, "crx": 1, "cry": 1, "crz": 1, "cu1": 1,
+        "cu": 4, "cu3": 3,
+    }
+
     def _extract_gate_qubits_with_context(self, gate_name: str, args: List[ast.AST], loop_ctx: Dict[str, int]) -> (List[int], List[int]):
         """Extract qubit indices with loop context for variable resolution."""
+        # Skip leading parameter args (e.g. rotation angles) so they are not
+        # mistakenly treated as qubit indices.
+        n_params = self._GATE_PARAM_COUNTS.get(gate_name, 0)
         qubit_indices: List[int] = []
-        for arg in args:
+        for arg in args[n_params:]:
             qubit_indices.extend(self._extract_index_list_with_context(arg, loop_ctx))
 
         controlled_names = {
@@ -336,8 +347,9 @@ class QiskitParser(BaseParser):
         return measurements
 
     def _extract_gate_qubits(self, gate_name: str, args: List[ast.AST]) -> (List[int], List[int]):
+        n_params = self._GATE_PARAM_COUNTS.get(gate_name, 0)
         qubit_indices: List[int] = []
-        for arg in args:
+        for arg in args[n_params:]:
             qubit_indices.extend(self._extract_index_list(arg))
 
         controlled_names = {

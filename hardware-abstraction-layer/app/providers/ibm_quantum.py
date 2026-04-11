@@ -477,8 +477,29 @@ class IBMQuantumProvider(QuantumProvider):
         import builtins
         import math
 
+        # Build a restricted __import__ that only permits allowed modules.
+        # Without this, any `import` statement in user code raises ImportError
+        # even for modules that are already pre-loaded in the sandbox namespace.
+        allowed_mod_set = set(m.strip() for m in allowed_modules)
+
+        def _restricted_import(
+            name: str,
+            glbls=None,
+            lcls=None,
+            fromlist: tuple = (),
+            level: int = 0,
+        ):
+            base = name.split('.')[0]
+            if base not in allowed_mod_set:
+                raise ImportError(
+                    f"Import of '{name}' is not permitted in the sandbox. "
+                    f"Allowed modules: {sorted(allowed_mod_set)}"
+                )
+            return builtins.__import__(name, glbls, lcls, fromlist, level)
+
         # Create restricted builtins
         safe_builtins: Dict[str, Any] = {
+            '__import__': _restricted_import,
             'abs': builtins.abs,
             'all': builtins.all,
             'any': builtins.any,

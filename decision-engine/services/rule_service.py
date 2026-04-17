@@ -152,6 +152,59 @@ class RuleBasedSystem:
         logger.info(f"Evaluating rules for {input_data.problem_type.value} problem")
         
         # ---------------------------------------------------------
+        # STEP 0: PHYSICAL-NECESSITY OVERRIDE
+        # ---------------------------------------------------------
+        # Classical state-vector simulation of an n-qubit circuit requires
+        # 2^n complex amplitudes (16 bytes each). Beyond ~50 qubits the memory
+        # requirement exceeds any classical machine (16 PB), so quantum is the
+        # only physically viable execution path regardless of NISQ fidelity.
+        # Beyond 127 qubits (IBM Eagle), no current quantum backend can run
+        # the circuit either, so the problem must be rejected.
+        MEMORY_WALL_QUBITS = 50      # Paper Sec. IV.D: 50-60 qubit crossover
+        HW_QUBIT_LIMIT = self.quantum_hardware_limits['max_qubits']  # 127
+
+        q = input_data.qubits_required
+
+        if q > HW_QUBIT_LIMIT and q > MEMORY_WALL_QUBITS:
+            return {
+                'decision_type': RuleDecisionType.REJECT,
+                'hardware': None,
+                'confidence': 1.0,
+                'rationale': (
+                    f"[RULE OVERRIDE] Problem requires {q} qubits: exceeds current "
+                    f"quantum hardware ({HW_QUBIT_LIMIT}-qubit IBM Eagle) and "
+                    f"classical state-vector simulation is physically infeasible "
+                    f"(would require ~2^{q} amplitudes)."
+                ),
+                'compatibility': {
+                    'quantum_compatible': False,
+                    'classical_compatible': False,
+                    'quantum_issues': [f"Exceeds {HW_QUBIT_LIMIT}-qubit hardware limit"],
+                    'classical_issues': [f"State-vector simulation needs 2^{q} amplitudes"],
+                },
+                'rules_triggered': ['physical_necessity_reject'],
+            }
+
+        if MEMORY_WALL_QUBITS <= q <= HW_QUBIT_LIMIT:
+            return {
+                'decision_type': RuleDecisionType.FORCE_QUANTUM,
+                'hardware': HardwareType.QUANTUM,
+                'confidence': 1.0,
+                'rationale': (
+                    f"[RULE OVERRIDE] Problem requires {q} qubits: classical "
+                    f"state-vector simulation is infeasible (>16 PB memory); "
+                    f"quantum execution is the only physically viable path."
+                ),
+                'compatibility': {
+                    'quantum_compatible': True,
+                    'classical_compatible': False,
+                    'quantum_issues': [],
+                    'classical_issues': [f"State-vector simulation needs 2^{q} amplitudes"],
+                },
+                'rules_triggered': ['physical_necessity_quantum'],
+            }
+
+        # ---------------------------------------------------------
         # STEP 1: HARDWARE COMPATIBILITY CHECK
         # ---------------------------------------------------------
         compatibility = self._check_hardware_compatibility(input_data)

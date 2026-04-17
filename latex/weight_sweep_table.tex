@@ -1,0 +1,26 @@
+\begin{table}[!t]
+\caption{Decision-Merger Weight Sweep vs.\ Oracle Ground Truth (\textit{N}\,=\,100 workloads)}
+\label{tab:weight-sweep}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Weights} & \textbf{Acc.} & \textbf{Prec.(Q)} & \textbf{Rec.(Q)} & \textbf{F1(Q)} & \textbf{$\kappa$} \\
+(ML / Rules / Cost) & & & & & \\
+\midrule
+50 / 35 / 15$^{*}$$^{\dagger}$ & \textbf{0.810} & \textbf{0.381} & \textbf{0.571} & \textbf{0.457} & \textbf{0.382} \\
+45 / 40 / 15 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+40 / 45 / 15 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+40 / 50 / 10 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+35 / 50 / 15 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+35 / 55 / 10 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+30 / 55 / 15 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+30 / 60 / 10 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+25 / 65 / 10 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+20 / 70 / 10 & 0.810 & 0.381 & 0.571 & 0.457 & 0.382 \\
+\bottomrule
+\\[-0.5em]
+\multicolumn{6}{p{0.92\columnwidth}}{\footnotesize $^{*}$Current paper baseline. $^{\dagger}$Best configuration by F1 on the Quantum class (tie-broken by Cohen's $\kappa$, then accuracy).} \\
+\end{tabular}
+\end{table}

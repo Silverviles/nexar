@@ -1,0 +1,117 @@
+<mxfile host="app.diagrams.net" modified="2026-04-08" agent="Nexar" version="24.0">
+  <diagram id="decision-engine" name="Decision Engine">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Decision Engine" style="text;html=1;fontSize=22;fontStyle=1;align=center;fillColor=none;strokeColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="450" y="20" width="300" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- External Inputs -->
+        <mxCell id="code-metrics" value="Code Analysis Metrics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="hw-status" value="Hardware Status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="350" width="220" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pricing" value="Cloud Provider Pricing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f9a825;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="530" width="220" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Pipeline Components -->
+        <mxCell id="feature-ext" value="Feature Extractor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0891b2;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="120" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ml-model" value="ML Prediction Model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dc2626;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="250" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="rule-system" value="Rule-Based Validator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d97706;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="370" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cost-analyzer" value="Cost Analyzer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0369a1;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="490" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Decision Merger -->
+        <mxCell id="merger" value="Decision Merger" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#059669;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=3;strokeColor=#047857;" vertex="1" parent="1">
+          <mxGeometry x="730" y="330" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Feedback -->
+        <mxCell id="feedback" value="Adaptive Learning Loop" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=13;fontStyle=1;arcSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="180" width="220" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Outputs -->
+        <mxCell id="recommendation" value="Hardware Recommendation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16a34a;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="200" width="250" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="confidence" value="Confidence Score" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16a34a;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="270" width="250" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="cost-est" value="Cost Estimates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16a34a;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="340" width="250" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="alternatives" value="Alternative Options" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16a34a;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="410" width="250" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="rationale" value="Decision Rationale" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16a34a;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="480" width="250" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: Inputs to pipeline -->
+        <mxCell id="a1" value="Raw metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#1565c0;fontSize=10;fontStyle=2;" edge="1" source="code-metrics" target="feature-ext" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="Constraints" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#388e3c;fontSize=10;fontStyle=2;" edge="1" source="hw-status" target="rule-system" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="Pricing data" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#f9a825;fontSize=10;fontStyle=2;" edge="1" source="pricing" target="cost-analyzer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Pipeline flow -->
+        <mxCell id="a4" value="Feature vectors" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#0891b2;fontSize=10;fontStyle=2;" edge="1" source="feature-ext" target="ml-model" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" value="ML prediction" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#dc2626;fontSize=10;fontStyle=2;" edge="1" source="ml-model" target="merger" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" value="Rule validation" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#d97706;fontSize=10;fontStyle=2;" edge="1" source="rule-system" target="merger" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" value="Cost analysis" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#0369a1;fontSize=10;fontStyle=2;" edge="1" source="cost-analyzer" target="merger" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Merger to outputs -->
+        <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;" edge="1" source="merger" target="recommendation" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;" edge="1" source="merger" target="confidence" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;" edge="1" source="merger" target="cost-est" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;" edge="1" source="merger" target="alternatives" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;" edge="1" source="merger" target="rationale" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Feedback loop -->
+        <mxCell id="a13" value="Execution outcomes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c62828;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="merger" target="feedback" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a14" value="Retrain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c62828;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="feedback" target="ml-model" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

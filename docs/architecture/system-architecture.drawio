@@ -1,0 +1,132 @@
+<mxfile host="app.diagrams.net" modified="2026-04-08" agent="Nexar" version="24.0">
+  <diagram id="system-arch" name="System Architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Nexar — System Architecture" style="text;html=1;fontSize=24;fontStyle=1;align=center;fillColor=none;strokeColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="380" y="15" width="440" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Quantum-Classical Code Router" style="text;html=1;fontSize=13;fontStyle=2;align=center;fillColor=none;strokeColor=none;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="460" y="50" width="280" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- User -->
+        <mxCell id="user" value="User" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#374151;fontColor=#ffffff;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="90" width="40" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Frontend -->
+        <mxCell id="frontend" value="Frontend (React + Vite)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3b82f6;fontColor=#ffffff;fontSize=15;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="430" y="170" width="340" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- API Gateway -->
+        <mxCell id="api-gw" value="API Gateway (Express.js)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f59e0b;fontColor=#ffffff;fontSize=15;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="430" y="280" width="340" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Python Services -->
+        <mxCell id="cae" value="Code Analysis Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#8b5cf6;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="250" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="de" value="Decision Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ef4444;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="340" y="420" width="250" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="acc" value="AI Code Converter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10b981;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="640" y="420" width="250" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="hal" value="Hardware Abstraction Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#06b6d4;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="940" y="420" width="260" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Port labels -->
+        <mxCell id="p1" value="Port 5173" style="text;html=1;fontSize=10;fontStyle=0;fillColor=none;strokeColor=none;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="770" y="180" width="60" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="Port 3000" style="text;html=1;fontSize=10;fontStyle=0;fillColor=none;strokeColor=none;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="770" y="290" width="60" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="Port 8002" style="text;html=1;fontSize=10;fontStyle=0;fillColor=none;strokeColor=none;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="110" y="478" width="60" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="Port 8003" style="text;html=1;fontSize=10;fontStyle=0;fillColor=none;strokeColor=none;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="415" y="478" width="60" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="Port 8001" style="text;html=1;fontSize=10;fontStyle=0;fillColor=none;strokeColor=none;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="715" y="478" width="60" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p6" value="Port 8004" style="text;html=1;fontSize=10;fontStyle=0;fillColor=none;strokeColor=none;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="478" width="60" height="15" as="geometry" />
+        </mxCell>
+
+        <!-- ML Models -->
+        <mxCell id="ml-models" value="ML Models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="540" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="de-models" value="ML Models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="540" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="llm" value="LLM Provider" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#be185d;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="700" y="540" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Quantum Backends -->
+        <mxCell id="ibm" value="IBM Quantum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565c0;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="540" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="aws" value="Amazon Braket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e65100;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="540" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="azure" value="Azure Quantum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0097a7;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="600" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="local-sim" value="Local Simulator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#455a64;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="600" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Infrastructure -->
+        <mxCell id="infra-label" value="Infrastructure" style="text;html=1;fontSize=11;fontStyle=5;fillColor=none;strokeColor=none;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="40" y="665" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="docker" value="Docker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#546e7a;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="690" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="gcp" value="Google Cloud Run" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#546e7a;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="690" width="140" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="terraform" value="Terraform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#546e7a;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="320" y="690" width="100" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Main flow arrows -->
+        <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#374151;" edge="1" source="user" target="frontend" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a2" value="REST API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#3b82f6;fontSize=10;fontStyle=2;" edge="1" source="frontend" target="api-gw" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- API to services -->
+        <mxCell id="a3" value="1. Analyze" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8b5cf6;fontSize=10;fontStyle=2;" edge="1" source="api-gw" target="cae" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a4" value="3. Route" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#ef4444;fontSize=10;fontStyle=2;" edge="1" source="api-gw" target="de" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a5" value="4. Convert" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#10b981;fontSize=10;fontStyle=2;" edge="1" source="api-gw" target="acc" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Inter-service -->
+        <mxCell id="a6" value="2. Analysis results" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8b5cf6;fontSize=10;fontStyle=2;" edge="1" source="cae" target="de" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="165" y="510" /><mxPoint x="465" y="510" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a7" value="5. Execute circuit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#06b6d4;fontSize=10;fontStyle=2;" edge="1" source="acc" target="hal" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="765" y="510" /><mxPoint x="1070" y="510" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- To backends -->
+        <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#c62828;" edge="1" source="cae" target="ml-models" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#c62828;" edge="1" source="de" target="de-models" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#be185d;" edge="1" source="acc" target="llm" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#1565c0;" edge="1" source="hal" target="ibm" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#e65100;" edge="1" source="hal" target="aws" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#0097a7;" edge="1" source="hal" target="azure" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#455a64;" edge="1" source="hal" target="local-sim" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Feedback loop -->
+        <mxCell id="a15" value="Feedback loop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#c62828;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="de" target="cae" parent="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="465" y="400" /><mxPoint x="165" y="400" /></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

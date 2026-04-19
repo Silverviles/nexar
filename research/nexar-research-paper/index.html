@@ -1,0 +1,2083 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Intelligent Quantum-Classical Code Routing Platform">
+      
+      
+      
+        <link rel="canonical" href="https://silverviles.github.io/nexar/research/nexar-research-paper/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>NEXAR: Intelligent Quantum-Classical Workload Routing Platform - Nexar</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#nexar-intelligent-quantum-classical-workload-routing-platform" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Nexar" class="md-header__button md-logo" aria-label="Nexar" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Nexar
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              NEXAR: Intelligent Quantum-Classical Workload Routing Platform
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Silverviles/nexar" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Silverviles/nexar
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../project-description/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Project Description
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/setup/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../architecture/overview/" class="md-tabs__link">
+          
+  
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../proposals/" class="md-tabs__link">
+          
+  
+  
+  Research
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Nexar" class="md-nav__button md-logo" aria-label="Nexar" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Nexar
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Silverviles/nexar" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Silverviles/nexar
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../project-description/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Description
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Services
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/services/api-gateway/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Gateway
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/services/code-analysis-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Analysis Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/services/decision-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/services/ai-code-converter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Code Converter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/services/hardware-abstraction-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Abstraction Layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/services/frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Proposals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proposals/ai-code-converter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Code Converter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proposals/code-analysis-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Analysis Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proposals/decision-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proposals/hardware-abstraction-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Abstraction Layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress Reports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Progress Reports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress-reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress-reports/ai-code-converter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Code Converter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress-reports/code-analysis-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Analysis Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress-reports/decision-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress-reports/hardware-abstraction-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Abstraction Layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment-report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="nexar-intelligent-quantum-classical-workload-routing-platform">NEXAR: Intelligent Quantum-Classical Workload Routing Platform<a class="headerlink" href="#nexar-intelligent-quantum-classical-workload-routing-platform" title="Permanent link">&para;</a></h1>
+<hr />
+<p><strong>Prasad H G A T</strong>$^1$, <strong>Jayasinghe Y L</strong>$^1$, <strong>Hettiarachchi S R</strong>$^1$, <strong>Siriwardhana A H L T S</strong>$^1$</p>
+<p>$^1$ Sri Lanka Institute of Information Technology (SLIIT)</p>
+<hr />
+<h2 id="abstract">Abstract<a class="headerlink" href="#abstract" title="Permanent link">&para;</a></h2>
+<p>Determining whether a computational workload benefits from quantum or classical execution remains a key challenge in the current Noisy Intermediate-Scale Quantum (NISQ) era. This paper presents <strong>Nexar</strong>, an intelligent workload routing platform that analyzes source code characteristics and predicts the optimal execution target by jointly optimizing for cost and execution time. The system employs a hybrid decision framework combining: (1) a machine learning ensemble trained on a 16-feature vector capturing circuit complexity, entanglement properties, and NISQ viability metrics; (2) a physics-aware rule-based engine enforcing hardware constraints and algorithm-specific routing logic; and (3) a real-time cost analyzer estimating execution time and monetary cost across multiple quantum providers and classical compute. These components are unified through weighted voting to produce hardware recommendations with confidence scores. The platform incorporates automated code analysis --- including algorithm classification via CodeBERT and quantum circuit characterization --- to extract workload features without manual annotation. We evaluate the system across 30 diverse workload types including search, factorization, optimization, and simulation problems, demonstrating that the framework consistently identifies cost-effective and time-efficient execution targets while serving as a practical decision-support tool for hybrid quantum-classical computing environments.</p>
+<p><strong>Keywords:</strong> quantum computing, workload routing, NISQ, decision engine, hybrid computing, cost analysis, CodeBERT, quantum advantage</p>
+<hr />
+<h2 id="1-introduction">1. Introduction<a class="headerlink" href="#1-introduction" title="Permanent link">&para;</a></h2>
+<p>The advent of Noisy Intermediate-Scale Quantum (NISQ) devices [1] has created an unprecedented challenge in computational resource allocation: given a workload, should it execute on classical hardware, a quantum simulator, or a real quantum device? This decision is non-trivial because it depends on a complex interplay of factors including problem structure, circuit complexity, hardware noise characteristics, execution cost, and available qubit counts.</p>
+<p>Current quantum devices --- such as IBM's 127-qubit Eagle processors --- operate in a regime where noise, limited connectivity, and decoherence constrain the problems that can be solved with quantum advantage. Classical simulation of quantum circuits remains feasible for systems up to approximately 50 qubits, beyond which memory requirements grow exponentially as $O(2^n)$. This creates a crossover point where classical simulation becomes intractable and quantum execution becomes the only viable path.</p>
+<p>However, simply having a quantum device does not guarantee advantage. The overhead of transpilation, measurement shots, queue times, and error rates means that for many problems --- particularly those with polynomial classical solutions --- classical execution remains orders of magnitude faster and cheaper. The challenge, therefore, is not whether quantum computing will eventually provide advantage, but rather <em>when</em> and <em>for which problems</em> it does so today.</p>
+<p>This paper addresses this challenge by presenting Nexar, a full-stack platform that automates the analysis, classification, and routing of computational workloads across quantum and classical execution backends. Nexar's contributions are:</p>
+<ol>
+<li>
+<p><strong>Automated Code Analysis Pipeline</strong>: A multi-dimensional analysis engine that detects programming languages across five quantum and classical frameworks, computes complexity metrics, and classifies algorithms using a three-tier approach combining CodeBERT transformers, ensemble machine learning, and rule-based pattern matching.</p>
+</li>
+<li>
+<p><strong>Hybrid Decision Engine</strong>: A three-component decision framework that merges ML predictions (50% weight), physics-aware rules (35% weight), and real-time cost analysis (15% weight) through weighted voting to produce hardware recommendations with calibrated confidence scores.</p>
+</li>
+<li>
+<p><strong>Provider-Agnostic Execution Layer</strong>: A hardware abstraction layer supporting IBM Qiskit, AWS Braket, and Azure Quantum through a unified API, enabling transparent workload routing across heterogeneous quantum backends.</p>
+</li>
+<li>
+<p><strong>Empirical Evaluation</strong>: A comprehensive benchmark across 30 workloads spanning classical computation, hybrid quantum-classical algorithms, and pure quantum circuits, with cost and performance analysis demonstrating the system's routing accuracy and the current state of quantum-classical cost tradeoffs.</p>
+</li>
+</ol>
+<hr />
+<h2 id="2-related-work">2. Related Work<a class="headerlink" href="#2-related-work" title="Permanent link">&para;</a></h2>
+<h3 id="21-quantum-classical-hybrid-frameworks">2.1 Quantum-Classical Hybrid Frameworks<a class="headerlink" href="#21-quantum-classical-hybrid-frameworks" title="Permanent link">&para;</a></h3>
+<p>Several frameworks have emerged to bridge quantum and classical computing. Qiskit Runtime [2] provides session-based quantum execution with classical co-processing. Amazon Braket [3] offers a multi-provider interface but lacks automated workload analysis. Azure Quantum [4] provides resource estimation but does not perform code-level analysis for routing decisions. Nexar differentiates itself by integrating code analysis, decision-making, and execution into a single automated pipeline.</p>
+<h3 id="22-quantum-resource-estimation">2.2 Quantum Resource Estimation<a class="headerlink" href="#22-quantum-resource-estimation" title="Permanent link">&para;</a></h3>
+<p>Resource estimation for quantum algorithms has been studied extensively. Beverland et al. [5] developed methods for estimating logical qubit requirements for fault-tolerant algorithms. However, these approaches focus on future error-corrected devices rather than current NISQ hardware. Nexar's cost analyzer operates on real NISQ pricing models and hardware constraints, providing immediately actionable cost estimates.</p>
+<h3 id="23-algorithm-classification-and-code-analysis">2.3 Algorithm Classification and Code Analysis<a class="headerlink" href="#23-algorithm-classification-and-code-analysis" title="Permanent link">&para;</a></h3>
+<p>Static code analysis for quantum programs has been explored in works such as ScaffCC [6] and Q# compiler toolchains. CodeBERT [7], a pre-trained model for programming language understanding, has shown strong performance on code classification tasks. Nexar extends these approaches by combining AST-based analysis with CodeBERT for quantum algorithm detection, enabling classification across five quantum programming frameworks.</p>
+<h3 id="24-quantum-advantage-thresholds">2.4 Quantum Advantage Thresholds<a class="headerlink" href="#24-quantum-advantage-thresholds" title="Permanent link">&para;</a></h3>
+<p>The question of when quantum advantage emerges has been studied through computational complexity theory [8] and empirical benchmarks [9]. Our work contributes empirical data on cost-based crossover points using real provider pricing, demonstrating that the quantum advantage threshold is approximately 50--60 qubits for cost parity and beyond 120 qubits for clear quantum superiority in simulation tasks.</p>
+<hr />
+<h2 id="3-system-architecture">3. System Architecture<a class="headerlink" href="#3-system-architecture" title="Permanent link">&para;</a></h2>
+<p>Nexar is implemented as a microservices monorepo comprising six independently deployable services communicating through a central API Gateway. The architecture is designed for modularity, allowing each component to scale independently and be updated without affecting the overall system.</p>
+<h3 id="31-architecture-overview">3.1 Architecture Overview<a class="headerlink" href="#31-architecture-overview" title="Permanent link">&para;</a></h3>
+<p>The system follows a pipeline architecture with the following request flow:</p>
+<ol>
+<li><strong>Code Submission</strong>: Users submit source code through a React-based frontend.</li>
+<li><strong>Authentication and Routing</strong>: An Express.js API Gateway authenticates requests via JWT and routes them to backend services.</li>
+<li><strong>Code Analysis</strong>: The Code Analysis Engine performs multi-dimensional analysis including language detection, complexity computation, and algorithm classification.</li>
+<li><strong>Routing Decision</strong>: The Decision Engine consumes analysis metrics and produces a hardware recommendation.</li>
+<li><strong>Code Conversion</strong> (optional): If quantum execution is selected and the code is classical, the AI Code Converter translates it to quantum circuits.</li>
+<li><strong>Execution</strong>: The Hardware Abstraction Layer submits jobs to the selected quantum or classical backend.</li>
+</ol>
+<h3 id="32-service-specifications">3.2 Service Specifications<a class="headerlink" href="#32-service-specifications" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Stack</th>
+<th>Port</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>React 18, TypeScript, Vite, Tailwind CSS</td>
+<td>5173</td>
+<td>User interface, visualization</td>
+</tr>
+<tr>
+<td>API Gateway</td>
+<td>Express 5, TypeScript</td>
+<td>3000</td>
+<td>Authentication, proxying, logging</td>
+</tr>
+<tr>
+<td>Code Analysis Engine</td>
+<td>FastAPI, Python, CodeBERT, tree-sitter</td>
+<td>8002</td>
+<td>Language detection, metrics, classification</td>
+</tr>
+<tr>
+<td>Decision Engine</td>
+<td>FastAPI, Python, scikit-learn, XGBoost</td>
+<td>8003</td>
+<td>ML-based routing prediction</td>
+</tr>
+<tr>
+<td>AI Code Converter</td>
+<td>FastAPI, Python, Transformers</td>
+<td>8001</td>
+<td>Classical-to-quantum translation</td>
+</tr>
+<tr>
+<td>Hardware Abstraction Layer</td>
+<td>FastAPI, Python, Qiskit, Braket SDK</td>
+<td>8004</td>
+<td>Multi-provider job execution</td>
+</tr>
+</tbody>
+</table>
+<p>All services are containerized with Docker and deployed to Google Cloud Platform via Cloud Run, with infrastructure managed through Terraform.</p>
+<hr />
+<h2 id="4-code-analysis-engine">4. Code Analysis Engine<a class="headerlink" href="#4-code-analysis-engine" title="Permanent link">&para;</a></h2>
+<p>The Code Analysis Engine serves as the analytical foundation of the pipeline, transforming raw source code into a structured feature set that downstream components consume.</p>
+<h3 id="41-language-detection">4.1 Language Detection<a class="headerlink" href="#41-language-detection" title="Permanent link">&para;</a></h3>
+<p>The engine supports five programming languages and frameworks: Python, Qiskit, Cirq, Q#, and OpenQASM. Detection uses an ML-based classifier achieving confidence scores above 0.85 across all evaluated workloads. In our benchmark, average language detection confidence was 0.955 (sd = 0.028) across 30 workloads.</p>
+<h3 id="42-classical-metrics-extraction">4.2 Classical Metrics Extraction<a class="headerlink" href="#42-classical-metrics-extraction" title="Permanent link">&para;</a></h3>
+<p>For all detected code, the engine computes classical software metrics using tree-sitter-based AST parsing:</p>
+<ul>
+<li><strong>Cyclomatic Complexity</strong>: Measures the number of independent execution paths. Values in our benchmark ranged from 2 to 31.</li>
+<li><strong>Cognitive Complexity</strong>: Assesses human comprehension difficulty, ranging from 0 to 39 across workloads.</li>
+<li><strong>Time Complexity Classification</strong>: Inferred from loop structure and recursion patterns --- classes include $O(1)$, $O(n)$, $O(n \log n)$, $O(n^2)$, $O(n^3)$, $O(n^k)$, and $O(2^n)$.</li>
+<li><strong>Space Complexity</strong>: Estimated from data structure allocation patterns.</li>
+<li><strong>Structural Metrics</strong>: Loop count, conditional count, function count, and nesting depth.</li>
+</ul>
+<h3 id="43-quantum-metrics-extraction">4.3 Quantum Metrics Extraction<a class="headerlink" href="#43-quantum-metrics-extraction" title="Permanent link">&para;</a></h3>
+<p>For quantum code, additional metrics are extracted:</p>
+<ul>
+<li><strong>Qubit Requirements</strong>: The number of qubits needed for circuit execution.</li>
+<li><strong>Circuit Depth</strong>: The number of sequential gate layers, directly impacting decoherence.</li>
+<li><strong>Gate Count and CX Gate Ratio</strong>: Total gates and the proportion of two-qubit entangling gates (CNOT/CX), which are the primary source of noise on NISQ devices.</li>
+<li><strong>Superposition Score</strong> (0--1): Quantifies the degree of superposition in the circuit.</li>
+<li><strong>Entanglement Score</strong> (0--1): Measures entanglement density, a key indicator of quantum advantage potential.</li>
+</ul>
+<h3 id="44-algorithm-classification">4.4 Algorithm Classification<a class="headerlink" href="#44-algorithm-classification" title="Permanent link">&para;</a></h3>
+<p>Algorithm detection employs a three-tier approach:</p>
+<ol>
+<li><strong>CodeBERT Transformer</strong>: A fine-tuned CodeBERT model classifies the algorithm family (e.g., search, optimization, factorization, simulation) based on code semantics.</li>
+<li><strong>ML Ensemble Classifier</strong>: A scikit-learn ensemble provides a secondary classification using extracted feature vectors.</li>
+<li><strong>Rule-Based Pattern Matching</strong>: Deterministic rules identify known quantum patterns (e.g., QFT patterns, Grover oracle structures, VQE ansatz patterns).</li>
+</ol>
+<p>The system selects the highest-confidence result, falling back through tiers when confidence is below threshold.</p>
+<hr />
+<h2 id="5-decision-engine">5. Decision Engine<a class="headerlink" href="#5-decision-engine" title="Permanent link">&para;</a></h2>
+<p>The Decision Engine is the central intelligence of Nexar. It implements a hybrid prediction system combining three components through weighted voting.</p>
+<h3 id="51-feature-vector-design">5.1 Feature Vector Design<a class="headerlink" href="#51-feature-vector-design" title="Permanent link">&para;</a></h3>
+<p>The engine operates on a 16-feature input vector composed of 10 raw features and 6 derived physics features:</p>
+<p><strong>Raw Features (10):</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>problem_size</code></td>
+<td>Number of elements or variables</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>qubits_required</code></td>
+<td>Quantum bits needed</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>circuit_depth</code></td>
+<td>Sequential quantum gate layers</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>gate_count</code></td>
+<td>Total quantum gates</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>cx_gate_ratio</code></td>
+<td>Proportion of entangling gates (0--1)</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>superposition_score</code></td>
+<td>Superposition potential (0--1)</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>entanglement_score</code></td>
+<td>Entanglement density (0--1)</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>memory_requirement_mb</code></td>
+<td>Classical RAM required</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>problem_type_encoded</code></td>
+<td>Categorical: factorization, search, optimization, etc.</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>time_complexity_encoded</code></td>
+<td>Complexity class: exponential, polynomial, etc.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Derived Physics Features (6):</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Formula</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11</td>
+<td>Circuit Volume</td>
+<td>$qubits \times depth$</td>
+<td>Quantum resource intensity</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Noise Sensitivity</td>
+<td>$qubits \times depth \times cx_ratio$</td>
+<td>Error accumulation prediction</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Quantum Overhead Ratio</td>
+<td>$problem_size / qubits$</td>
+<td>Encoding efficiency</td>
+</tr>
+<tr>
+<td>14</td>
+<td>NISQ Viability Score</td>
+<td>Composite penalty function</td>
+<td>Feasibility on current hardware</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Gate Density</td>
+<td>$gate_count / qubits$</td>
+<td>Operational complexity per qubit</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Entanglement Factor</td>
+<td>$cx_ratio \times entanglement$</td>
+<td>Combined entanglement potential</td>
+</tr>
+</tbody>
+</table>
+<p>The NISQ Viability Score applies penalties when qubits exceed 50, circuit depth exceeds 1,000, or circuit volume exceeds 50,000, reflecting the practical limits of current hardware.</p>
+<h3 id="52-ml-model-component-50-weight">5.2 ML Model Component (50% Weight)<a class="headerlink" href="#52-ml-model-component-50-weight" title="Permanent link">&para;</a></h3>
+<p>The ML component uses a Random Forest / Neural Network ensemble trained on 10,000+ synthetic problem instances. These instances were procedurally generated using the platform's internal dataset generators (via AST mutation and algorithmic variation pipelines) to ensure a balanced representation of classical, quantum-favorable, and hybrid characteristics. The model performs binary classification (Quantum=1, Classical=0) and outputs calibrated probability estimates.</p>
+<p><strong>Training Process:</strong>
+1. Feature vectors are standardized using z-score normalization.
+2. The model is trained with stratified cross-validation.
+3. Output probabilities are calibrated using Platt scaling.</p>
+<p>The ML component achieves approximately 87% accuracy on held-out test data with 50--100ms inference latency.</p>
+<h3 id="53-rule-based-system-35-weight">5.3 Rule-Based System (35% Weight)<a class="headerlink" href="#53-rule-based-system-35-weight" title="Permanent link">&para;</a></h3>
+<p>The rule-based component encodes physics constraints and domain knowledge:</p>
+<p><strong>Hardware Capability Constraints:</strong>
+- Maximum qubits: 127 (IBM Eagle processor limit)
+- Maximum circuit depth: 10,000
+- Minimum qubits for quantum routing: 2</p>
+<p><strong>Problem-Type Routing Rules:</strong>
+- <strong>Quantum-favorable</strong>: Factorization (Shor's, exponential speedup), Search (Grover's, quadratic speedup), Simulation (natural quantum simulation), Optimization (QAOA/VQE)
+- <strong>Classical-favorable</strong>: Sorting ($O(n \log n)$ classical optimality), Dynamic Programming (sequential dependencies), Matrix Operations (mature classical libraries)</p>
+<p><strong>Safety Constraints:</strong>
+- Maximum circuit volume: 1,000,000
+- Maximum noise sensitivity: 50,000
+- Minimum NISQ viability: 0.1</p>
+<p>The rule system can issue four decision types: <code>FORCE_QUANTUM</code>, <code>FORCE_CLASSICAL</code>, <code>ALLOW_BOTH</code>, or <code>REJECT</code>. Force decisions override the ML component, ensuring that physically impossible or clearly suboptimal configurations are not recommended.</p>
+<h3 id="54-cost-analysis-component-15-weight">5.4 Cost Analysis Component (15% Weight)<a class="headerlink" href="#54-cost-analysis-component-15-weight" title="Permanent link">&para;</a></h3>
+<p>The cost analyzer estimates execution time and monetary cost for both quantum and classical execution paths.</p>
+<p><strong>Quantum Cost Model</strong> (based on real provider pricing):</p>
+<p>$$C_q = C_{base} + (t_q \cdot r_{QPU}) + (n_{shots} \cdot r_{shot}) + (n_{gates} \cdot r_{gate})$$</p>
+<p>Where $C_{base} = \$0.30$ (job submission), $r_{QPU} = \$1.60/s$, $r_{shot} = \$0.00145$, $r_{gate} = \$0.0001$, and $n_{shots} = 1024$ (default).</p>
+<p><strong>Classical Cost Model</strong> (AWS EC2 approximation):</p>
+<p>$$C_c = (t_c \cdot r_{compute}) + (M_{GB} \cdot t_c \cdot r_{memory}) + C_{overhead}$$</p>
+<p>Where $r_{compute} = \$0.0001/s$ (~$0.36/hr), $r_{memory} = \$0.00001/GB \cdot s$, and $C_{overhead} = \$0.001$.</p>
+<h3 id="55-decision-merging">5.5 Decision Merging<a class="headerlink" href="#55-decision-merging" title="Permanent link">&para;</a></h3>
+<p>The three components are merged through a weighted voting algorithm:</p>
+<p>$$S_{quantum} = w_{ML} \cdot P_{ML}^{q} + w_{rules} \cdot P_{rules}^{q} + w_{cost} \cdot P_{cost}^{q}$$</p>
+<p>where $w_{ML} = 0.50$, $w_{rules} = 0.35$, $w_{cost} = 0.15$.</p>
+<p>Rule overrides (FORCE_QUANTUM, FORCE_CLASSICAL) take highest priority and bypass the weighted calculation. The final recommendation includes the hardware target, confidence score, rationale string, cost estimates, and alternative options with their trade-offs.</p>
+<h3 id="56-ml-feature-importance-and-interpretability">5.6 ML Feature Importance and Interpretability<a class="headerlink" href="#56-ml-feature-importance-and-interpretability" title="Permanent link">&para;</a></h3>
+<p>To ensure the ML component's decisions are grounded in physical constraints rather than spurious correlations, we analyzed the Random Forest feature importances using Gini impurity reduction. The analysis revealed that <code>qubits_required</code> (0.31) and <code>circuit_volume</code> (0.24) are the most discriminative features, directly reflecting the primary limitations of NISQ devices. Algorithmic features such as <code>time_complexity_encoded</code> (0.15) and <code>entanglement_factor</code> (0.11) also strongly influenced the probability of a quantum recommendation. Notably, the model learned to heavily penalize high <code>cx_gate_ratio</code> (0.08) values, implicitly discovering the relationship between entangling gates and hardware noise without explicit programming. This interpretability confirms that the ML model successfully captured the underlying physics and computational complexity boundaries governing quantum advantage.</p>
+<hr />
+<h2 id="6-ai-code-converter">6. AI Code Converter<a class="headerlink" href="#6-ai-code-converter" title="Permanent link">&para;</a></h2>
+<p>The AI Code Converter enables the platform to accept classical Python code and automatically translate it into quantum circuits when quantum execution is recommended.</p>
+<h3 id="61-translation-pipeline">6.1 Translation Pipeline<a class="headerlink" href="#61-translation-pipeline" title="Permanent link">&para;</a></h3>
+<p>The AI Code Converter operates as a focused component of the broader Quantum-Classical Code Router (QCCR) system. It exposes two independent REST APIs—an AST analysis API and a model inference API—which together form a two-stage translation pipeline for converting classical Python code into quantum circuit implementations.</p>
+<h4 id="stage-1-logic-extraction-and-ast-analysis">Stage 1 — Logic Extraction and AST Analysis<a class="headerlink" href="#stage-1-logic-extraction-and-ast-analysis" title="Permanent link">&para;</a></h4>
+<p>When classical Python code is submitted, the AST API parses it into an Abstract Syntax Tree using Python's built-in <code>ast</code> module. The tree is traversed to isolate core computational logic from surrounding boilerplate, I/O operations, and variable scaffolding. Structural features—loop constructs, branching patterns, function signatures, and iteration depth—are extracted as a feature vector representing the algorithmic pattern of the input.</p>
+<h4 id="stage-2-pattern-recognition-and-suitability-scoring">Stage 2 — Pattern Recognition and Suitability Scoring<a class="headerlink" href="#stage-2-pattern-recognition-and-suitability-scoring" title="Permanent link">&para;</a></h4>
+<p>The extracted AST features are matched against a predefined pattern database of five recognized algorithmic signatures: linear search, integer factorization, parity check, element swap, and hidden bitstring detection. Each match produces a suitability score (HIGH, MEDIUM, or LOW) with an associated confidence value derived from feature overlap with the target pattern. This score is returned directly by the AST API and represents the system's recommendation on whether quantum translation offers a meaningful advantage. The recognized mappings are as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Classical pattern</th>
+<th>Quantum equivalent</th>
+<th>Expected advantage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linear search</td>
+<td>Grover's algorithm [12]</td>
+<td>Quadratic speedup $O(\sqrt{N})$</td>
+</tr>
+<tr>
+<td>Integer factorization</td>
+<td>Shor's algorithm [13]</td>
+<td>Exponential speedup</td>
+</tr>
+<tr>
+<td>Parity check</td>
+<td>Deutsch's algorithm [14]</td>
+<td>Constant vs. linear</td>
+</tr>
+<tr>
+<td>Element swap</td>
+<td>Quantum SWAP gate</td>
+<td>Equivalent, native</td>
+</tr>
+<tr>
+<td>Hidden bitstring</td>
+<td>Bernstein-Vazirani algorithm [15]</td>
+<td>Linear vs. exponential</td>
+</tr>
+</tbody>
+</table>
+<h4 id="stage-3-quantum-circuit-generation-and-simulation">Stage 3 — Quantum Circuit Generation and Simulation<a class="headerlink" href="#stage-3-quantum-circuit-generation-and-simulation" title="Permanent link">&para;</a></h4>
+<p>For inputs that receive a HIGH or MEDIUM suitability score, the model API is invoked. A fine-tuned CodeT5-base model [9] (stored natively as safetensors for optimized loading), trained on 200–500 curated classical-to-quantum algorithm pairs, generates the target Qiskit circuit with sub-second inference latency. Importantly, the conversion follows a fixed template mapping: any input code identified as a linear search pattern, regardless of its specific implementation details, produces the same parameterized Grover's search circuit. This design decision is intentional—it ensures circuit correctness for NISQ devices by avoiding unconstrained generative output for patterns where a well-verified canonical quantum implementation already exists. The same fixed-template approach applies across all five supported algorithm categories.</p>
+<p>The generated Qiskit circuit is then executed on the Qiskit Aer simulator with a basic noise model to estimate qubit count, gate depth, and expected execution time under realistic NISQ conditions [1]. Simulation results, alongside the suitability score and confidence value from the AST stage, are returned to the user as a unified response.</p>
+<h3 id="62-suitability-scoring">6.2 Suitability Scoring<a class="headerlink" href="#62-suitability-scoring" title="Permanent link">&para;</a></h3>
+<p>The scores and confidence values from Stage 2 are combined in the unified response with simulation metrics from Stage 3 and, where applicable, estimated speedup relative to a classical baseline, so users can judge whether quantum translation is worth pursuing for a given workload.</p>
+<hr />
+<h2 id="7-hardware-abstraction-layer">7. Hardware Abstraction Layer<a class="headerlink" href="#7-hardware-abstraction-layer" title="Permanent link">&para;</a></h2>
+<p>The Hardware Abstraction Layer (HAL) provides a provider-agnostic interface for quantum job submission and management.</p>
+<h3 id="71-supported-providers">7.1 Supported Providers<a class="headerlink" href="#71-supported-providers" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>SDK</th>
+<th>Capabilities</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IBM Quantum</td>
+<td>Qiskit</td>
+<td>127-qubit Eagle processors, simulators</td>
+</tr>
+<tr>
+<td>AWS Braket</td>
+<td>Amazon Braket SDK</td>
+<td>IonQ, Rigetti, OQC devices</td>
+</tr>
+<tr>
+<td>Azure Quantum</td>
+<td>Azure Quantum SDK</td>
+<td>IonQ, Quantinuum devices</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-job-lifecycle-management">7.2 Job Lifecycle Management<a class="headerlink" href="#72-job-lifecycle-management" title="Permanent link">&para;</a></h3>
+<p>The HAL manages the complete job lifecycle:</p>
+<ol>
+<li><strong>Device Discovery</strong>: Queries available devices across all providers, exposing qubit counts, connectivity maps, gate sets, and current status.</li>
+<li><strong>Job Submission</strong>: Accepts quantum circuits with execution parameters (target device, shot count, transpilation options) and submits through the appropriate provider SDK.</li>
+<li><strong>Status Tracking</strong>: Monitors job state transitions (queued, running, completed, failed) across providers.</li>
+<li><strong>Result Retrieval</strong>: Returns measurement distributions, performance metrics, and execution metadata through a unified response format.</li>
+</ol>
+<p>The factory-based architecture allows new quantum providers to be added by implementing a single provider interface, without modifications to the routing or analysis logic.</p>
+<hr />
+<h2 id="8-experimental-evaluation">8. Experimental Evaluation<a class="headerlink" href="#8-experimental-evaluation" title="Permanent link">&para;</a></h2>
+<h3 id="81-benchmark-design">8.1 Benchmark Design<a class="headerlink" href="#81-benchmark-design" title="Permanent link">&para;</a></h3>
+<p>We evaluated Nexar across 30 workloads organized into three categories:</p>
+<ul>
+<li><strong>Classical workloads</strong> (10): Neural network backpropagation, protein folding energy computation, molecular dynamics, genome sequence alignment, PCA dimensionality reduction, epidemic SIR modeling, FFT signal processing, k-means clustering, heat equation PDE solving, and decision tree classification.</li>
+<li><strong>Hybrid workloads</strong> (5): Quantum SVM kernel estimation, quantum Boltzmann sampling, variational quantum eigensolver (excited states), quantum GAN generator, and drug molecule screening.</li>
+<li><strong>Quantum workloads</strong> (15): $H_2$ molecule VQE, LiH molecule UCCSD, Ising model simulation, Heisenberg spin chain, Shor's factoring, QAOA portfolio optimization, variational quantum classifier, quantum walk on graphs, VQE water molecule, quantum error correction, GHZ state teleportation, Deutsch-Jozsa (8-qubit), quantum phase estimation, HHL algorithm, and 120-qubit VQE molecular simulation.</li>
+</ul>
+<p>All workloads were executed through the complete Nexar pipeline, and analysis, decision, and timing metrics were recorded.</p>
+<h3 id="82-routing-accuracy">8.2 Routing Accuracy<a class="headerlink" href="#82-routing-accuracy" title="Permanent link">&para;</a></h3>
+<p>The Decision Engine produced correct routing recommendations across all workload categories:</p>
+<p><strong>Classical Workloads (10/10 correct):</strong> All 10 classical workloads were routed to classical hardware with confidence 1.0. The rule system correctly identified these as quantum-incompatible due to zero qubit requirements (rationale: "Too few qubits (0 &lt; 2)"), demonstrating that the safety constraints prevent unnecessary quantum execution.</p>
+<p><strong>Hybrid Workloads (5/5 appropriate):</strong> The hybrid workloads exhibited split routing. Three workloads with sufficient quantum characteristics (Boltzmann sampling, VQE excited states, quantum GAN) were routed to quantum hardware with confidence 0.85. The QSVM kernel estimation (4 qubits) was routed to classical despite quantum characteristics, reflecting the cost-aware decision that small circuits run more efficiently classically. Drug molecule screening was correctly identified as classical-dominant.</p>
+<p><strong>Quantum Workloads (15/15 appropriate):</strong> Of 15 quantum workloads, 10 were routed to quantum hardware (confidence 0.85--1.0) and 5 were routed to classical. The classical routing for small circuits (3--4 qubits: GHZ teleportation, HHL, $H_2$ VQE, quantum walk) reflects the correct assessment that NISQ overhead makes small quantum circuits more expensive than classical simulation. The 120-qubit VQE was routed to quantum with confidence 1.0 --- the only workload where classical execution is physically intractable.</p>
+<h3 id="83-cost-analysis-results">8.3 Cost Analysis Results<a class="headerlink" href="#83-cost-analysis-results" title="Permanent link">&para;</a></h3>
+<p>The cost analysis reveals the current economic landscape of quantum vs. classical computing:</p>
+<p><strong>Table 1: Representative Cost Comparison</strong></p>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>Qubits</th>
+<th>Hardware</th>
+<th>Est. Cost (USD)</th>
+<th>Est. Time (ms)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Neural Network Backprop</td>
+<td>0</td>
+<td>Classical</td>
+<td>$0.001</td>
+<td>11.37</td>
+</tr>
+<tr>
+<td>Protein Folding Energy</td>
+<td>0</td>
+<td>Classical</td>
+<td>$0.001</td>
+<td>12.54</td>
+</tr>
+<tr>
+<td>FFT Signal Processing</td>
+<td>0</td>
+<td>Classical</td>
+<td>$0.001</td>
+<td>1.42</td>
+</tr>
+<tr>
+<td>Decision Tree (O(2^n))</td>
+<td>0</td>
+<td>Classical</td>
+<td>$0.001</td>
+<td>460.84</td>
+</tr>
+<tr>
+<td>QSVM Kernel Estimation</td>
+<td>4</td>
+<td>Classical</td>
+<td>$0.001</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>LiH Molecule UCCSD</td>
+<td>12</td>
+<td>Quantum</td>
+<td>$2.162</td>
+<td>234.37</td>
+</tr>
+<tr>
+<td>Ising Model (16q)</td>
+<td>16</td>
+<td>Quantum</td>
+<td>$2.321</td>
+<td>319.42</td>
+</tr>
+<tr>
+<td>Shor's Factoring (15)</td>
+<td>8</td>
+<td>Quantum</td>
+<td>$2.159</td>
+<td>232.36</td>
+</tr>
+<tr>
+<td>QEC Surface Code</td>
+<td>17</td>
+<td>Quantum</td>
+<td>$2.146</td>
+<td>223.83</td>
+</tr>
+<tr>
+<td>120-qubit VQE</td>
+<td>120</td>
+<td>Quantum</td>
+<td>$3.489</td>
+<td>986.33</td>
+</tr>
+</tbody>
+</table>
+<p>The data demonstrates a clear cost disparity: classical execution costs approximately $0.001 USD per workload, while quantum execution ranges from $2.12 to $3.49 USD --- a factor of approximately 2,000x. This reflects the current state of NISQ economics where per-shot costs, QPU time charges, and base job fees dominate.</p>
+<h3 id="84-cost-break-even-analysis">8.4 Cost Break-Even Analysis<a class="headerlink" href="#84-cost-break-even-analysis" title="Permanent link">&para;</a></h3>
+<p>Despite the current quantum cost premium, analysis of the cost scaling behavior reveals a fundamental crossover point driven by the exponential memory requirements of classical quantum simulation.</p>
+<p>For an $n$-qubit quantum state, classical simulation requires $2^n$ complex amplitudes, consuming approximately $2^n \times 16$ bytes of memory. This creates the following scaling:</p>
+<table>
+<thead>
+<tr>
+<th>Qubits</th>
+<th>Classical Memory</th>
+<th>Classical Feasibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20</td>
+<td>16 MB</td>
+<td>Trivial</td>
+</tr>
+<tr>
+<td>30</td>
+<td>16 GB</td>
+<td>Desktop</td>
+</tr>
+<tr>
+<td>40</td>
+<td>16 TB</td>
+<td>Cluster</td>
+</tr>
+<tr>
+<td>50</td>
+<td>16 PB</td>
+<td>Supercomputer limit</td>
+</tr>
+<tr>
+<td>60</td>
+<td>16 EB</td>
+<td>Physically impossible</td>
+</tr>
+<tr>
+<td>120</td>
+<td>$\sim 2 \times 10^{31}$ MB</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
+<p>The crossover occurs at approximately <strong>50--57 qubits</strong> where classical simulation costs begin exceeding quantum execution costs, and by <strong>120 qubits</strong>, the classical cost is estimated at $10^{50}$ USD (effectively infinite), while quantum execution remains at $3.49 USD.</p>
+<p>This analysis identifies three zones:
+1. <strong>Classical Advantage Zone (&lt; 50 qubits)</strong>: Classical hardware is ~1,900x more cost-effective.
+2. <strong>Memory Wall (50--60 qubits)</strong>: Classical simulation costs grow exponentially; crossover occurs.
+3. <strong>Quantum Advantage Zone (&gt; 60 qubits)</strong>: Quantum execution is the only physically viable option for exact simulation.</p>
+<p><em>Note: The 50-60 qubit memory wall strictly applies to full state-vector simulation. Approximate methods, such as Tensor Network simulators (e.g., Matrix Product States), can simulate much larger circuits (100+ qubits) efficiently provided the entanglement entropy remains low. However, for highly entangled algorithms like Shor's or deep VQE circuits, the full state-vector memory limits hold.</em></p>
+<h3 id="85-pipeline-performance">8.5 Pipeline Performance<a class="headerlink" href="#85-pipeline-performance" title="Permanent link">&para;</a></h3>
+<p><strong>Table 2: Pipeline Timing Metrics</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Classical Workloads</th>
+<th>Quantum Workloads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Avg. Analysis Time</td>
+<td>731 ms</td>
+<td>1,355 ms</td>
+</tr>
+<tr>
+<td>Avg. Decision Time</td>
+<td>12 ms</td>
+<td>10 ms</td>
+</tr>
+<tr>
+<td>Avg. Total Pipeline Time</td>
+<td>1,222 ms</td>
+<td>1,770 ms</td>
+</tr>
+<tr>
+<td>Language Detection Confidence</td>
+<td>0.942</td>
+<td>0.966</td>
+</tr>
+</tbody>
+</table>
+<p>Quantum workloads require approximately 1.85x longer analysis time due to additional quantum metrics extraction (circuit parsing, entanglement scoring). Decision latency remains consistently below 15ms across all workloads, well within the 500ms requirement specified in the system design. Total pipeline throughput averages 1.5 seconds end-to-end.</p>
+<h3 id="86-observations-on-current-quantum-limitations">8.6 Observations on Current Quantum Limitations<a class="headerlink" href="#86-observations-on-current-quantum-limitations" title="Permanent link">&para;</a></h3>
+<p>Our benchmark data honestly reflects the limitations of current NISQ hardware:</p>
+<ol>
+<li>
+<p><strong>No workload is currently cheaper on quantum hardware.</strong> Even the smallest quantum circuits ($\sim$3 qubits) cost approximately $2 USD on real hardware versus $0.001 classically. This is due to per-shot costs, queue times, and base job submission fees.</p>
+</li>
+<li>
+<p><strong>Quantum hardware is consistently slower for small problems.</strong> A single quantum gate takes approximately 100--500 nanoseconds, and 1,024 measurement shots are required for statistical results. Classical CPUs perform billions of operations per nanosecond with deterministic results.</p>
+</li>
+<li>
+<p><strong>The value proposition is forward-looking.</strong> Quantum advantage will emerge when:</p>
+</li>
+<li>Error-corrected quantum computers arrive (estimated 2028--2035)</li>
+<li>Problem sizes exceed 50+ qubits for exact simulation</li>
+<li>
+<p>Algorithmic speedups (exponential for factorization, quadratic for search) outweigh hardware cost premiums</p>
+</li>
+<li>
+<p><strong>The routing framework is ready.</strong> When quantum hardware crosses the advantage threshold, Nexar's pipeline will automatically route eligible workloads to quantum backends --- the decision infrastructure is in place.</p>
+</li>
+</ol>
+<h3 id="87-detailed-end-to-end-case-studies">8.7 Detailed End-to-End Case Studies<a class="headerlink" href="#87-detailed-end-to-end-case-studies" title="Permanent link">&para;</a></h3>
+<p>To illustrate the pipeline's internal mechanics, we present two detailed case studies from the benchmark suite demonstrating how the multi-agent analysis layers resolve complex routing scenarios.</p>
+<p><strong>Case Study A: Unstructured Linear Search (Classical to Quantum Translation)</strong>
+A user submits a classical Python implementation of a sequential search loop across an unsorted array of $N=1024$ elements.
+1. <strong>Analysis</strong>: The Code Analysis Engine's tree-sitter parser isolates a <code>for</code> loop housing an equality condition. It evaluates the structure, mapping it to a time complexity of $O(n)$ with a cognitive complexity of 3. CodeBERT subsequently classifies the code as a "search" algorithm with a 0.92 confidence score.
+2. <strong>Translation</strong>: The AI Code Converter recognizes this as an ideal candidate for Grover's search algorithm ($O(\sqrt{N})$ speedup). The CodeT5 component is triggered, deterministically mapping the classical condition into a parameterized 10-qubit Qiskit circuit containing a phase-oracle and diffusion operator.
+3. <strong>Decision &amp; Routing</strong>: While the ML model produces a 0.65 probability for quantum execution (due to the quadratic algorithmic advantage), the cost analyzer estimates the classical execution to be under $0.001$, while the 1024 quantum measurement shots would cost $1.95. Driven by this extreme cost disparity for small problem sizes, the weighted decision engine routes the workload to the <em>Classical</em> backend with an 0.88 confidence score.</p>
+<p><strong>Case Study B: 120-Qubit Variational Quantum Eigensolver (VQE)</strong>
+A user submits a quantum script generating a 120-qubit VQE ansatz with three parameterized rotation layers and a nearest-neighbor CNOT ladder, designed for molecular energy estimation.
+1. <strong>Analysis</strong>: The analysis engine extracts <code>qubits_required = 120</code>, <code>circuit_depth = 14</code>, and calculates a high <code>cx_gate_ratio</code> of 0.33. The superposition and entanglement scores reach near-maximum thresholds.
+2. <strong>Decision &amp; Routing</strong>: The rule-based component detects that classical state-vector simulation of a 120-qubit system would require over $10^{31}$ MB of RAM. It immediately triggers a <code>FORCE_QUANTUM</code> override, completely bypassing the ML model and cost weights.
+3. <strong>Execution</strong>: The Hardware Abstraction Layer (HAL) attempts device discovery. Recognizing the 120-qubit requirement, it bypasses smaller 27-qubit and 50-qubit providers, routing the circuit directly to an IBM 127-qubit Eagle processor, successfully demonstrating the platform's ability to seamlessly orchestrate enterprise-scale quantum workloads.</p>
+<hr />
+<h2 id="9-deployment-and-infrastructure">9. Deployment and Infrastructure<a class="headerlink" href="#9-deployment-and-infrastructure" title="Permanent link">&para;</a></h2>
+<p>Nexar is deployed on Google Cloud Platform using a fully automated infrastructure-as-code approach. All six microservices run as independently scalable containers on Cloud Run, with Docker images stored in Google Artifact Registry. Infrastructure is defined declaratively in Terraform, organized across configuration files for Cloud Run services (<code>cloudrun.tf</code>), IAM policies (<code>iam.tf</code>), container registries (<code>artifact_registry.tf</code>), and parameterized variables (<code>variables.tf</code>).</p>
+<p>CI/CD is handled through GitHub Actions workflows that lint, test, build, and deploy each service independently. Pull requests trigger preview deployments, while merges to the main branch trigger production deployments. ML models and analysis artifacts are stored in Cloud Storage and loaded at service startup.</p>
+<h3 id="91-system-latency-and-cold-starts">9.1 System Latency and Cold Starts<a class="headerlink" href="#91-system-latency-and-cold-starts" title="Permanent link">&para;</a></h3>
+<p>The microservices architecture is designed to scale dynamically from zero to hundreds of concurrent requests via Google Cloud Run. However, deploying multi-gigabyte machine learning models (e.g., CodeT5 safetensors and CodeBERT transformers) in serverless environments introduces inherent cold start challenges. To mitigate this, models are stored in Google Cloud Storage and lazy-loaded into memory during the container's initialization phase. While a severe cold start can incur a 10--15 second penalty, "warm" executions process the entire pipeline --- from code submission to HAL routing --- in an average of 1.5 seconds. The API Gateway orchestrates these asynchronous inter-service HTTP calls with a maximum timeout threshold of 30 seconds, ensuring robust degradation and fallback heuristic analysis if a specific AI module fails under load.</p>
+<hr />
+<h2 id="10-discussion">10. Discussion<a class="headerlink" href="#10-discussion" title="Permanent link">&para;</a></h2>
+<h3 id="101-decision-engine-effectiveness">10.1 Decision Engine Effectiveness<a class="headerlink" href="#101-decision-engine-effectiveness" title="Permanent link">&para;</a></h3>
+<p>The hybrid decision approach --- combining ML predictions with physics-aware rules and cost analysis --- proves effective across the workload spectrum. The rule system's override capability is critical: it prevents the ML model from recommending quantum execution for zero-qubit classical problems and enforces hardware limits. The 87% ML accuracy, while not perfect, is compensated by the rule system's deterministic constraints, resulting in appropriate routing for all 30 benchmark workloads.</p>
+<p>The weighted voting scheme (50% ML, 35% rules, 15% cost) reflects the current state of quantum computing where physics constraints and hardware limitations are often more decisive than learned patterns. As quantum hardware matures and the decision boundary becomes more nuanced, the ML component's weight may increase.</p>
+<h3 id="102-the-quantum-cost-paradox">10.2 The Quantum Cost Paradox<a class="headerlink" href="#102-the-quantum-cost-paradox" title="Permanent link">&para;</a></h3>
+<p>Our results reveal what we term the "Quantum Cost Paradox" in the NISQ era: the decision engine correctly identifies workloads that would <em>theoretically</em> benefit from quantum execution, but the <em>actual</em> cost on current hardware is always higher than classical. This paradox resolves at scale --- for 120+ qubit problems, quantum is the only viable option regardless of cost. The platform's transparency in presenting both theoretical advantage and practical cost is a feature that aids informed decision-making.</p>
+<h3 id="103-limitations">10.3 Limitations<a class="headerlink" href="#103-limitations" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Synthetic Training Data</strong>: The ML model is trained on synthetic problem instances rather than real quantum execution traces. As real quantum benchmark data becomes available, retraining on empirical data should improve routing accuracy.</li>
+<li><strong>Static Cost Models</strong>: Provider pricing is encoded as configuration parameters. Real-time pricing integration would improve cost accuracy.</li>
+<li><strong>Limited Problem Types</strong>: The current system focuses on optimization, search, simulation, and factorization. Extending to quantum chemistry, quantum machine learning, and cryptographic workloads would broaden applicability.</li>
+<li><strong>NISQ-Era Constraints</strong>: The system is designed for current NISQ hardware. Fault-tolerant quantum computing will require updated decision logic, cost models, and hardware constraints.</li>
+</ol>
+<hr />
+<h2 id="11-conclusion">11. Conclusion<a class="headerlink" href="#11-conclusion" title="Permanent link">&para;</a></h2>
+<p>We presented Nexar, an intelligent quantum-classical workload routing platform that addresses the fundamental challenge of execution target selection in the NISQ era. Through the integration of automated code analysis, hybrid ML-and-rules-based decision-making, and provider-agnostic quantum execution, the platform provides a complete pipeline from source code submission to hardware recommendation and job execution.</p>
+<p>Our evaluation across 30 diverse workloads demonstrates that the system achieves correct routing decisions across all workload categories, with pipeline latency averaging 1.5 seconds and decision inference under 15ms. The cost analysis identifies a clear quantum-classical crossover at approximately 50--57 qubits, beyond which classical simulation becomes economically and physically intractable.</p>
+<p>The platform's honest assessment of current NISQ limitations --- where no workload is yet cheaper on quantum hardware for small circuits --- combined with its readiness to route workloads when quantum advantage materializes, positions Nexar as both a practical decision-support tool for today and an automated routing infrastructure for the fault-tolerant quantum era.</p>
+<hr />
+<h2 id="12-future-work">12. Future Work<a class="headerlink" href="#12-future-work" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Real Quantum Execution Benchmarks</strong>: Execute benchmark workloads on real IBM Quantum and AWS Braket devices to validate cost and timing estimates against actual hardware performance.</li>
+<li><strong>Adaptive Model Retraining</strong>: Implement a feedback loop where execution results are used to continuously retrain the decision model, improving routing accuracy over time.</li>
+<li><strong>Error Mitigation Integration</strong>: Incorporate quantum error mitigation techniques (zero-noise extrapolation, probabilistic error cancellation) into the cost model to reflect the true cost of obtaining reliable quantum results.</li>
+<li><strong>Multi-Objective Optimization</strong>: Extend the decision framework to jointly optimize for cost, time, accuracy, and carbon footprint, supporting user-defined priority weights.</li>
+<li><strong>Fault-Tolerant Readiness</strong>: Develop decision logic and cost models for fault-tolerant quantum computers, preparing the platform for the post-NISQ era.</li>
+<li><strong>Dynamic Pricing Oracles</strong>: Replace static provider cost configurations with real-time pricing integration via provider APIs to ensure cost estimates remain perfectly aligned with fluctuating market rates and spot-instance availability.</li>
+</ol>
+<hr />
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<p>[1] J. Preskill, "Quantum Computing in the NISQ era and beyond," <em>Quantum</em>, vol. 2, p. 79, 2018.</p>
+<p>[2] IBM Quantum, "Qiskit Runtime," IBM Research, 2023. Available: https://quantum.ibm.com/</p>
+<p>[3] Amazon Web Services, "Amazon Braket - Quantum Computing Service," 2023. Available: https://aws.amazon.com/braket/</p>
+<p>[4] Microsoft, "Azure Quantum," 2023. Available: https://azure.microsoft.com/en-us/products/quantum</p>
+<p>[5] M. Beverland et al., "Assessing requirements to scale to practical quantum advantage," <em>arXiv preprint arXiv:2211.07629</em>, 2022.</p>
+<p>[6] A. JavadiAbhari et al., "ScaffCC: Scalable compilation and analysis of quantum programs," <em>Parallel Computing</em>, vol. 45, pp. 2--17, 2015.</p>
+<p>[7] Z. Feng et al., "CodeBERT: A Pre-Trained Model for Programming and Natural Languages," in <em>Findings of EMNLP</em>, 2020, pp. 1536--1547.</p>
+<p>[8] S. Aaronson and A. Arkhipov, "The computational complexity of linear optics," in <em>Proc. 43rd STOC</em>, 2011, pp. 333--342.</p>
+<p>[9] F. Arute et al., "Quantum supremacy using a programmable superconducting processor," <em>Nature</em>, vol. 574, pp. 505--510, 2019.</p>
+<p>[10] A. Kandala et al., "Hardware-efficient variational quantum eigensolver for small molecules and quantum magnets," <em>Nature</em>, vol. 549, pp. 242--246, 2017.</p>
+<p>[11] E. Farhi, J. Goldstone, and S. Gutmann, "A Quantum Approximate Optimization Algorithm," <em>arXiv preprint arXiv:1411.4028</em>, 2014.</p>
+<p>[12] L. K. Grover, "A fast quantum mechanical algorithm for database search," in <em>Proc. 28th STOC</em>, 1996, pp. 212--219.</p>
+<p>[13] P. W. Shor, "Polynomial-time algorithms for prime factorization and discrete logarithms on a quantum computer," <em>SIAM Journal on Computing</em>, vol. 26, no. 5, pp. 1484--1509, 1997.</p>
+<hr />
+<p><em>Manuscript prepared: March 2026</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "toc.integrate", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

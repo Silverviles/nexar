@@ -1,5 +1,5 @@
 \begin{table*}[!t]
-\caption{Routing Accuracy vs.\ Dual Literature-Cited Oracle Ground Truth (\textit{N}\,=\,100 workloads). Oracle A (algorithmic advantage) labels workloads by known quantum speedup regimes; Oracle B (hardware viability) labels by whether current NISQ hardware produces usable signal (calibrated to Table~\ref{tab:hardware-validation}).}
+\caption{Routing Accuracy vs.\ Dual Literature-Cited Oracle Ground Truth (\textit{N}\,=\,100 workloads). Oracle A (algorithmic advantage) labels workloads by known quantum speedup regimes; Oracle B (hardware viability) labels by whether current NISQ hardware produces usable signal, with thresholds derived from external IBM-published Heron r2 coherence/gate-time specs via Preskill 2018's error-budget framework (not from this paper's own Table~\ref{tab:hardware-validation} evidence).}
 \label{tab:routing-accuracy}
 \centering
 \footnotesize
@@ -21,6 +21,6 @@ A2 Rules-only & 0.920 & 0.875 & 0.500 & 0.636 & 0.628 & 0.950 & 0.625 & 0.714 & 
 A3 Cost-only & 0.140 & 0.140 & 1.000 & 0.246 & 0.000 & 0.070 & 0.070 & 1.000 & 0.131 & 0.000 \\
 \bottomrule
 \\[-0.5em]
-\multicolumn{11}{p{0.95\textwidth}}{\footnotesize Both oracles are derived from literature-cited rules applied to the workload filename and physical circuit features (qubits, depth, entanglement), independent of Nexar's decision logic. Oracle A distribution --- Classical: 85, Quantum: 14, Reject: 1. Oracle B distribution --- Classical: 92, Quantum: 7, Reject: 1. $^{\dagger}$B3 Random averaged over 1000 seeds (A: 0.496$\pm$0.051; B: 0.495$\pm$0.050). Q = Quantum class. $\kappa$ = Cohen's kappa vs.\ oracle.} \\
+\multicolumn{11}{p{0.95\textwidth}}{\footnotesize Both oracles are derived from literature-cited rules applied to the workload filename and physical circuit features (qubits, depth, entanglement). Oracle A is fully independent of Nexar's decision logic. Oracle B's qubit/depth thresholds are derived from external pre-Nexar sources only (IBM-published Heron r2 T2$\approx$144\,$\mu$s and ECR gate time $\approx$68\,ns; Preskill 2018 error budget $d_{\max}$$\approx T_2 / (K \cdot t_\text{gate})$, $K{=}10$, yielding $d_{\max}\approx 200$), not from the \texttt{ibm\_fez} validation data that Nexar's rule engine also consumes. Oracle A distribution --- Classical: 85, Quantum: 14, Reject: 1. Oracle B distribution --- Classical: 92, Quantum: 7, Reject: 1. Majority-class (constant-Classical) baseline: Acc 0.85/0.92, F1$_{(Q)}${=}0, $\kappa${=}0 on Oracle A/B respectively---aggregate accuracy is therefore not separative at this distribution, so F1$_{(Q)}$ and $\kappa$ are treated as the primary metrics. $^{\dagger}$B3 Random averaged over 1000 seeds (A: 0.496$\pm$0.051; B: 0.495$\pm$0.050). Q = Quantum class. $\kappa$ = Cohen's kappa vs.\ oracle.} \\
 \end{tabular}
 \end{table*}

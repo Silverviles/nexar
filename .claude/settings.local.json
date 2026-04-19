@@ -34,7 +34,12 @@
       "Bash(python benchmarks/workloads/classical/28_rna_secondary_structure.py)",
       "Bash(python benchmarks/workloads/classical/29_hidden_markov_viterbi.py)",
       "Bash(python benchmarks/workloads/classical/30_matrix_inversion_gauss.py)",
-      "Bash(python 20_traveling_salesman_branch_bound.py)"
+      "Bash(python 20_traveling_salesman_branch_bound.py)",
+      "Bash(python *)",
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error nexar-paper.tex)",
+      "Bash(cp latex/oracle_ground_truth.csv /tmp/oracle_before.csv)",
+      "Bash(cp latex/routing_accuracy_table.tex /tmp/table_before.tex)",
+      "Bash(pdflatex -interaction=nonstopmode nexar-paper.tex)"
     ]
   }
 }

@@ -13,6 +13,10 @@
 # =============================================================================
 
 set -uo pipefail
+# Enable monitor mode so each background pipeline gets its own process group.
+# Without this, signals sent by uvicorn --reload (SIGTERM to its worker) propagate
+# up to this bash process on MINGW/Windows and kill all services prematurely.
+set -m
 
 # ── Project root ──
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

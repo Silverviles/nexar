@@ -1,0 +1,26 @@
+\begin{table*}[!t]
+\caption{Routing Accuracy vs.\ Dual Literature-Cited Oracle Ground Truth (\textit{N}\,=\,100 workloads). Oracle A (algorithmic advantage) labels workloads by known quantum speedup regimes; Oracle B (hardware viability) labels by whether current NISQ hardware produces usable signal (calibrated to Table~\ref{tab:hardware-validation}).}
+\label{tab:routing-accuracy}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l ccccc ccccc}
+\toprule
+ & \multicolumn{5}{c}{\textbf{Oracle A: Algorithmic Advantage}} & \multicolumn{5}{c}{\textbf{Oracle B: Hardware Viability}} \\
+\cmidrule(lr){2-6}\cmidrule(lr){7-11}
+\textbf{Router} & \textbf{Acc.} & \textbf{P(Q)} & \textbf{R(Q)} & \textbf{F1(Q)} & \textbf{$\kappa$} & \textbf{Acc.} & \textbf{P(Q)} & \textbf{R(Q)} & \textbf{F1(Q)} & \textbf{$\kappa$} \\
+\midrule
+\textbf{Nexar (full)} & \textbf{0.810} & \textbf{0.381} & \textbf{0.571} & \textbf{0.457} & \textbf{0.382} & \textbf{0.860} & \textbf{0.333} & \textbf{1.000} & \textbf{0.500} & \textbf{0.477} \\
+\midrule
+B1 Qubit$\geq$50 & 0.890 & 0.800 & 0.286 & 0.421 & 0.407 & 0.960 & 0.800 & 0.571 & 0.667 & 0.673 \\
+B2 Volume$\geq$50k & 0.880 & 0.667 & 0.286 & 0.400 & 0.377 & 0.910 & 0.333 & 0.286 & 0.308 & 0.313 \\
+B3 Random$^{\dagger}$ & 0.530 & 0.180 & 0.643 & 0.281 & 0.069 & 0.520 & 0.100 & 0.714 & 0.175 & 0.050 \\
+\midrule
+A1 ML-only & 0.810 & 0.368 & 0.500 & 0.424 & 0.333 & 0.860 & 0.316 & 0.857 & 0.462 & 0.420 \\
+A2 Rules-only & 0.920 & 0.875 & 0.500 & 0.636 & 0.628 & 0.950 & 0.625 & 0.714 & 0.667 & 0.682 \\
+A3 Cost-only & 0.140 & 0.140 & 1.000 & 0.246 & 0.000 & 0.070 & 0.070 & 1.000 & 0.131 & 0.000 \\
+\bottomrule
+\\[-0.5em]
+\multicolumn{11}{p{0.95\textwidth}}{\footnotesize Both oracles are derived from literature-cited rules applied to the workload filename and physical circuit features (qubits, depth, entanglement), independent of Nexar's decision logic. Oracle A distribution --- Classical: 85, Quantum: 14, Reject: 1. Oracle B distribution --- Classical: 92, Quantum: 7, Reject: 1. $^{\dagger}$B3 Random averaged over 1000 seeds (A: 0.496$\pm$0.051; B: 0.495$\pm$0.050). Q = Quantum class. $\kappa$ = Cohen's kappa vs.\ oracle.} \\
+\end{tabular}
+\end{table*}

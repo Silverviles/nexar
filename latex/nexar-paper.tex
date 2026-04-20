@@ -113,8 +113,7 @@ The question of when quantum advantage emerges has been studied through computat
 
 \section{System Architecture}
 
-Nexar is implemented as a microservices monorepo comprising six independently deployable services communicating through a central API Gateway. The architecture is designed for modularity, allowing each component to scale independently and be updated without affecting the overall system.
-The end-to-end service topology is illustrated in Fig.~\ref{fig:system-architecture}.
+Nexar is implemented as a microservices monorepo of six independently deployable services communicating through a central API Gateway (Fig.~\ref{fig:system-architecture}).
 
 \begin{figure}[htbp]
 \centering
@@ -123,14 +122,11 @@ The end-to-end service topology is illustrated in Fig.~\ref{fig:system-architect
 \label{fig:system-architecture}
 \end{figure}
 
-\subsection{Architecture Overview}
-
-The system follows a pipeline architecture: submitted source code passes through an Express.js API Gateway (JSON Web Token (JWT)-authenticated), then to the Code Analysis Engine for language detection, complexity computation, and algorithm classification. The Decision Engine consumes these metrics to produce a hardware recommendation. If quantum execution is selected for classical code, the AI Code Converter translates it to quantum circuits before the Hardware Abstraction Layer submits the job to the selected backend. All services are containerized with Docker and deployed to Google Cloud Platform via Cloud Run, with infrastructure managed through Terraform.
+Submitted source code passes through a JWT-authenticated Express.js API Gateway to the Code Analysis Engine (language detection, complexity, algorithm classification); the Decision Engine consumes these metrics to produce a hardware recommendation; if quantum execution is selected for classical code, the AI Code Converter translates it before the Hardware Abstraction Layer dispatches to the chosen backend. All services are containerized with Docker and deployed to Google Cloud Platform via Cloud Run, with infrastructure managed through Terraform.
 
 \section{Code Analysis Engine}
 
-The Code Analysis Engine serves as the analytical foundation of the pipeline, transforming raw source code into a structured feature set that downstream components consume.
-Its internal processing stages are shown in Fig.~\ref{fig:code-analysis}.
+The Code Analysis Engine transforms raw source code into the structured feature set downstream components consume (Fig.~\ref{fig:code-analysis}).
 
 \begin{figure}[htbp]
 \centering
@@ -213,22 +209,13 @@ Time complexity (encoded) & Complexity class: exponential, polynomial, etc. \\
 
 \subsection{Algorithm Classification}
 
-Algorithm detection employs a three-tier approach:
+Algorithm detection employs a three-tier cascade: (1)~\emph{CodeBERT Transformer} \cite{feng2020} classifies the algorithm family from code semantics; (2)~\emph{ML Ensemble} (Random Forest, XGBoost, Gradient Boosting) uses 35 hand-engineered circuit features; (3)~\emph{Rule-Based Pattern Matching} identifies canonical structures (QFT, Grover oracles, VQE ansatz). The system selects the highest-confidence result and falls back through tiers below threshold; tier-3 additionally overrides tier-1 when rule confidence $\geq$0.7 disagrees with CodeBERT's top prediction. Tier-1 CodeBERT attains macro F1 0.66 across eight families (750-sample held-out), perfect on Grover/QAOA/QPE/Shor but missing Bernstein--Vazirani and Deutsch--Jozsa (F1=0) whose Python syntax lacks signal for a general-code transformer. Tier-2 recovers these at macro F1 0.921 (acc.\ 0.864, $n{=}8{,}800$) via CX-gate patterns invisible to CodeBERT.
 
-\begin{enumerate}
-    \item \textbf{CodeBERT Transformer:} A fine-tuned CodeBERT model classifies the algorithm family (e.g., search, optimization, factorization, simulation) based on code semantics \cite{feng2020}.
-    \item \textbf{ML Ensemble Classifier:} A scikit-learn ensemble (Random Forest, XGBoost, Gradient Boosting) provides a secondary classification using 35 hand-engineered circuit features (gate counts per type, CX-ratio, depth, rotation-gate distribution, etc.).
-    \item \textbf{Rule-Based Pattern Matching:} Deterministic rules identify known quantum patterns (e.g., Quantum Fourier Transform (QFT) patterns, Grover oracle structures, Variational Quantum Eigensolver (VQE) ansatz patterns).
-\end{enumerate}
-
-The system selects the highest-confidence result, falling back through tiers below threshold; tier-3 additionally cross-validates tier-1 and overrides when rule confidence $\geq$0.7 disagrees with CodeBERT's top prediction. Tier-1 CodeBERT attains macro F1 0.66 across eight algorithm families (750-sample held-out), perfect on Grover/QAOA/QPE/Shor but missing Bernstein--Vazirani and Deutsch--Jozsa (F1=0) whose Python surface syntax lacks signal for a general-code transformer. Tier-2 recovers these at macro F1 0.921 (acc.\ 0.864, $n{=}8{,}800$) via CX-gate patterns invisible to CodeBERT; tier-3 provides the final fallback so every routable input receives a deterministic label.
-
-\paragraph*{Tier fire-rate on the real benchmark.} Running the full classifier over the \tierTotalWorkloads-workload benchmark and recording the winning tier per workload: \tierNonQuantumSkipped{} classical-language inputs skip the quantum pipeline; of the \tierQuantumEvaluated{} quantum workloads, tier-1 CodeBERT retains its prediction on \tierOneCount{} (\tierOneShareQuantum\%), tier-3 rule-based pattern matching carries \tierThreeCount{} (\tierThreeShareQuantum\%; \tierThreeCrossCount{} cross-validation overrides + \tierThreeFallbackCount{} low-confidence fallbacks), and tier-2 ML ensemble never fires (\tierTwoCount{})---because CodeBERT's internal fallback always populates top-1, tier-2 functions as a reserve for CodeBERT unavailability rather than a routine contributor. In production the division of labour is therefore tier-1 for a small set of canonical textbook circuits (Deutsch--Jozsa, Bernstein--Vazirani, Simon, minimal-VQE) and tier-3 for everything else.
+\paragraph*{Tier fire-rate on the real benchmark.} Over the \tierTotalWorkloads-workload benchmark, \tierNonQuantumSkipped{} classical-language inputs skip the quantum pipeline; of the \tierQuantumEvaluated{} quantum workloads, tier-1 wins \tierOneCount{} (\tierOneShareQuantum\%), tier-3 carries \tierThreeCount{} (\tierThreeShareQuantum\%; \tierThreeCrossCount{} cross-validation overrides + \tierThreeFallbackCount{} low-confidence fallbacks), and tier-2 never fires---CodeBERT's internal fallback always populates top-1, so tier-2 is a reserve for CodeBERT unavailability rather than a routine contributor. Tier-1 thus handles canonical textbook circuits; tier-3 handles everything else.
 
 \section{Decision Engine}
 
-The Decision Engine is the core component of Nexar. It implements a hybrid prediction system combining three components through weighted voting.
-Fig.~\ref{fig:decision-engine} summarizes the interaction among these components.
+The Decision Engine is Nexar's core component, implementing a hybrid prediction system that combines three sub-components through weighted voting (Fig.~\ref{fig:decision-engine}).
 
 \begin{figure}[htbp]
 \centering
@@ -266,7 +253,7 @@ The NISQ Viability Score applies penalties when qubits exceed 50, circuit depth 
 
 The ML component is a CalibratedClassifierCV (Platt-scaled \cite{simsek2023}) wrapping a Random Forest, performing binary classification (Quantum/Classical) over the 16-feature vector. The synthetic training corpus is produced by AST-level mutation of base classical-to-quantum algorithm pairs (factorization, search, period-finding, random walk) with transforms spanning qubit scaling, depth injection, gate-set substitution, and register re-indexing; features are z-score standardized and the model is trained with stratified cross-validation.
 
-On a stratified held-out test split of 876 instances (438 Classical / 438 Quantum), the Random Forest head attains accuracy 0.977, F1$_{(Q)}$ 0.978, ROC-AUC 0.999, and Brier score 0.016; cross-architecture checks with Gradient Boosting (acc 0.983, F1$_{(Q)}$ 0.983) and XGBoost (acc 0.984, F1$_{(Q)}$ 0.984) confirm the signal is not architecture-specific. Per-problem-type slice accuracy is reported in Table~\ref{tab:ml-slice-metrics}. These synthetic metrics do not transfer directly to the real benchmark---the isolated ML ablation attains only F1$_{(Q)}{=}0.424$ on the 100-workload oracle evaluation (Table~\ref{tab:routing-accuracy})---which empirically motivates the two-stage pipeline characterised in Sections~\ref{sec:routing-accuracy} and~\ref{sec:regime-conditional}.
+On an 876-instance stratified held-out split (438/438), the Random Forest head attains accuracy 0.977, F1$_{(Q)}$ 0.978, ROC-AUC 0.999, Brier 0.016; Gradient Boosting (0.983) and XGBoost (0.984) match within 1 point, confirming the signal is not architecture-specific. Per-problem-type slice accuracy (Table~\ref{tab:ml-slice-metrics}) floors at 0.941. These synthetic metrics do not transfer: the isolated ML ablation attains only F1$_{(Q)}{=}0.424$ on the real oracle evaluation (Table~\ref{tab:routing-accuracy}), motivating the two-stage pipeline (Sections~\ref{sec:routing-accuracy},~\ref{sec:regime-conditional}).
 
 \begin{table}[htbp]
 \caption{ML Classifier Held-Out Accuracy by Problem Type (Random Forest head; stratified 876-instance test set).}
@@ -302,7 +289,7 @@ The rule-based component encodes physics constraints and domain knowledge. Hardw
 
 The cost analyzer estimates execution time and monetary cost for both quantum and classical execution paths, formalized by \eqref{eq:quantum-cost} and \eqref{eq:classical-cost}.
 
-Gate timing parameters in the quantum execution model are anchored to calibration data retrieved live from IBM Quantum backends via \texttt{QiskitRuntimeService}. Table~\ref{tab:ibm-calibration} summarises the median hardware metrics across the three IBM Quantum backends accessible to this system (retrieved April 2026). The median two-qubit ECR gate time of 68.0\,ns is consistent across all three devices and directly informs the $t_q$ estimation in \eqref{eq:quantum-cost}. The monetary rate $r_{\text{QPU}} = \$1.60/\text{s}$ is taken from IBM's pay-as-you-go schedule \cite{ibm_pricing2024}. As this rate is subject to change, we report the hardware-agnostic QPU-seconds ($t_q$) alongside dollar estimates throughout the paper to allow direct comparison across pricing epochs.
+Gate timing is anchored to calibration data retrieved live via \texttt{QiskitRuntimeService}. Table~\ref{tab:ibm-calibration} summarises the median metrics across three IBM backends (April 2026); the 68.0\,ns median ECR gate time is consistent across devices and directly informs $t_q$ in \eqref{eq:quantum-cost}. The rate $r_{\text{QPU}} = \$1.60/\text{s}$ \cite{ibm_pricing2024} is transient, so we report QPU-seconds alongside dollar estimates throughout.
 
 \begin{table}[htbp]
 \caption{IBM Quantum Backend Calibration Data (Retrieved April 2026 via \texttt{QiskitRuntimeService})}
@@ -325,28 +312,28 @@ ibm\_kingston  & 156 & 0.00183 & 0.000229 & 0.00867 & 275.4 & 144.8 \\
 \end{tabular}
 \end{table}
 
-Quantum Cost Model (IBM Quantum Network pay-as-you-go \cite{ibm_pricing2024}):
+Quantum cost (IBM pay-as-you-go \cite{ibm_pricing2024}):
 \begin{equation}
 C_q = t_q\, r_{\text{QPU}},
 \label{eq:quantum-cost}
 \end{equation}
-where $C_q$ is the total estimated quantum execution cost, $t_q$ is the estimated QPU reservation time in seconds (the full billable window, including gate execution at the 68.0\,ns median ECR time of Table~\ref{tab:ibm-calibration}, readout, reset, and classical post-processing across all $n_{\text{shots}} = 1024$ measurement shots), and $r_{\text{QPU}} = \$1.60/\text{s}$ is IBM's pay-as-you-go QPU-time rate \cite{ibm_pricing2024}. This is the canonical production pricing model: IBM pay-as-you-go bills purely on QPU-seconds, with no per-shot, per-gate, or job-submission fees. Alternative providers (e.g., AWS Braket) charge per shot and per task rather than per QPU-second, which would add additive terms to \eqref{eq:quantum-cost}; because our benchmark targets the IBM backend family used for real-hardware validation (Table~\ref{tab:hardware-validation}), the IBM pay-as-you-go model is the appropriate reference.
+where $t_q$ is the QPU reservation time (full billable window including gate execution, readout, reset, and post-processing across $n_{\text{shots}}{=}1024$ shots) and $r_{\text{QPU}}{=}\$1.60/\text{s}$. IBM bills purely on QPU-seconds; AWS Braket's per-shot/per-task fees would add terms to \eqref{eq:quantum-cost}, but our real-hardware validation targets IBM so \eqref{eq:quantum-cost} is the appropriate reference.
 
-Classical Cost Model (AWS EC2 on-demand pricing \cite{aws_ec2_pricing2024}):
+Classical cost (AWS EC2 on-demand \cite{aws_ec2_pricing2024}):
 \begin{equation}
-C_c = (t_c\, r_{\text{compute}}) + (M_{\text{GB}}\, t_c\, r_{\text{memory}}) + C_{\text{overhead}},
+C_c = t_c\, r_{\text{compute}} + M_{\text{GB}}\, t_c\, r_{\text{memory}} + C_{\text{overhead}},
 \label{eq:classical-cost}
 \end{equation}
-where $C_c$ is the total estimated classical execution cost, $t_c$ is the estimated classical execution time in seconds, $r_{\text{compute}} = \$0.0001/\text{s}$ ($\sim$\$0.36/hr, approximating a \texttt{c6i.2xlarge} instance \cite{aws_ec2_pricing2024}) is the compute rate, $M_{\text{GB}}$ is the estimated memory usage in gigabytes, $r_{\text{memory}} = \$0.00001/(\text{GB}\cdot\text{s})$ is the memory rate, and $C_{\text{overhead}} = \$0.001$ is a fixed per-job overhead covering job submission and bookkeeping.
+where $t_c$ is classical execution time, $r_{\text{compute}}{=}\$0.0001/\text{s}$ ($\sim$\texttt{c6i.2xlarge}), $M_{\text{GB}}$ is memory usage, $r_{\text{memory}}{=}\$0.00001/(\text{GB}{\cdot}\text{s})$, and $C_{\text{overhead}}{=}\$0.001$ covers job submission.
 
 \subsection{Decision Merging}
 
-The engine operates as a two-stage pipeline. In the first stage the rule engine emits one of four decision types; \texttt{FORCE\_QUANTUM}, \texttt{FORCE\_CLASSICAL}, and \texttt{REJECT} bypass the merger entirely and constitute the deterministic routing path. Only the \texttt{ALLOW\_BOTH} decision type reaches the second stage, where the three components are combined through a weighted voting algorithm,
+The engine is a two-stage pipeline. In stage one the rule engine emits \texttt{FORCE\_QUANTUM}, \texttt{FORCE\_CLASSICAL}, or \texttt{REJECT} (deterministic path) or \texttt{ALLOW\_BOTH} (defers to stage two). Stage two combines the three components by weighted voting,
 \begin{equation}
-S_{\text{quantum}} = w_{\text{ML}}\, P_{\text{ML}}^{q} + w_{\text{rules}}\, P_{\text{rules}}^{q} + w_{\text{cost}}\, P_{\text{cost}}^{q},
+S_{\text{quantum}} = w_{\text{ML}} P_{\text{ML}}^{q} + w_{\text{rules}} P_{\text{rules}}^{q} + w_{\text{cost}} P_{\text{cost}}^{q},
 \label{eq:decision-score}
 \end{equation}
-where $S_{\text{quantum}}$ is the final quantum suitability score, $P_{\text{ML}}^{q}$ is the ML component's quantum probability, $P_{\text{rules}}^{q}$ is the rule-based component's quantum score, $P_{\text{cost}}^{q}$ is the cost component's quantum preference score, and $w_{\text{ML}} = 0.50$, $w_{\text{rules}} = 0.35$, $w_{\text{cost}} = 0.15$ are the respective component weights.
+with $w_{\text{ML}}{=}0.50$, $w_{\text{rules}}{=}0.35$, $w_{\text{cost}}{=}0.15$.
 
 On our 100-workload benchmark the first stage resolves 61 workloads (40 \texttt{FORCE\_CLASSICAL}, 20 \texttt{FORCE\_QUANTUM}, 1 \texttt{REJECT}); the merger fires only on the 39 remaining \texttt{ALLOW\_BOTH} workloads, where $P_{\text{rules}}^{q}$ is neutral by construction, so the weighted sum is dominated by the ML probability with cost as a tie-breaker (characterised in Section~\ref{sec:regime-conditional}).
 
@@ -385,8 +372,7 @@ Table~\ref{tab:weight-sensitivity} reports routing counts across six configurati
 
 \section{AI Code Converter}
 
-The AI Code Converter enables the platform to accept classical Python code and automatically translate it into quantum circuits when quantum execution is recommended.
-The converter workflow is presented in Fig.~\ref{fig:ai-code-converter}.
+The AI Code Converter translates classical Python into Qiskit circuits when quantum execution is recommended (Fig.~\ref{fig:ai-code-converter}).
 
 \begin{figure}[htbp]
 \centering
@@ -437,7 +423,7 @@ We evaluated Nexar across 100 workloads in three categories. \emph{Classical} (3
 \subsection{Routing Accuracy}\label{sec:routing-accuracy}
 
 \subsubsection{Routing Distribution}
-Of the 100 workloads, Nexar routes 79 to classical, 20 to quantum, and rejects 1 as physically infeasible. The rejected workload is a 150-qubit circuit whose state vector cannot be simulated classically ($\sim\!10^{31}$\,MB) and whose qubit count exceeds the 127-qubit IBM~Eagle limit. Quantum-routed workloads span the NISQ-advantage regime and above: 50--120-qubit VQE and QAOA circuits (confidence~1.0), 20--32-qubit optimization and simulation workloads (confidence 0.54--0.80), and a handful of 10--20-qubit hybrids with high superposition or entanglement scores. Every classically-routable workload (qubits\,=\,0) is routed classically with confidence~1.0.
+Of the 100 workloads, Nexar routes 79 to classical, 20 to quantum, and rejects one 150-qubit circuit whose state vector cannot be simulated classically ($\sim\!10^{31}$\,MB) and exceeds the 127-qubit IBM~Eagle limit. Quantum routes span 20--120 qubits (confidence 0.54--1.0); every 0-qubit workload is routed classically at confidence~1.0.
 
 \subsubsection{Dual-Oracle Ground Truth}\label{sec:dual-oracle}
 A routing decision can be ``correct'' under two distinct criteria, so we apply two oracles to each workload's filename and physical circuit features (qubits, depth, entanglement), without referring to Nexar's output. Oracle~A is fully independent of Nexar's decision logic. Oracle~B's NISQ-viability thresholds are derived from external IBM device specs and prior-art error-budget analysis rather than from Table~\ref{tab:hardware-validation}; because Nexar's rule engine draws on the same external physics, Oracle~B and the rule engine share a first-principles foundation but are not co-calibrated on any internal dataset (addressed in Section~\ref{sec:discussion-effectiveness}).
@@ -537,14 +523,11 @@ Iron-Sulfur VQE & 60 & Quantum & \$1.421 & 888.31 \\
 \end{tabular}
 \end{table}
 
-Across all 100 workloads, classical execution costs approximate \$0.001 USD, overhead-dominated by $C_{\text{overhead}}$ (the other terms in \eqref{eq:classical-cost} stay below $10^{-4}$ across the full classical timing range of 1.42--806\,ms), so the classical denominator is effectively constant. Quantum-routed workloads range from \$0.375 to \$1.578 USD under IBM's pay-as-you-go rate (\$1.60/QPU-second), giving a cost ratio of \textbf{375$\times$ to 1{,}578$\times$}: 10--20 qubit circuits average \$0.41 while 50+ qubit workloads reach \$0.92--\$1.58.
+Classical execution costs approximate \$0.001 USD overhead-dominated across the 1.42--806\,ms timing range, so the classical denominator is effectively constant. Quantum-routed workloads range \$0.375--\$1.578 at IBM's \$1.60/QPU-second rate, giving a cost ratio of \textbf{375$\times$ to 1{,}578$\times$}.
 
 \subsection{Cost Break-Even Analysis}\label{sec:cost-break-even}
 
-Despite the current quantum cost premium, analysis of the cost scaling behavior reveals a fundamental crossover point driven by the exponential memory requirements of classical quantum simulation.
-
-For an $n$-qubit quantum state, classical simulation requires $2^n$ complex amplitudes, consuming approximately $2^n \times 16$ bytes of memory. This creates the following scaling:
-These simulation memory thresholds are summarized in Table~\ref{tab:memory-scaling}.
+An $n$-qubit quantum state requires $2^n$ complex amplitudes ($2^n{\cdot}16$ bytes) to simulate classically; the resulting scaling wall is summarised in Table~\ref{tab:memory-scaling}.
 
 \begin{table}[htbp]
 \caption{Classical Simulation Memory Requirements}
@@ -565,15 +548,7 @@ These simulation memory thresholds are summarized in Table~\ref{tab:memory-scali
 \end{tabular}
 \end{table}
 
-Beyond 50--60 qubits classical exact simulation becomes physically infeasible: the state-vector memory requirement ($2^n \cdot 16$ bytes) exceeds 16\,PB at 50 qubits and 16\,EB at 60 qubits, so we report the crossover qualitatively rather than via extrapolated dollar figures, which would assume unlimited memory rental. Quantum execution at \$1.58 for the 120-qubit VQE ansatz remains on the same \$0.375--\$1.578 scale as the 12--60 qubit workloads because QPU reservation time scales with depth rather than qubit count.
-
-This analysis identifies three zones:
-
-\begin{enumerate}
-    \item \textbf{Classical Advantage Zone ($<$ 50 qubits):} Classical hardware is \mbox{375--1{,}578$\times$} more cost-effective (range taken across the quantum-routed workloads at \$0.375--\$1.578 vs.\ \$0.001 classical).
-    \item \textbf{Memory Wall (50--60 qubits):} Classical exact simulation becomes physically infeasible; any cost extrapolation is an artefact of assumed unlimited memory rental.
-    \item \textbf{Quantum Advantage Zone ($>$ 60 qubits):} Quantum execution is the only physically viable option for exact simulation; cost remains on the sub-\$2 scale regardless of qubit count.
-\end{enumerate}
+Beyond 50--60 qubits, exact classical simulation is physically infeasible (16\,PB at 50q, 16\,EB at 60q), so the crossover is qualitative rather than an extrapolated dollar figure. Quantum execution stays on the \$0.375--\$1.578 scale across 12--120 qubits because QPU reservation time scales with depth, not qubit count. This identifies three zones: a \emph{classical advantage zone} ($<$50q) where classical is 375--1{,}578$\times$ cheaper; a \emph{memory wall} (50--60q) where classical exact simulation is infeasible; and a \emph{quantum advantage zone} ($>$60q) where quantum is the only viable option for exact simulation.
 
 The 50--60 qubit memory wall applies to \emph{full state-vector simulation} of high-entanglement circuits. Tensor Network simulators (e.g., MPS) can simulate 100+ qubits efficiently when entanglement entropy remains bounded \cite{vinkhuijzen2023}, but the algorithms central to our benchmark (Shor, deep VQE, high-depth QAOA) generate entanglement growing with depth, rendering such shortcuts inapplicable. The crossover is visualized in Fig.~\ref{fig:cost-scaling}.
 
@@ -660,13 +635,13 @@ Iron-sulfur VQE (60q)        &  60 &   242 &  0.1$^{\ddagger}$ & \textbf{Quantum
 \end{tabular}
 \end{table}
 
-\textbf{Hardware-evidence consistency.} Across all 27 circuits, zero routing decisions were contradicted by hardware evidence: every classical-routed workload either produced a correct result at low cost or produced noise-dominated output on quantum hardware, confirming it should not have been sent there.
+\textbf{Hardware-evidence consistency.} No routing decision was contradicted: every classical-routed workload either produced a correct result or produced noise-dominated output on quantum hardware.
 
-\textbf{NISQ depth wall.} Post-transpile depth is the primary predictor of fidelity, more than logical qubit count. Circuits below depth~80 consistently exceed 80\% fidelity (DJ 99.9\%, BV 96.3\%, QPE 82.3\%); above depth~$\sim$130 results degrade toward the noise floor. The 4-qubit Grover at depth~241 (post-\texttt{mcx} decomposition) drops to 33.5\% while 4-qubit QPE at depth~80 holds 82.3\%, confirming the physical basis of the NISQ Viability Score.
+\textbf{NISQ depth wall.} Post-transpile depth predicts fidelity more reliably than qubit count: circuits below depth~80 consistently exceed 80\% (DJ 99.9\%, BV 96.3\%, QPE 82.3\%); above depth~$\sim$130 results degrade toward the noise floor. The 4-qubit Grover at depth~241 drops to 33.5\% while 4-qubit QPE at depth~80 holds 82.3\%, confirming the physical basis of the NISQ Viability Score.
 
-\textbf{Large-circuit verification.} The 50q QAOA, 60q iron-sulfur VQE, and 120q VQE ansatz were all successfully dispatched to real IBM hardware---the first execution of these benchmark circuits outside simulation. Results are noise-dominated as expected for unmitigated single-layer ansätze, but this does not invalidate the routing: these circuits are physically impossible to simulate classically, so quantum hardware is the only viable path regardless of current fidelity.
+\textbf{Large-circuit verification.} 50q QAOA, 60q iron-sulfur VQE, and 120q VQE were successfully dispatched to real IBM hardware---the first execution of these circuits outside simulation. Noise-dominated output is expected for unmitigated ansätze but does not invalidate routing: these circuits cannot be simulated classically.
 
-\textbf{ZNE transpiler insight.} The ZNE benchmark (24q, logical depth~51) collapsed to post-transpile depth~1 after the Qiskit pass manager cancelled the T/Tdg identity pairs and forward/reverse GHZ ladder exactly. Hardware measured $|0\ldots0\rangle$ at 68.5\%, reflecting the near-vacuum post-cancellation state---a factor the cost model should account for in future work.
+\textbf{ZNE transpiler insight.} The ZNE benchmark (24q, logical depth~51) collapsed to post-transpile depth~1 after the Qiskit pass manager cancelled T/Tdg pairs and the GHZ ladder exactly; hardware measured $|0\ldots0\rangle$ at 68.5\%---a factor the cost model should handle in future work.
 
 \section{Discussion}
 

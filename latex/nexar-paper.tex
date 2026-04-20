@@ -10,6 +10,13 @@
 \usepackage[most]{tcolorbox}
 \usepackage{placeins}
 
+% Tighten float/table whitespace to keep content within 10 pages.
+\setlength{\textfloatsep}{8pt plus 1pt minus 2pt}
+\setlength{\floatsep}{8pt plus 1pt minus 2pt}
+\setlength{\intextsep}{8pt plus 1pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+
 \input{tier_attribution_summary.tex}
 
 \begin{document}
@@ -80,7 +87,7 @@ CodeBERT, cost analysis, decision engine, hybrid computing, NISQ, quantum advant
 
 \section{Introduction}
 
-The advent of Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018} has created a computational resource-allocation challenge: given a workload, should it execute on classical hardware, a quantum simulator, or a real quantum device? The decision depends on a complex interplay of problem structure, circuit complexity, hardware noise, cost, and qubit availability. Classical state-vector simulation remains feasible up to approximately 50 qubits, beyond which memory requirements grow as $O(2^n)$ and exceed any deployable system, creating a crossover where quantum execution is the only viable path. Yet simply having a quantum device does not guarantee advantage: transpilation, shots, queue times, and error rates mean many polynomial-solvable problems remain orders of magnitude faster and cheaper on classical hardware. The challenge is not whether quantum computing will eventually provide advantage, but when and for which problems it does so today.
+The advent of Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018} has created a computational resource-allocation challenge: given a workload, should it execute on classical hardware, a quantum simulator, or a real quantum device? The decision depends on a complex interplay of problem structure, circuit complexity, hardware noise, cost, and qubit availability. Classical state-vector simulation remains feasible up to approximately 50 qubits, beyond which memory requirements grow as $O(2^n)$ and exceed any deployable system, creating a crossover where full state-vector simulation of high-entanglement circuits becomes infeasible. Yet simply having a quantum device does not guarantee advantage: transpilation, shots, queue times, and error rates mean many polynomial-solvable problems remain orders of magnitude faster and cheaper on classical hardware. The challenge is not whether quantum computing will eventually provide advantage, but when and for which problems it does so today.
 
 This paper presents Nexar, a full-stack platform that automates the analysis, classification, and routing of computational workloads across quantum and classical execution backends. Its contributions are:
 
@@ -109,7 +116,7 @@ Static code analysis for quantum programs has been explored in works such as Sca
 
 \subsection{Quantum Advantage Thresholds}
 
-The question of when quantum advantage emerges has been studied through computational complexity theory \cite{aaronson2011} and empirical benchmarks \cite{arute2019}. Our work contributes empirical data on the physical-feasibility crossover: 50--60 qubits is where classical state-vector memory (16 PB to 16 EB) exceeds any deployable system, making quantum the only viable path for exact simulation beyond this scale.
+The question of when quantum advantage emerges has been studied through computational complexity theory \cite{aaronson2011} and empirical benchmarks \cite{arute2019}. Our work contributes empirical data on the physical-feasibility crossover: 50--60 qubits is where classical state-vector memory (16 PB to 16 EB) exceeds any deployable system, making full state-vector simulation of high-entanglement circuits infeasible beyond this scale.
 
 \section{System Architecture}
 
@@ -423,7 +430,7 @@ We evaluated Nexar across 100 workloads in three categories. \emph{Classical} (3
 \subsection{Routing Accuracy}\label{sec:routing-accuracy}
 
 \subsubsection{Routing Distribution}
-Of the 100 workloads, Nexar routes 79 to classical, 20 to quantum, and rejects one 150-qubit circuit whose state vector cannot be simulated classically ($\sim\!10^{31}$\,MB) and exceeds the 127-qubit IBM~Eagle limit. Quantum routes span 20--120 qubits (confidence 0.54--1.0); every 0-qubit workload is routed classically at confidence~1.0.
+Of the 100 workloads, Nexar routes 79 to classical, 20 to quantum, and rejects one 150-qubit circuit whose full state-vector simulation is infeasible for high-entanglement settings ($\sim\!10^{31}$\,MB) and exceeds the 127-qubit IBM~Eagle limit. Quantum routes span 20--120 qubits (confidence 0.54--1.0); every 0-qubit workload is routed classically at confidence~1.0.
 
 \subsubsection{Dual-Oracle Ground Truth}\label{sec:dual-oracle}
 A routing decision can be ``correct'' under two distinct criteria, so we apply two oracles to each workload's filename and physical circuit features (qubits, depth, entanglement), without referring to Nexar's output. Oracle~A is fully independent of Nexar's decision logic. Oracle~B's NISQ-viability thresholds are derived from external IBM device specs and prior-art error-budget analysis rather than from Table~\ref{tab:hardware-validation}; because Nexar's rule engine draws on the same external physics, Oracle~B and the rule engine share a first-principles foundation but are not co-calibrated on any internal dataset (addressed in Section~\ref{sec:discussion-effectiveness}).
@@ -548,7 +555,7 @@ An $n$-qubit quantum state requires $2^n$ complex amplitudes ($2^n{\cdot}16$ byt
 \end{tabular}
 \end{table}
 
-Beyond 50--60 qubits, exact classical simulation is physically infeasible (16\,PB at 50q, 16\,EB at 60q), so the crossover is qualitative rather than an extrapolated dollar figure. Quantum execution stays on the \$0.375--\$1.578 scale across 12--120 qubits because QPU reservation time scales with depth, not qubit count. This identifies three zones: a \emph{classical advantage zone} ($<$50q) where classical is 375--1{,}578$\times$ cheaper; a \emph{memory wall} (50--60q) where classical exact simulation is infeasible; and a \emph{quantum advantage zone} ($>$60q) where quantum is the only viable option for exact simulation.
+Beyond 50--60 qubits, exact classical full state-vector simulation of high-entanglement circuits is physically infeasible (16\,PB at 50q, 16\,EB at 60q), so the crossover is qualitative rather than an extrapolated dollar figure. Quantum execution stays on the \$0.375--\$1.578 scale across 12--120 qubits because QPU reservation time scales with depth, not qubit count. This identifies three zones: a \emph{classical advantage zone} ($<$50q) where classical is 375--1{,}578$\times$ cheaper; a \emph{memory wall} (50--60q) where full state-vector simulation of high-entanglement circuits is infeasible; and a \emph{quantum advantage zone} ($>$60q) where exact simulation of high-entanglement circuits is only practically accessible through quantum hardware.
 
 The 50--60 qubit memory wall applies to \emph{full state-vector simulation} of high-entanglement circuits. Tensor Network simulators (e.g., MPS) can simulate 100+ qubits efficiently when entanglement entropy remains bounded \cite{vinkhuijzen2023}, but the algorithms central to our benchmark (Shor, deep VQE, high-depth QAOA) generate entanglement growing with depth, rendering such shortcuts inapplicable. The crossover is visualized in Fig.~\ref{fig:cost-scaling}.
 
@@ -584,7 +591,7 @@ Quantum workloads require $\sim$1.85$\times$ longer analysis time due to additio
 
 \subsection{End-to-End Case Study}
 
-\textbf{120-Qubit VQE $\rightarrow$ Quantum Override.} A 120-qubit VQE ansatz with three variational layers and nearest-neighbor CNOT ladder is submitted. Analysis extracts \texttt{qubits=120, depth=14, cx\_ratio=0.33}; the physical-necessity rule (state-vector memory $\sim$$10^{31}$\,MB) triggers \texttt{FORCE\_QUANTUM} (confidence 1.0), bypassing ML voting, and the HAL submits to an IBM Eagle processor. This is a success of \emph{routing}, not of \emph{output fidelity}: the circuit returned noise-dominated Top\% 0.1 on \texttt{ibm\_fez} (post-transpile depth 482, exceeding NISQ coherence), as expected for an unmitigated ansatz at 120 qubits. Nexar's correctness claim is narrow---the only physically feasible backend was selected for a circuit that cannot be simulated classically; recovering fidelity requires error mitigation \cite{temme2017} or fault tolerance. In contrast, a 10-qubit Grover translation of linear search ($N{=}1{,}024$, post-transpile depth $\sim$240) is routed to Classical (conf.\ 0.88): the theoretical-floor quantum cost $240{\cdot}1024{\cdot}68\text{\,ns}{\cdot}\$1.60/\text{s}\approx\$0.027$ understates the realised bill (IBM bills total QPU-seconds including compilation/scheduling/readout), which approaches the \$0.375--\$1.578 band in Table~\ref{tab:cost-comparison}; either metric, $O(\sqrt{N})$ Grover cannot justify the cost at this scale.
+\textbf{120-Qubit VQE $\rightarrow$ Quantum Override.} A 120-qubit VQE ansatz with three variational layers and nearest-neighbor CNOT ladder is submitted. Analysis extracts \texttt{qubits=120, depth=14, cx\_ratio=0.33}; the physical-necessity rule (state-vector memory $\sim$$10^{31}$\,MB) triggers \texttt{FORCE\_QUANTUM} (confidence 1.0), bypassing ML voting, and the HAL submits to an IBM Eagle processor. This is a success of \emph{routing}, not of \emph{output fidelity}: the circuit returned noise-dominated Top\% 0.1 on \texttt{ibm\_fez} (post-transpile depth 482, exceeding NISQ coherence), as expected for an unmitigated ansatz at 120 qubits. Nexar's correctness claim is narrow---the only physically feasible backend was selected for a circuit that is infeasible under full state-vector simulation in high-entanglement settings; recovering fidelity requires error mitigation \cite{temme2017} or fault tolerance. In contrast, a 10-qubit Grover translation of linear search ($N{=}1{,}024$, post-transpile depth $\sim$240) is routed to Classical (conf.\ 0.88): the theoretical-floor quantum cost $240{\cdot}1024{\cdot}68\text{\,ns}{\cdot}\$1.60/\text{s}\approx\$0.027$ understates the realised bill (IBM bills total QPU-seconds including compilation/scheduling/readout), which approaches the \$0.375--\$1.578 band in Table~\ref{tab:cost-comparison}; either metric, $O(\sqrt{N})$ Grover cannot justify the cost at this scale.
 
 \subsection{Real Hardware Validation}
 
@@ -639,7 +646,7 @@ Iron-sulfur VQE (60q)        &  60 &   242 &  0.1$^{\ddagger}$ & \textbf{Quantum
 
 \textbf{NISQ depth wall.} Post-transpile depth predicts fidelity more reliably than qubit count: circuits below depth~80 consistently exceed 80\% (DJ 99.9\%, BV 96.3\%, QPE 82.3\%); above depth~$\sim$130 results degrade toward the noise floor. The 4-qubit Grover at depth~241 drops to 33.5\% while 4-qubit QPE at depth~80 holds 82.3\%, confirming the physical basis of the NISQ Viability Score.
 
-\textbf{Large-circuit verification.} 50q QAOA, 60q iron-sulfur VQE, and 120q VQE were successfully dispatched to real IBM hardware---the first execution of these circuits outside simulation. Noise-dominated output is expected for unmitigated ansätze but does not invalidate routing: these circuits cannot be simulated classically.
+\textbf{Large-circuit verification.} 50q QAOA, 60q iron-sulfur VQE, and 120q VQE were successfully dispatched to real IBM hardware---the first execution of these circuits outside simulation. Noise-dominated output is expected for unmitigated ansätze but does not invalidate routing: for these high-entanglement workloads, full state-vector classical simulation is infeasible.
 
 \textbf{ZNE transpiler insight.} The ZNE benchmark (24q, logical depth~51) collapsed to post-transpile depth~1 after the Qiskit pass manager cancelled T/Tdg pairs and the GHZ ladder exactly; hardware measured $|0\ldots0\rangle$ at 68.5\%---a factor the cost model should handle in future work.
 

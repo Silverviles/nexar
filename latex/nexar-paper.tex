@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[10pt,conference]{IEEEtran}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
@@ -9,13 +9,6 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage[most]{tcolorbox}
 \usepackage{placeins}
-
-% Tighten float/table whitespace to keep content within 10 pages.
-\setlength{\textfloatsep}{8pt plus 1pt minus 2pt}
-\setlength{\floatsep}{8pt plus 1pt minus 2pt}
-\setlength{\intextsep}{8pt plus 1pt minus 2pt}
-\setlength{\abovecaptionskip}{4pt}
-\setlength{\belowcaptionskip}{2pt}
 
 \input{tier_attribution_summary.tex}
 
@@ -56,14 +49,14 @@ yashodhalasithjayasinghe@gmail.com}
 Malabe, Sri Lanka \\
 sayunhettiarachchi@gmail.com}
 \and
-\IEEEauthorblockN{5\textsuperscript{th} Prof. Nuwan Kodagoda}
+\IEEEauthorblockN{5\textsuperscript{th} Nuwan Kodagoda}
 \IEEEauthorblockA{\textit{Dept. of Information Technology} \\
 \textit{Sri Lanka Institute of Information} \\
 \textit{Technology} \\
 Malabe, Sri Lanka \\
 nuwan.k@sliit.lk}
 \and
-\IEEEauthorblockN{6\textsuperscript{th} Dr. Kapila Dissanayaka}
+\IEEEauthorblockN{6\textsuperscript{th} Kapila Dissanayaka}
 \IEEEauthorblockA{\textit{Department of Computer Science} \\
 \textit{and Software Engineering} \\
 \textit{Sri Lanka Institute of Information} \\
@@ -117,16 +110,16 @@ The question of when quantum advantage emerges has been studied through computat
 
 \section{System Architecture}
 
-Nexar is implemented as a microservices monorepo of six independently deployable services communicating through a central API Gateway (Fig.~\ref{fig:system-architecture}).
+Nexar is a six-service microservices monorepo coordinated by a central API Gateway (Fig.~\ref{fig:system-architecture}).
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\columnwidth]{system-architecture.png}
-\caption{Nexar system architecture: six microservices connected through an API Gateway. Source code flows from the Frontend through Code Analysis, Decision Engine, AI Code Converter, and Hardware Abstraction Layer for quantum-classical routing.}
+\caption{Nexar architecture: source code flows from Frontend to Code Analysis, Decision Engine, AI Code Converter, and Hardware Abstraction Layer through the API Gateway.}
 \label{fig:system-architecture}
 \end{figure}
 
-Submitted source code passes through a JWT-authenticated Express.js API Gateway to the Code Analysis Engine (language detection, complexity, algorithm classification); the Decision Engine consumes these metrics to produce a hardware recommendation; if quantum execution is selected for classical code, the AI Code Converter translates it before the Hardware Abstraction Layer dispatches to the chosen backend. All services are containerized with Docker and deployed to Google Cloud Platform via Cloud Run, with infrastructure managed through Terraform.
+Submitted code enters a JWT-authenticated Express.js API Gateway, then the Code Analysis Engine extracts language, complexity, and algorithm signals. The Decision Engine recommends a target backend; when classical code is routed to quantum execution, the AI Code Converter generates Qiskit before the Hardware Abstraction Layer dispatches the job. Services are containerized with Docker and deployed on Google Cloud Run via Terraform.
 
 \section{Code Analysis Engine}
 
@@ -422,7 +415,7 @@ The Hardware Abstraction Layer provides a provider-extensible interface for quan
 
 \subsection{Benchmark Design}
 
-We evaluated Nexar across 100 workloads in three categories. \emph{Classical} (32 workloads): deep learning (CNN, transformer, GAN), scientific computing (MD, CFD, N-body, PDE), ML (k-means, GBM, RL), cryptography (RSA, AES), and combinatorial optimisation (TSP, graph colouring, A*). \emph{Hybrid} (23 workloads, 0--24q): VQE variants (caffeine, job-shop), QAOA (supply chain, graph partition), quantum ML (QSVM, QNN, transfer learning), and error mitigation (ZNE). \emph{Quantum} (45 workloads, 1--150q): molecular simulation (H\textsubscript{2}, LiH, H\textsubscript{2}O, 60q iron-sulfur, 120q VQE) \cite{kandala2017}, Shor factoring ($N{=}15$/$21$/$35$), search (20q Grover, 3-SAT), optimisation (50q QAOA MaxCut, vehicle routing), and foundational algorithms (DJ, BV, Simon, QFT, QPE).
+We evaluated Nexar on 100 workloads in three categories: \emph{Classical} (32; deep learning, scientific computing, ML, cryptography, and combinatorial optimization), \emph{Hybrid} (23; VQE, QAOA, quantum ML, and ZNE), and \emph{Quantum} (45; 1--150q molecular simulation \cite{kandala2017}, Shor factoring, Grover search, QAOA optimization, and foundational circuits DJ/BV/Simon/QFT/QPE).
 
 \subsection{Routing Accuracy}\label{sec:routing-accuracy}
 
@@ -430,7 +423,7 @@ We evaluated Nexar across 100 workloads in three categories. \emph{Classical} (3
 Of the 100 workloads, Nexar routes 79 to classical, 20 to quantum, and rejects one 150-qubit circuit whose full state-vector simulation is infeasible for high-entanglement settings ($\sim\!10^{31}$\,MB) and exceeds the 127-qubit IBM~Eagle limit. Quantum routes span 20--120 qubits (confidence 0.54--1.0); every 0-qubit workload is routed classically at confidence~1.0.
 
 \subsubsection{Dual-Oracle Ground Truth}\label{sec:dual-oracle}
-A routing decision can be ``correct'' under two distinct criteria, so we apply two oracles to each workload's filename and physical circuit features (qubits, depth, entanglement), without referring to Nexar's output. Oracle~A is fully independent of Nexar's decision logic. Oracle~B's NISQ-viability thresholds are derived from external IBM device specs and prior-art error-budget analysis rather than from Table~\ref{tab:hardware-validation}; because Nexar's rule engine draws on the same external physics, Oracle~B and the rule engine share a first-principles foundation but are not co-calibrated on any internal dataset (addressed in Section~\ref{sec:discussion-effectiveness}).
+Because routing can be judged by different criteria, we evaluate against two independent oracles derived from workload metadata and physical circuit features (qubits, depth, entanglement), without using Nexar outputs. Oracle~A is fully independent of Nexar logic. Oracle~B uses externally sourced NISQ-viability thresholds (IBM specs + prior error-budget analysis), sharing first-principles physics with the rule engine but no internal co-calibration (Section~\ref{sec:discussion-effectiveness}).
 
 \emph{Oracle~A (Algorithmic Advantage)} labels Quantum when a known quantum algorithm provides theoretical speedup: classical simulation infeasible ($\geq\!50$ qubits; \cite{preskill2018}), Shor-class factorization ($\geq\!8$ qubits; \cite{shor1997}), large entangled VQE ($\geq\!20$ qubits, entanglement$\,\geq\!0.3$; \cite{kandala2017}), large QAOA ($\geq\!20$ qubits, entanglement$\,\geq\!0.3$; \cite{farhi2014}), or Grover search ($\geq\!20$ qubits; \cite{grover1996}); rejects circuits above 127 qubits \cite{arute2019}.
 
@@ -454,13 +447,13 @@ Table~\ref{tab:routing-accuracy} reports accuracy, precision and recall on the Q
 \subsubsection{Findings}
 Accuracy is not a separative metric at this benchmark's class distribution (Oracle~A: 85/14/1; Oracle~B: 92/7/1): a constant-Classical classifier scores 0.85/0.92 accuracy with F1$_{(Q)}{=}0$ and $\kappa{=}0$. We therefore report F1$_{(Q)}$ and Cohen's $\kappa$ as the primary metrics. Nexar achieves $\kappa = 0.38$ (Oracle~A; 95\% CI $[0.14, 0.58]$) and $\kappa = 0.48$ (Oracle~B; 95\% CI $[0.23, 0.68]$) against random $\kappa \approx 0.05$, and F1$_{(Q)}$ of 0.457/0.500 against B3's 0.281/0.175 (McNemar Nexar vs.\ B3: $p{<}0.001$; Table~\ref{tab:statistical-significance}). Under Oracle~B, Nexar attains perfect Quantum-class recall (1.000) at precision 0.333, corroborated by Table~\ref{tab:hardware-validation}.
 
-Accuracy is higher under Oracle~B (0.86) than Oracle~A (0.81) because the rule engine's hardware-viability thresholds mirror Oracle~B more closely than Oracle~A's textbook algorithmic criteria, which is the correct behaviour for a present-day platform. Of 19 Nexar--Oracle~A disagreements, 18 have Table~\ref{tab:hardware-validation} counterparts: every sub-20-qubit or deep circuit Oracle~A labels Quantum produced noise-dominated output (top-outcome fidelity below 10\%) on \texttt{ibm\_fez}, vindicating Nexar's Classical routing.
+Accuracy is higher under Oracle~B (0.86) than Oracle~A (0.81) because Nexar targets present-day hardware viability. Of 19 Nexar--Oracle~A disagreements, 18 appear in Table~\ref{tab:hardware-validation}: sub-20-qubit or deep circuits labeled Quantum by Oracle~A produced noise-dominated output (top outcome $<$10\%) on \texttt{ibm\_fez}, supporting Nexar's Classical routing.
 
 Aggregated over all 100 workloads, rules-only (A2) superficially outperforms the full ensemble (F1$_{(Q)}$ 0.636 vs.\ 0.457 on A; 0.667 vs.\ 0.500 on B), but this aggregate conflates two regimes decoupled by the rule gate: on the 61 rule-overridden workloads the two routers are numerically identical, and on the 39 \texttt{ALLOW\_BOTH} workloads rules-only emits zero quantum predictions (F1$_{(Q)}{=}0$) while the ensemble attains perfect Quantum-class recall under Oracle~B. Rules-only wins the aggregate by refusing to participate in the ambiguous regime, which is not a defensible default; the regime-conditional breakdown is deferred to Section~\ref{sec:regime-conditional}. The cost-only ablation (A3) is the weakest component in isolation (F1$_{(Q)}{<}0.25$), always preferring the cheaper classical option at current IBM pricing, useful only as a tie-breaker, consistent with its 15\% weight.
 
 \subsubsection{Statistical Robustness}\label{sec:statistical-robustness}
 
-With only 14/7 Quantum positives, single flips shift F1$_{(Q)}$ by 0.07--0.14. Table~\ref{tab:statistical-significance} reports 95\% paired-bootstrap CIs (2{,}000 resamples) on F1$_{(Q)}$ and $\kappa$ per router under both oracles, together with McNemar tests against Nexar (exact binomial when $b{+}c{<}25$, else asymptotic $\chi^{2}$ with continuity correction).
+With only 14/7 Quantum positives, single flips move F1$_{(Q)}$ by 0.07--0.14. Table~\ref{tab:statistical-significance} reports 95\% paired-bootstrap CIs (2{,}000 resamples) for F1$_{(Q)}$ and $\kappa$, plus McNemar tests versus Nexar (exact binomial for $b{+}c{<}25$, otherwise continuity-corrected $\chi^{2}$).
 
 \input{statistical_significance_table.tex}
 
@@ -468,7 +461,7 @@ Three claims survive the small-$n$ correction. First, Nexar's routing is disting
 
 \subsubsection{Regime-Conditional Analysis}\label{sec:regime-conditional}
 
-The aggregate metrics in Table~\ref{tab:routing-accuracy} obscure the two-stage structure of Nexar's decision pipeline. The merger is only exercised on the 39 workloads for which the rule engine emits \texttt{ALLOW\_BOTH}; the remaining 61 workloads are resolved by deterministic rule overrides. Evaluating each router on these two regimes separately (Table~\ref{tab:regime-conditional}) clarifies where the ensemble actually contributes.
+Aggregate metrics in Table~\ref{tab:routing-accuracy} mask Nexar's two-stage pipeline. The merger runs only on 39 \texttt{ALLOW\_BOTH} workloads; 61 are resolved by deterministic rule overrides. Table~\ref{tab:regime-conditional} reports both regimes separately.
 
 \begin{table}[htbp]
 \caption{Regime-Conditional Routing Metrics (\textit{N}\,=\,100; Oracle A/B F1(Q) and Quantum-class recall).}
@@ -490,16 +483,14 @@ B2 Volume$\geq$50k & 0.500 & 0.364 & 0.000 & 0.000 \\
 \bottomrule
 \\[-0.5em]
 \multicolumn{5}{l}{\footnotesize True-Quantum counts per slice: Rule-Overridden 10 (A) / 5 (B);} \\
-\multicolumn{5}{l}{\footnotesize \texttt{ALLOW\_BOTH} 4 (A) / 2 (B). B1, B2, and A2 emit zero quantum} \\
-\multicolumn{5}{l}{\footnotesize predictions in the \texttt{ALLOW\_BOTH} slice by construction (qubit/volume} \\
-\multicolumn{5}{l}{\footnotesize thresholds not met; rules defaulted to \texttt{ALLOW\_BOTH} rather than} \\
-\multicolumn{5}{l}{\footnotesize a forced label), so their recall on the quantum class is 0.} \\
+\multicolumn{5}{l}{\footnotesize \texttt{ALLOW\_BOTH} 4 (A) / 2 (B). B1, B2, and A2 make zero quantum predictions there} \\
+\multicolumn{5}{l}{\footnotesize by construction (thresholds not met; rules defer), so quantum-class recall is 0.} \\
 \end{tabular}
 \end{table}
 
-On the rule-overridden regime Nexar and rules-only are numerically identical (F1$_{(Q)}$ 0.778/0.769) because the first stage \emph{is} the rule engine on these workloads; the qubit-threshold baseline B1 trails by 25 points on Oracle~A, showing force-overrides do substantive work beyond a single-feature heuristic. On \texttt{ALLOW\_BOTH}, rules-only, qubit-threshold, and volume-threshold routers each emit zero quantum predictions (recall exactly 0) because their rules are structurally unable to commit to quantum at sub-50-qubit scale. The ensemble recovers 100\% of true-Quantum workloads under Oracle~B (ZNE 24q and QFT 20q) and 25\% under Oracle~A, at the cost of 11 false-positive quantum predictions; recall-at-cost in the ambiguous regime is the ensemble's designed contribution.
+On rule-overridden workloads, Nexar and rules-only are identical (F1$_{(Q)}$ 0.778/0.769) because stage one is the rule engine; B1 trails by 25 points on Oracle~A, indicating force-overrides add value beyond a single-feature threshold. In \texttt{ALLOW\_BOTH}, rules-only, B1, and B2 emit zero quantum predictions (recall 0) at sub-50-qubit scale, while the ensemble recovers 100\% of true-Quantum workloads under Oracle~B (ZNE 24q, QFT 20q) and 25\% under Oracle~A, with 11 false-positive quantum routes.
 
-On this slice the ML-only ablation A1 marginally outperforms the full ensemble on F1$_{(Q)}$ (0.308 vs.\ 0.267 on B; 0.133 vs.\ 0.118 on A); both achieve perfect recall and the difference is entirely precision (two extra false positives: QPE and Simon). The cost component's consistent classical preference in the sub-120-qubit regime makes its 15\% weight a de-facto classical prior that dampens the ML head. A regime-adaptive weighting scheme (rules-as-gate, ML-dominant voting within \texttt{ALLOW\_BOTH}) is an immediately tractable improvement (Section~\ref{sec:future-work}).
+Within this slice, ML-only A1 slightly exceeds the full ensemble on F1$_{(Q)}$ (0.308 vs.\ 0.267 on B; 0.133 vs.\ 0.118 on A). Both have perfect recall; the gap is precision (two extra false positives: QPE and Simon), consistent with a classical bias from the 15\% cost weight in sub-120-qubit workloads. A practical improvement is regime-adaptive weighting (rules as gate, ML-dominant voting in \texttt{ALLOW\_BOTH}; Section~\ref{sec:future-work}).
 
 \subsection{Cost Analysis Results}
 
@@ -519,11 +510,12 @@ Sorting Suite & 0 & Classical & \$0.001 & 806.49 \\
 RSA Key Gen. & 0 & Classical & \$0.001 & 24.29 \\
 QSVM Kernel Est. & 4 & Classical & \$0.001 & 1.00 \\
 QAOA Graph Part. & 20 & Quantum & \$0.439 & 274.36 \\
-LiH UCCSD\footnote{Unitary Coupled Cluster Singles and Doubles} & 12 & Quantum & \$0.375 & 234.37 \\
+LiH UCCSD$^{a}$ & 12 & Quantum & \$0.375 & 234.37 \\
 QAOA MaxCut (50q) & 50 & Quantum & \$0.917 & 573.18 \\
 Iron-Sulfur VQE & 60 & Quantum & \$1.421 & 888.31 \\
 120-qubit VQE & 120 & Quantum & \$1.578 & 986.33 \\
 \bottomrule
+\multicolumn{5}{l}{$^{a}$Unitary Coupled Cluster Singles and Doubles.} \\
 \end{tabular}
 \end{table}
 
@@ -592,13 +584,14 @@ Quantum workloads require $\sim$1.85$\times$ longer analysis time due to additio
 
 \subsection{Real Hardware Validation}
 
-To validate routing against actual hardware, we submitted 27 quantum circuits spanning every algorithm family to \texttt{ibm\_fez} (156-qubit Heron~r2) via Nexar's HAL, 1{,}024 shots each. Every job ID is logged in the supplementary results file and is verifiable on the IBM Quantum Platform. Table~\ref{tab:hardware-validation} summarises the results.
+For hardware validation, we submitted 27 circuits across all algorithm families to \texttt{ibm\_fez} (156-qubit Heron~r2) via Nexar's HAL at 1{,}024 shots each. Job IDs are listed in supplementary results and verifiable on the IBM Quantum Platform. Table~\ref{tab:hardware-validation} summarizes outcomes.
 
 \begin{table}[htbp]
 \caption{Real Hardware Validation: 27 Circuits on \texttt{ibm\_fez} (April 2026, 1{,}024 shots)}
 \label{tab:hardware-validation}
 \centering
-\scriptsize
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{l r r r l}
 \toprule
 \textbf{Circuit} & \textbf{Q} & \textbf{Depth$^{*}$} & \textbf{Top\%} & \textbf{Nexar Route} \\

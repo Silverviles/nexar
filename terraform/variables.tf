@@ -86,27 +86,27 @@ variable "service_resources" {
   default = {
     api = {
       cpu    = "1"
-      memory = "256Mi"
+      memory = "512Mi"
     }
     frontend = {
       cpu    = "1"
-      memory = "128Mi"
+      memory = "512Mi"
     }
     ai-code-converter = {
       cpu    = "2"
       memory = "4Gi"
     }
     code-analysis-engine = {
-      cpu    = "1"
+      cpu    = "2"
       memory = "4Gi"
     }
     decision-engine = {
       cpu    = "1"
-      memory = "256Mi"
+      memory = "512Mi"
     }
     hardware-abstraction-layer = {
       cpu    = "1"
-      memory = "256Mi"
+      memory = "512Mi"
     }
   }
 }

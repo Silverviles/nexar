@@ -43,8 +43,9 @@ def create_app() -> FastAPI:
             "message": "Welcome to Python-to-Quantum API",
             "endpoints": {
                 "/api/translate": "POST - Translate Python to quantum code",
-                "/api/execute": "POST - Execute quantum circuit",
+                "/api/execute": "POST - Execute quantum circuit (supports 'local' and 'hal' backends)",
                 "/api/extract-logic": "POST - Extract logic function",
+                "/api/devices": "GET - List available HAL quantum devices",
                 "/api/health": "GET - Health check",
                 "/api/quantum/patterns": "GET - List detectable quantum patterns",
                 "/api/quantum/analyze": "POST - Analyze code for quantum suitability",

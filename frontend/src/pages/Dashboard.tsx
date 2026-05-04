@@ -9,6 +9,13 @@ import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { decisionEngineService } from "@/services/decision-engine-service";
 import type { DashboardStats } from "@/types/decision-engine.tp";
 
+function formatDashboardResponseTime(value: number): string {
+  if (!Number.isFinite(value) || value < 0) return "N/A";
+  // Keep very large values visible, but compact.
+  if (Math.abs(value) >= 1e6) return `${value.toExponential(2)}ms`;
+  return `${Math.round(value)}ms`;
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +67,7 @@ export default function Dashboard() {
               isLoading
                 ? "..."
                 : metrics && metrics.avgResponseTime > 0
-                  ? `${metrics.avgResponseTime}ms`
+                  ? formatDashboardResponseTime(metrics.avgResponseTime)
                   : "N/A"
             }
             subtitle="Estimated execution"

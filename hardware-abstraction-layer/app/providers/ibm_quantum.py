@@ -1,11 +1,14 @@
 from typing import List, Dict, Any, Union, Optional
 import logging
 import signal
+import statistics
+import time
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import BackendV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Batch
+from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound
 
 from app.core.config import settings
 from app.core.constants import BasisGates
@@ -20,19 +23,40 @@ class SandboxTimeoutError(Exception):
     pass
 
 
+_IBM_STATUS_MAP = {
+    "Initializing": "PENDING",
+    "Queued": "QUEUED",
+    "Validating": "QUEUED",
+    "Running": "RUNNING",
+    "Done": "COMPLETED",
+    "Error": "FAILED",
+    "Cancelled": "CANCELLED",
+}
+
+
 class IBMQuantumProvider(QuantumProvider):
     """
     A quantum provider for IBM Qiskit.
     """
 
+    # Calibration cache TTL: 1 hour (IBM recalibrates ~daily)
+    _CALIBRATION_CACHE_TTL = 3600
+
     def __init__(self):
         self.service = None
+        self._calibration_cache: Dict[str, Dict[str, Any]] = {}
+        self._calibration_cache_time: float = 0.0
+
         try:
             if settings.IBM_QUANTUM_TOKEN:
-                self.service = QiskitRuntimeService(
-                    channel="ibm_quantum_platform",
-                    token=settings.IBM_QUANTUM_TOKEN
-                )
+                runtime_kwargs = {
+                    "channel": "ibm_quantum_platform",
+                    "token": settings.IBM_QUANTUM_TOKEN,
+                }
+                if settings.IBM_QUANTUM_INSTANCE:
+                    runtime_kwargs["instance"] = settings.IBM_QUANTUM_INSTANCE
+
+                self.service = QiskitRuntimeService(**runtime_kwargs)
                 logger.info("IBM Quantum Service initialized with provided token.")
             else:
                  # Fallback to default (env vars or saved account)
@@ -102,6 +126,9 @@ class IBMQuantumProvider(QuantumProvider):
                         if v not in adjacency_map[u]:
                             adjacency_map[u].append(v)
 
+            # Extract calibration data (cached)
+            calibration = self._get_calibration(backend)
+
             devices.append(
                 {
                     "name": backend.name,
@@ -113,9 +140,131 @@ class IBMQuantumProvider(QuantumProvider):
                     "pending_jobs": pending_jobs,
                     "basis_gates": basis_gates_info,
                     "coupling_map": adjacency_map,
+                    "calibration": calibration,
                 }
             )
         return devices
+
+    def _get_calibration(self, backend: Any) -> Dict[str, Any]:
+        """
+        Extract median calibration metrics from a backend.
+        Uses an in-memory cache with 1-hour TTL to avoid repeated slow fetches.
+
+        Returns dict with:
+          median_cx_error, median_sx_error, median_readout_error,
+          median_t1_us, median_t2_us, median_gate_time_ns
+        """
+        name = getattr(backend, 'name', 'unknown')
+
+        # Check cache
+        now = time.time()
+        if (
+            name in self._calibration_cache
+            and (now - self._calibration_cache_time) < self._CALIBRATION_CACHE_TTL
+        ):
+            return self._calibration_cache[name]
+
+        calibration = self._extract_calibration(backend)
+        self._calibration_cache[name] = calibration
+        self._calibration_cache_time = now
+
+        return calibration
+
+    @staticmethod
+    def _extract_calibration(backend: Any) -> Dict[str, Any]:
+        """
+        Extract median error rates and coherence times from backend.target
+        and backend.qubit_properties().
+        """
+        empty = {
+            "median_cx_error": None,
+            "median_sx_error": None,
+            "median_readout_error": None,
+            "median_t1_us": None,
+            "median_t2_us": None,
+            "median_gate_time_ns": None,
+        }
+
+        target = getattr(backend, 'target', None)
+        if target is None:
+            return empty
+
+        try:
+            op_names = target.operation_names
+
+            # Two-qubit gate errors (ECR, CX, or CZ — whichever the device uses)
+            cx_errors: list[float] = []
+            gate_times_ns: list[float] = []
+            for gate_name in ['ecr', 'cx', 'cz']:
+                if gate_name not in op_names:
+                    continue
+                for qargs, props in target[gate_name].items():
+                    if props is None:
+                        continue
+                    if props.error is not None:
+                        cx_errors.append(props.error)
+                    if props.duration is not None:
+                        gate_times_ns.append(props.duration * 1e9)
+
+            # Single-qubit gate errors (SX is the standard single-qubit gate)
+            sx_errors: list[float] = []
+            for gate_name in ['sx', 'x', 'rz']:
+                if gate_name not in op_names:
+                    continue
+                for qargs, props in target[gate_name].items():
+                    if props is None:
+                        continue
+                    if props.error is not None:
+                        sx_errors.append(props.error)
+                if sx_errors:
+                    break  # Use the first gate type that has data
+
+            # Readout errors
+            readout_errors: list[float] = []
+            if 'measure' in op_names:
+                for qargs, props in target['measure'].items():
+                    if props is not None and props.error is not None:
+                        readout_errors.append(props.error)
+
+            # T1/T2 coherence times from qubit properties
+            t1_values: list[float] = []
+            t2_values: list[float] = []
+            num_qubits = getattr(backend, 'num_qubits', 0)
+            for i in range(num_qubits):
+                try:
+                    qp = backend.qubit_properties(i)
+                    if qp is None:
+                        continue
+                    if qp.t1 is not None:
+                        t1_values.append(qp.t1 * 1e6)  # seconds → microseconds
+                    if qp.t2 is not None:
+                        t2_values.append(qp.t2 * 1e6)
+                except Exception:
+                    continue
+
+            result = {
+                "median_cx_error": statistics.median(cx_errors) if cx_errors else None,
+                "median_sx_error": statistics.median(sx_errors) if sx_errors else None,
+                "median_readout_error": statistics.median(readout_errors) if readout_errors else None,
+                "median_t1_us": round(statistics.median(t1_values), 2) if t1_values else None,
+                "median_t2_us": round(statistics.median(t2_values), 2) if t2_values else None,
+                "median_gate_time_ns": round(statistics.median(gate_times_ns), 2) if gate_times_ns else None,
+            }
+
+            logger.info(
+                "Calibration extracted for %s: cx_err=%.4f, sx_err=%.5f, ro_err=%.4f, T1=%.1fμs, T2=%.1fμs",
+                getattr(backend, 'name', '?'),
+                result['median_cx_error'] or 0,
+                result['median_sx_error'] or 0,
+                result['median_readout_error'] or 0,
+                result['median_t1_us'] or 0,
+                result['median_t2_us'] or 0,
+            )
+            return result
+
+        except Exception as e:
+            logger.warning("Failed to extract calibration for %s: %s", getattr(backend, 'name', '?'), e)
+            return empty
 
     def execute_circuit(
             self,
@@ -131,17 +280,20 @@ class IBMQuantumProvider(QuantumProvider):
         pm = generate_preset_pass_manager(target=backend.target, optimization_level=1)
         transpiled_circuit = pm.run(circuit)
 
-        # If caller provided an explicit mode, use it directly.
         if mode is not None:
             sampler = Sampler(mode=mode)
             job = sampler.run([transpiled_circuit], shots=shots)
             return job.job_id()
 
-        # Default: session execution mode (keeps current behavior).
-        with Session(backend=backend) as session:
-            sampler = Sampler(mode=session)
-            job = sampler.run([transpiled_circuit], shots=shots)
-            return job.job_id()
+        if settings.IBM_EXECUTION_MODE == "session":
+            with Session(backend=backend) as session:
+                sampler = Sampler(mode=session)
+                job = sampler.run([transpiled_circuit], shots=shots)
+                return job.job_id()
+
+        sampler = Sampler(mode=backend)
+        job = sampler.run([transpiled_circuit], shots=shots)
+        return job.job_id()
 
     def execute_batch(self, tasks: List[QuantumCircuit], device_name: str, **kwargs) -> List[str]:
         if not self.service:
@@ -153,16 +305,16 @@ class IBMQuantumProvider(QuantumProvider):
         pm = generate_preset_pass_manager(target=backend.target, optimization_level=1)
         transpiled_circuits = pm.run(tasks)
 
-        job = None
         if mode is not None:
-             sampler = Sampler(mode=mode)
-             job = sampler.run(transpiled_circuits, shots=shots)
+            sampler = Sampler(mode=mode)
+        elif settings.IBM_EXECUTION_MODE == "session":
+            session = Session(backend=backend)
+            sampler = Sampler(mode=session)
         else:
-            with Session(backend=backend) as session:
-                sampler = Sampler(mode=session)
-                job = sampler.run(transpiled_circuits, shots=shots)
-        
-        # Return composite IDs
+            sampler = Sampler(mode=backend)
+
+        job = sampler.run(transpiled_circuits, shots=shots)
+
         base_id = job.job_id()
         return [f"{base_id}:{i}" for i in range(len(tasks))]
 
@@ -170,8 +322,13 @@ class IBMQuantumProvider(QuantumProvider):
         if not self.service:
             return "UNKNOWN"
         real_id = job_id.split(":")[0]
-        job = self.service.job(real_id)
-        return job.status().title()
+        try:
+            job = self.service.job(real_id)
+            raw = job.status().title()
+            return _IBM_STATUS_MAP.get(raw, raw.upper())
+        except RuntimeJobNotFound:
+            logger.warning("IBM job not found while checking status: %s", real_id)
+            return "UNKNOWN"
 
     def get_job_result(self, job_id: str) -> Dict[str, Any]:
         if not self.service:
@@ -180,12 +337,61 @@ class IBMQuantumProvider(QuantumProvider):
         real_id = parts[0]
         index = int(parts[1]) if len(parts) > 1 else 0
 
-        job = self.service.job(real_id)
-        result = job.result()
-        
-        if hasattr(result, 'pub_results') and len(result.pub_results) > index:
-            pub_result = result.pub_results[index]
-            return pub_result.data.meas.get_counts() if hasattr(pub_result.data, 'meas') else {}
+        try:
+            job = self.service.job(real_id)
+            result = job.result()
+        except RuntimeJobNotFound:
+            logger.warning("IBM job not found while fetching result: %s", real_id)
+            return {}
+
+        counts = self._extract_counts_from_result(result, index)
+        if not counts:
+            logger.warning(
+                "IBM job %s completed but no counts could be extracted from result type %s",
+                real_id,
+                type(result).__name__,
+            )
+        return counts
+
+    def _extract_counts_from_result(self, result: Any, index: int) -> Dict[str, Any]:
+        pub_results = getattr(result, "pub_results", None)
+        if pub_results is None:
+            try:
+                pub_results = list(result)
+            except TypeError:
+                pub_results = None
+
+        if not pub_results or len(pub_results) <= index:
+            return {}
+
+        return self._extract_counts_from_pub_result(pub_results[index])
+
+    def _extract_counts_from_pub_result(self, pub_result: Any) -> Dict[str, Any]:
+        data = getattr(pub_result, "data", None)
+        if data is not None:
+            for register_name in ("meas", "c"):
+                register = getattr(data, register_name, None)
+                if register is not None and hasattr(register, "get_counts"):
+                    counts = register.get_counts()
+                    if counts:
+                        return counts
+
+            for value in vars(data).values():
+                if hasattr(value, "get_counts"):
+                    counts = value.get_counts()
+                    if counts:
+                        return counts
+
+        if hasattr(pub_result, "join_data"):
+            try:
+                joined = pub_result.join_data()
+                if hasattr(joined, "get_counts"):
+                    counts = joined.get_counts()
+                    if counts:
+                        return counts
+            except Exception as exc:
+                logger.debug("Failed to extract counts via join_data(): %s", exc)
+
         return {}
 
     def check_device_availability(self, device_name: str) -> DeviceAvailability:
@@ -275,8 +481,33 @@ class IBMQuantumProvider(QuantumProvider):
         import builtins
         import math
 
+        # Import allowed modules from configuration before building
+        # the restricted importer.
+        allowed_modules = [m.strip() for m in settings.SANDBOX_ALLOWED_MODULES.split(',') if m.strip()]
+
+        # Build a restricted __import__ that only permits allowed modules.
+        # Without this, any `import` statement in user code raises ImportError
+        # even for modules that are already pre-loaded in the sandbox namespace.
+        allowed_mod_set = set(m.strip() for m in allowed_modules)
+
+        def _restricted_import(
+            name: str,
+            glbls=None,
+            lcls=None,
+            fromlist: tuple = (),
+            level: int = 0,
+        ):
+            base = name.split('.')[0]
+            if base not in allowed_mod_set:
+                raise ImportError(
+                    f"Import of '{name}' is not permitted in the sandbox. "
+                    f"Allowed modules: {sorted(allowed_mod_set)}"
+                )
+            return builtins.__import__(name, glbls, lcls, fromlist, level)
+
         # Create restricted builtins
         safe_builtins: Dict[str, Any] = {
+            '__import__': _restricted_import,
             'abs': builtins.abs,
             'all': builtins.all,
             'any': builtins.any,
@@ -324,8 +555,6 @@ class IBMQuantumProvider(QuantumProvider):
             'None': None,
         }
 
-        # Import allowed modules
-        allowed_modules = settings.SANDBOX_ALLOWED_MODULES.split(',')
         namespace: Dict[str, Any] = {
             '__builtins__': safe_builtins,
         }

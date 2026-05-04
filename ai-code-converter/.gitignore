@@ -21,3 +21,5 @@
 /modal_training_utils/better_datasets
 # Images
 *.png
+
+/version*/

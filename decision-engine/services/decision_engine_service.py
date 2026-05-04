@@ -327,7 +327,7 @@ class DecisionEngineService:
             alternatives.append({
                 "hardware": alt_hw.value,
                 "confidence": 1.0 - final_recommendation.confidence,
-                "trade_off": f"Alternative: {alt_time:.0f}ms execution, ${alt_cost:.4f} cost"
+                "trade_off": f"Alternative: {self._format_time(alt_time)} execution, {self._format_cost(alt_cost)} cost"
             })
             
             # Get estimated cost/time for recommended hardware
@@ -358,6 +358,40 @@ class DecisionEngineService:
                 error=f"Prediction failed: {str(e)}"
             )
     
+    @staticmethod
+    def _format_time(ms: float) -> str:
+        """Format execution time (ms) into a human-readable string"""
+        if ms > 1e15:
+            return "Infeasible"
+        s = ms / 1000
+        if s < 1:
+            return f"{ms:.0f}ms"
+        if s < 60:
+            return f"{s:.2f}s"
+        if s < 3600:
+            return f"{int(s // 60)}m {int(s % 60)}s"
+        if s < 86400:
+            return f"{int(s // 3600)}h {int((s % 3600) // 60)}m"
+        days = s / 86400
+        if days < 365:
+            return f"{days:.1f} days"
+        return f"{days / 365:.1f} years"
+
+    @staticmethod
+    def _format_cost(usd: float) -> str:
+        """Format cost (USD) into a human-readable string"""
+        if usd > 1e12:
+            return "Infeasible"
+        if usd < 0.01:
+            return f"${usd:.6f}"
+        if usd < 1000:
+            return f"${usd:.2f}"
+        if usd < 1e6:
+            return f"${usd / 1000:.1f}K"
+        if usd < 1e9:
+            return f"${usd / 1e6:.1f}M"
+        return f"${usd / 1e9:.1f}B"
+
     def health_check(self) -> Dict:
         """Check service health"""
         return {

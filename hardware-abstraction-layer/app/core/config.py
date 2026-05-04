@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     # IBM Quantum
     IBM_QUANTUM_TOKEN: Optional[str] = None
+    IBM_QUANTUM_INSTANCE: Optional[str] = None
 
     # IBM Classical (Cloud Functions)
     IBM_CLOUD_API_KEY: Optional[str] = None
@@ -40,6 +41,9 @@ class Settings(BaseSettings):
     # Python code execution
     PYTHON_EXEC_TIMEOUT: int = 30  # Seconds timeout for sandboxed code execution
     SANDBOX_ALLOWED_MODULES: str = "qiskit,numpy,math"  # Comma-separated allowed modules
+
+    # IBM Quantum execution mode: "session" requires a paid plan; "direct" works on all plans
+    IBM_EXECUTION_MODE: str = "direct"
 
     class Config:
         env_file = ".env"

@@ -1,0 +1,17 @@
+feature,correlation_with_label
+superposition_score,0.48270098422925567
+entanglement_factor,0.4352650615659042
+entanglement_score,0.43457386151355004
+cx_gate_ratio,0.4076761081119428
+memory_requirement_mb,-0.32932657095429924
+gate_density,0.2964104994036825
+gate_count,0.22285683532307654
+qubits_required,0.20889735295567963
+problem_type_encoded,0.1827061338736606
+circuit_depth,0.1476139667227242
+problem_size,0.1074585692760448
+quantum_overhead_ratio,0.10745856927604461
+noise_sensitivity,0.10025208472153128
+time_complexity_encoded,0.09929045133349247
+circuit_volume,0.07981162204099077
+nisq_viability_score,0.008174844953922619

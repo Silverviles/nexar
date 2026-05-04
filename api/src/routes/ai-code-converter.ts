@@ -6,23 +6,27 @@ const router = Router();
 // Change this URL to your FastAPI backend
 const AI_CODE_CONVERTER_URL =
   process.env.AI_CODE_CONVERTER_URL || "http://127.0.0.1:8000";
-const REQUEST_TIMEOUT = 30_000;
+const DEFAULT_TIMEOUT = 30_000;       // 30s for lightweight endpoints
+const MODEL_INFERENCE_TIMEOUT = 120_000; // 120s for T5 model inference (/translate)
+const EXECUTION_TIMEOUT = 150_000;    // 150s for circuit execution (HAL polling can be slow)
 const SLOW_UPSTREAM_THRESHOLD_MS = 100_000;
 
 logger.debug("AI Code Converter routes initialized", {
   targetUrl: AI_CODE_CONVERTER_URL,
-  timeoutMs: REQUEST_TIMEOUT,
+  defaultTimeoutMs: DEFAULT_TIMEOUT,
+  modelInferenceTimeoutMs: MODEL_INFERENCE_TIMEOUT,
+  executionTimeoutMs: EXECUTION_TIMEOUT,
 });
 
 /**
  * Categorize axios/network errors into actionable types.
  */
-function categorizeError(error: any): { errorType: string; detail: string } {
+function categorizeError(error: any, timeout: number): { errorType: string; detail: string } {
   if (error.code === "ECONNREFUSED") {
     return { errorType: "connection_refused", detail: "AI Code Converter service is not running or not reachable" };
   }
   if (error.code === "ETIMEDOUT" || error.code === "ECONNABORTED") {
-    return { errorType: "timeout", detail: `Request timed out after ${REQUEST_TIMEOUT}ms` };
+    return { errorType: "timeout", detail: `Request timed out after ${timeout}ms` };
   }
   if (error.code === "ENOTFOUND") {
     return { errorType: "dns_failure", detail: "Could not resolve AI Code Converter hostname" };
@@ -33,8 +37,8 @@ function categorizeError(error: any): { errorType: string; detail: string } {
   return { errorType: "network_error", detail: error.message || "Unknown network error" };
 }
 
-// Handler function for forwarding requests
-const forwardRequest = async (req: Request, res: Response) => {
+// Handler factory — returns a request forwarder with the given timeout
+const createForwarder = (timeout: number) => async (req: Request, res: Response) => {
   const requestId = req.requestId;
   const targetUrl = `${AI_CODE_CONVERTER_URL}/api${req.path}`;
 
@@ -52,7 +56,7 @@ const forwardRequest = async (req: Request, res: Response) => {
     bodySize: req.body ? JSON.stringify(req.body).length : 0,
     contentType: req.headers["content-type"] || "application/json",
     queryParams: req.query,
-    timeoutMs: REQUEST_TIMEOUT,
+    timeoutMs: timeout,
   });
 
   const startTime = Date.now();
@@ -66,8 +70,8 @@ const forwardRequest = async (req: Request, res: Response) => {
       headers: {
         "Content-Type": req.headers["content-type"] || "application/json",
       },
-      timeout: REQUEST_TIMEOUT,
-      validateStatus: () => true, // Accept all status codes
+      timeout,
+      validateStatus: () => true,
     });
 
     const durationMs = Date.now() - startTime;
@@ -128,7 +132,7 @@ const forwardRequest = async (req: Request, res: Response) => {
     res.status(response.status).json(response.data);
   } catch (error: any) {
     const durationMs = Date.now() - startTime;
-    const { errorType, detail } = categorizeError(error);
+    const { errorType, detail } = categorizeError(error, timeout);
 
     logger.error("[AI Code Converter] Upstream request failed", {
       requestId,
@@ -149,12 +153,16 @@ const forwardRequest = async (req: Request, res: Response) => {
 };
 
 // Define routes that match your FastAPI endpoints
-router.post("/translate", forwardRequest);
-router.post("/execute", forwardRequest);
-router.post("/quantum/analyze", forwardRequest);
+router.post("/translate", createForwarder(MODEL_INFERENCE_TIMEOUT));
+router.post("/execute", createForwarder(EXECUTION_TIMEOUT));
+router.post("/quantum/analyze", createForwarder(DEFAULT_TIMEOUT));
+router.get("/devices", createForwarder(DEFAULT_TIMEOUT));
 
 logger.debug("AI Code Converter routes registered", {
-  routes: ["POST /translate", "POST /execute", "POST /quantum/analyze"],
+  routes: [
+    "POST /translate", "POST /execute",
+    "POST /quantum/analyze", "GET /devices",
+  ],
 });
 
 export default router;

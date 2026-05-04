@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { formatDurationMs } from "@/lib/number-format";
 import { decisionEngineService } from "@/services/decision-engine-service";
 import type { AnalysisResult } from "@/types/codeAnalysis";
 import {
@@ -303,9 +304,7 @@ export function EnvironmentRecommendation({ analysisResult }: EnvironmentRecomme
                     <span className="text-xs">Est. Execution Time</span>
                   </div>
                   <p className="mt-1 font-mono text-xl font-bold">
-                    {recommendation.estimated_execution_time_ms
-                      ? `${(recommendation.estimated_execution_time_ms / 1000).toFixed(2)}s`
-                      : "N/A"}
+                    {formatDurationMs(recommendation.estimated_execution_time_ms)}
                   </p>
                 </div>
 

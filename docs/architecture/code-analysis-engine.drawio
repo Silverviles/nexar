@@ -1,0 +1,199 @@
+<mxfile host="app.diagrams.net" modified="2026-04-08" agent="Nexar" version="24.0">
+  <diagram id="cae-diagram" name="Code Analysis Engine">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Code Analysis Engine" style="text;html=1;fontSize=22;fontStyle=1;align=center;fillColor=none;strokeColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="430" y="20" width="350" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Input -->
+        <mxCell id="code-input" value="Source Code Input" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=14;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="190" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 1: Language Detection -->
+        <mxCell id="ml-lang" value="ML Language Classifier" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#be185d;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="100" width="210" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="lang-enum" value="Supported Language Resolver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9d174d;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="170" width="210" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 2: AST -->
+        <mxCell id="ast-builder" value="AST Builder" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7c3aed;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="270" width="210" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="parsers" value="Language Parsers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6d28d9;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="270" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="canonical-ir" value="Canonical IR Builder" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6d28d9;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="340" width="210" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 3: Classical Analysis -->
+        <mxCell id="lbl-classical" value="Classical Path" style="text;html=1;fontSize=11;fontStyle=5;fillColor=none;strokeColor=none;fontColor=#0891b2;" vertex="1" parent="1">
+          <mxGeometry x="590" y="90" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="complexity-analyzer" value="Complexity Analyzer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0891b2;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="590" y="110" width="190" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="time-comp" value="Time Complexity Analyzer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0e7490;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="100" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="space-comp" value="Space Complexity Analyzer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0e7490;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="150" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 4: Quantum Analysis -->
+        <mxCell id="lbl-quantum" value="Quantum Path" style="text;html=1;fontSize=11;fontStyle=5;fillColor=none;strokeColor=none;fontColor=#7c3aed;" vertex="1" parent="1">
+          <mxGeometry x="590" y="230" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="quantum-analyzer" value="Quantum Analyzer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7c3aed;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="590" y="255" width="190" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="circuit-depth" value="Circuit Depth Calculator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b21b6;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="240" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="state-sim" value="Quantum State Simulator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b21b6;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="290" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 5: Algorithm Detection -->
+        <mxCell id="lbl-algo" value="Algorithm Detection (Cascade)" style="text;html=1;fontSize=11;fontStyle=5;fillColor=none;strokeColor=none;fontColor=#dc2626;" vertex="1" parent="1">
+          <mxGeometry x="590" y="370" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="codebert" value="CodeBERT Classifier" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dc2626;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="590" y="400" width="180" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ml-ensemble" value="ML Ensemble Classifier" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d97706;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="400" width="190" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="rule-detector" value="Rule-Based Detector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#059669;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="400" width="180" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="heuristic" value="Heuristic Fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6b7280;fontColor=#ffffff;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="400" width="150" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Continuous Learning -->
+        <mxCell id="learning" value="Continuous Learning Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=12;fontStyle=1;arcSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="230" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Output -->
+        <mxCell id="result" value="Code Analysis Result" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16a34a;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="590" y="530" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Consumers -->
+        <mxCell id="to-de" value="Decision Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ef4444;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="870" y="530" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="to-fe" value="Frontend UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3b82f6;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="530" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Stage labels -->
+        <mxCell id="s1" value="Stage 1" style="text;html=1;fontSize=10;fontStyle=1;fillColor=#fce4ec;strokeColor=#e91e63;fontColor=#c62828;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="250" y="100" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" value="Stage 2" style="text;html=1;fontSize=10;fontStyle=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontColor=#5b21b6;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="250" y="275" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="Stage 3" style="text;html=1;fontSize=10;fontStyle=1;fillColor=#e0f2f1;strokeColor=#0891b2;fontColor=#0891b2;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="545" y="115" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" value="Stage 4" style="text;html=1;fontSize=10;fontStyle=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontColor=#7c3aed;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="545" y="260" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="s5" value="Stage 5" style="text;html=1;fontSize=10;fontStyle=1;fillColor=#fef2f2;strokeColor=#dc2626;fontColor=#dc2626;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="545" y="410" width="50" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows -->
+        <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#1565c0;" edge="1" source="code-input" target="ml-lang" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#be185d;" edge="1" source="ml-lang" target="lang-enum" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="Detected language" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#7c3aed;fontSize=10;fontStyle=2;" edge="1" source="lang-enum" target="ast-builder" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#6d28d9;" edge="1" source="ast-builder" target="parsers" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#6d28d9;" edge="1" source="ast-builder" target="canonical-ir" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- AST to analysis branches -->
+        <mxCell id="a4" value="If classical" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#0891b2;fontSize=10;fontStyle=2;" edge="1" source="ast-builder" target="complexity-analyzer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" value="If quantum" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#7c3aed;fontSize=10;fontStyle=2;" edge="1" source="ast-builder" target="quantum-analyzer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Sub-analyzers -->
+        <mxCell id="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#0e7490;" edge="1" source="complexity-analyzer" target="time-comp" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#0e7490;" edge="1" source="complexity-analyzer" target="space-comp" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#5b21b6;" edge="1" source="quantum-analyzer" target="circuit-depth" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#5b21b6;" edge="1" source="quantum-analyzer" target="state-sim" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Algorithm cascade -->
+        <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#7c3aed;" edge="1" source="ast-builder" target="codebert" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a11" value="Fallback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#d97706;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="codebert" target="ml-ensemble" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a12" value="Fallback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="ml-ensemble" target="rule-detector" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a13" value="Fallback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#6b7280;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="rule-detector" target="heuristic" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a14" value="Cross-validate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#333;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="codebert" target="rule-detector" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="680" y="480" /><mxPoint x="1110" y="480" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- To result -->
+        <mxCell id="a15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#16a34a;" edge="1" source="complexity-analyzer" target="result" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#16a34a;" edge="1" source="quantum-analyzer" target="result" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#16a34a;" edge="1" source="codebert" target="result" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Result to consumers -->
+        <mxCell id="a18" value="Analysis results" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;fontSize=10;fontStyle=2;" edge="1" source="result" target="to-de" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#3b82f6;" edge="1" source="result" target="to-fe" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Feedback -->
+        <mxCell id="a20" value="Feedback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#c62828;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="learning" target="ml-lang" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

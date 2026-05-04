@@ -4,6 +4,7 @@ Implements threshold-based decision trees and hardware compatibility validation
 """
 
 import logging
+import math
 from typing import Dict, Optional, Any, List
 from enum import Enum
 
@@ -96,6 +97,12 @@ class RuleBasedSystem:
                 'reason': "QAOA/VQE can explore solution space efficiently",
                 'min_qubits': 6,
             },
+            ProblemType.SAMPLING: {
+                'preferred_hardware': HardwareType.CLASSICAL,
+                'reason': "Classical FFT is O(n log n) vs quantum QFT O(n²) gates; quantum advantage only as subroutine in larger algorithms (Shor's, QPE)",
+                'quantum_not_beneficial': True,
+                'conditional': "quantum_if_subroutine",  # Quantum beneficial only when QFT is part of a larger quantum algorithm
+            },
             ProblemType.SORTING: {
                 'preferred_hardware': HardwareType.CLASSICAL,
                 'reason': "Classical sorting algorithms are highly optimized",
@@ -117,12 +124,19 @@ class RuleBasedSystem:
         # SAFETY CONSTRAINTS
         # ---------------------------------------------------------
         # Rules that must not be violated for system safety
-        
+
         self.safety_rules = {
             'max_circuit_volume': 1000000,  # qubits * depth
             'max_noise_sensitivity': 50000,  # qubits * depth * cx_ratio
-            'min_nisq_viability': 0.1,       # Minimum hardware viability score
+            'min_nisq_viability': 0.01,      # Physics-based minimum (P(success))
         }
+
+        # ---------------------------------------------------------
+        # IBM DEVICE CALIBRATION (live from HAL, with published defaults)
+        # ---------------------------------------------------------
+        # IBM Eagle r3 (ibm_sherbrooke/ibm_brisbane) published specs as defaults.
+        # Overwritten at startup by live data from HAL /api/devices if available.
+        self.device_calibration = self._fetch_device_calibration()
 
     def evaluate(self, input_data: CodeAnalysisInput) -> Dict[str, Any]:
         """
@@ -137,6 +151,59 @@ class RuleBasedSystem:
         
         logger.info(f"Evaluating rules for {input_data.problem_type.value} problem")
         
+        # ---------------------------------------------------------
+        # STEP 0: PHYSICAL-NECESSITY OVERRIDE
+        # ---------------------------------------------------------
+        # Classical state-vector simulation of an n-qubit circuit requires
+        # 2^n complex amplitudes (16 bytes each). Beyond ~50 qubits the memory
+        # requirement exceeds any classical machine (16 PB), so quantum is the
+        # only physically viable execution path regardless of NISQ fidelity.
+        # Beyond 127 qubits (IBM Eagle), no current quantum backend can run
+        # the circuit either, so the problem must be rejected.
+        MEMORY_WALL_QUBITS = 50      # Paper Sec. IV.D: 50-60 qubit crossover
+        HW_QUBIT_LIMIT = self.quantum_hardware_limits['max_qubits']  # 127
+
+        q = input_data.qubits_required
+
+        if q > HW_QUBIT_LIMIT and q > MEMORY_WALL_QUBITS:
+            return {
+                'decision_type': RuleDecisionType.REJECT,
+                'hardware': None,
+                'confidence': 1.0,
+                'rationale': (
+                    f"[RULE OVERRIDE] Problem requires {q} qubits: exceeds current "
+                    f"quantum hardware ({HW_QUBIT_LIMIT}-qubit IBM Eagle) and "
+                    f"classical state-vector simulation is physically infeasible "
+                    f"(would require ~2^{q} amplitudes)."
+                ),
+                'compatibility': {
+                    'quantum_compatible': False,
+                    'classical_compatible': False,
+                    'quantum_issues': [f"Exceeds {HW_QUBIT_LIMIT}-qubit hardware limit"],
+                    'classical_issues': [f"State-vector simulation needs 2^{q} amplitudes"],
+                },
+                'rules_triggered': ['physical_necessity_reject'],
+            }
+
+        if MEMORY_WALL_QUBITS <= q <= HW_QUBIT_LIMIT:
+            return {
+                'decision_type': RuleDecisionType.FORCE_QUANTUM,
+                'hardware': HardwareType.QUANTUM,
+                'confidence': 1.0,
+                'rationale': (
+                    f"[RULE OVERRIDE] Problem requires {q} qubits: classical "
+                    f"state-vector simulation is infeasible (>16 PB memory); "
+                    f"quantum execution is the only physically viable path."
+                ),
+                'compatibility': {
+                    'quantum_compatible': True,
+                    'classical_compatible': False,
+                    'quantum_issues': [],
+                    'classical_issues': [f"State-vector simulation needs 2^{q} amplitudes"],
+                },
+                'rules_triggered': ['physical_necessity_quantum'],
+            }
+
         # ---------------------------------------------------------
         # STEP 1: HARDWARE COMPATIBILITY CHECK
         # ---------------------------------------------------------
@@ -162,11 +229,14 @@ class RuleBasedSystem:
                 'decision_type': RuleDecisionType.FORCE_CLASSICAL,
                 'hardware': HardwareType.CLASSICAL,
                 'confidence': 1.0,
-                'rationale': f"Safety constraint violated: {safety_check['violation_reason']}",
+                'rationale': f"[RULE OVERRIDE] Safety constraint violated: {safety_check['violation_reason']}",
                 'compatibility': compatibility,
                 'rules_triggered': ['safety_constraint', safety_check['violated_rule']]
             }
-        
+
+        # Carry forward any NISQ warning for inclusion in the final rationale
+        nisq_warning = safety_check.get('nisq_warning')
+
         # ---------------------------------------------------------
         # STEP 3: CLEAR-CUT DECISION RULES
         # ---------------------------------------------------------
@@ -181,27 +251,32 @@ class RuleBasedSystem:
         quantum_advantage = self._evaluate_quantum_advantage(input_data)
         
         if quantum_advantage['has_advantage'] and compatibility['quantum_compatible']:
+            rationale = quantum_advantage['reason']
+            if nisq_warning:
+                rationale += f" | Warning: {nisq_warning}"
             return {
                 'decision_type': RuleDecisionType.FORCE_QUANTUM,
                 'hardware': HardwareType.QUANTUM,
                 'confidence': quantum_advantage['confidence'],
-                'rationale': quantum_advantage['reason'],
+                'rationale': rationale,
                 'compatibility': compatibility,
                 'rules_triggered': ['quantum_advantage_threshold']
             }
-        
+
         # ---------------------------------------------------------
         # STEP 5: PROBLEM-SPECIFIC ROUTING
         # ---------------------------------------------------------
         problem_based_decision = self._apply_problem_type_rules(input_data, compatibility)
-        
+
         if problem_based_decision is not None:
+            if nisq_warning and problem_based_decision.get('hardware') == HardwareType.QUANTUM:
+                problem_based_decision['rationale'] += f" | Warning: {nisq_warning}"
             return problem_based_decision
-        
+
         # ---------------------------------------------------------
         # STEP 6: DEFAULT - ALLOW ML MODEL TO DECIDE
         # ---------------------------------------------------------
-        return {
+        result = {
             'decision_type': RuleDecisionType.ALLOW_BOTH,
             'hardware': None,  # Let ML model decide
             'confidence': 0.5,
@@ -209,6 +284,9 @@ class RuleBasedSystem:
             'compatibility': compatibility,
             'rules_triggered': ['default_ml_decision']
         }
+        if nisq_warning:
+            result['rationale'] += f" | Warning: {nisq_warning}"
+        return result
 
     # ---------------------------------------------------------
     # HARDWARE COMPATIBILITY CHECKING
@@ -281,13 +359,30 @@ class RuleBasedSystem:
                 'violated_rule': 'max_noise_sensitivity'
             }
         
-        # Check NISQ viability (calculated from multiple factors)
+        # Check NISQ viability (physics-based: gate errors × readout × decoherence)
         nisq_score = self._calculate_nisq_viability(input_data)
-        
+
         if nisq_score < self.safety_rules['min_nisq_viability']:
+            # Before forcing Classical, check if classical simulation is even possible.
+            # Exact state-vector simulation of N qubits requires 2^N complex amplitudes.
+            # >30 qubits needs >16GB RAM; >45 qubits is infeasible on any classical machine.
+            if input_data.qubits_required > 40:
+                logger.info(
+                    "NISQ viability low (%.6f) but %d qubits is classically infeasible — allowing quantum",
+                    nisq_score, input_data.qubits_required,
+                )
+                return {
+                    'safe': True,
+                    'violation_reason': None,
+                    'nisq_warning': (
+                        f"NISQ viability is low ({nisq_score:.4f}) but classical simulation of "
+                        f"{input_data.qubits_required} qubits is infeasible (would need ~2^{input_data.qubits_required} "
+                        f"amplitudes). Quantum hardware is the only viable execution path."
+                    ),
+                }
             return {
                 'safe': False,
-                'violation_reason': f"NISQ viability too low: {nisq_score:.2f} (hardware cannot reliably execute)",
+                'violation_reason': f"NISQ viability too low: {nisq_score:.4f} (hardware cannot reliably execute)",
                 'violated_rule': 'min_nisq_viability'
             }
         
@@ -362,42 +457,82 @@ class RuleBasedSystem:
     
     def _evaluate_quantum_advantage(self, input_data: CodeAnalysisInput) -> Dict[str, Any]:
         """
-        Evaluate if problem exhibits clear quantum advantage based on thresholds
+        Evaluate if problem exhibits clear quantum advantage based on thresholds.
+
+        High quantum feature scores (superposition, entanglement, cx_gate_ratio)
+        indicate the algorithm *could* benefit from quantum hardware, but that alone
+        is not sufficient. Quantum advantage only materialises when the problem is
+        large enough that quantum speedup outweighs the practical overhead of
+        current NISQ devices (queue time, shot noise, gate errors, decoherence).
+
+        For small qubit counts (< 20) the full state vector fits easily in classical
+        memory (2^20 ≈ 1M amplitudes) so classical simulation is fast and reliable.
+        We therefore require *both* strong quantum features AND a problem scale where
+        classical simulation becomes expensive before forcing quantum execution.
         """
-        
-        # Calculate weighted quantum score
+
+        # Calculate weighted quantum score from algorithm features
         quantum_score = (
             input_data.superposition_score * 0.4 +
             input_data.entanglement_score * 0.4 +
             input_data.cx_gate_ratio * 0.2
         )
-        
+
         reasons = []
-        
-        # Check individual thresholds
+
+        # Check individual feature thresholds
         if input_data.superposition_score >= self.quantum_advantage_thresholds['min_superposition_score']:
             reasons.append(f"High superposition potential ({input_data.superposition_score:.2f})")
-        
+
         if input_data.entanglement_score >= self.quantum_advantage_thresholds['min_entanglement_score']:
             reasons.append(f"Strong entanglement ({input_data.entanglement_score:.2f})")
-        
+
         if input_data.cx_gate_ratio >= self.quantum_advantage_thresholds['min_cx_gate_ratio']:
             reasons.append(f"High entangling gate usage ({input_data.cx_gate_ratio:.2f})")
-        
+
         # Check time complexity for exponential problems
         if input_data.time_complexity == TimeComplexity.EXPONENTIAL:
             reasons.append("Exponential classical complexity")
         elif input_data.time_complexity == TimeComplexity.QUADRATIC_SPEEDUP:
             reasons.append("Known quantum speedup available")
-        
-        # Determine if advantage exists
-        has_advantage = (
+
+        has_strong_features = (
             quantum_score >= self.quantum_advantage_thresholds['min_combined_quantum_score'] or
-            len(reasons) >= 3  # Multiple indicators suggest advantage
+            len(reasons) >= 3
         )
-        
-        confidence = min(quantum_score * 1.2, 1.0)  # Scale confidence
-        
+
+        # ------------------------------------------------------------------
+        # Practical scale check: quantum advantage requires a problem large
+        # enough that classical simulation is actually expensive.
+        #   - < 20 qubits: classical state-vector sim is trivial
+        #   - 20-30 qubits: classical is feasible but slow for deep circuits
+        #   - > 30 qubits: classical simulation becomes impractical
+        #
+        # For small problems, even perfect quantum features don't justify the
+        # overhead of real quantum hardware on current NISQ devices.
+        # ------------------------------------------------------------------
+        MIN_QUBITS_FOR_ADVANTAGE = 20
+        MIN_PROBLEM_SIZE_FOR_ADVANTAGE = 500
+
+        has_practical_scale = (
+            input_data.qubits_required >= MIN_QUBITS_FOR_ADVANTAGE or
+            (input_data.problem_size >= MIN_PROBLEM_SIZE_FOR_ADVANTAGE and
+             input_data.time_complexity in (TimeComplexity.EXPONENTIAL, TimeComplexity.QUADRATIC_SPEEDUP))
+        )
+
+        has_advantage = has_strong_features and has_practical_scale
+
+        # If features are strong but scale is too small, note why
+        if has_strong_features and not has_practical_scale:
+            reasons.append(
+                f"Scale too small for quantum advantage "
+                f"({input_data.qubits_required} qubits, problem size {input_data.problem_size})"
+            )
+
+        confidence = min(quantum_score * 1.2, 1.0)
+        if not has_practical_scale:
+            confidence *= 0.5  # Low confidence when scale doesn't justify quantum
+
         return {
             'has_advantage': has_advantage,
             'quantum_score': quantum_score,
@@ -416,22 +551,28 @@ class RuleBasedSystem:
         compatibility: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
-        Apply problem-type-specific routing rules
+        Apply problem-type-specific routing rules.
+
+        Quantum-preferred problem types (Factorization, Search, Simulation,
+        Optimization) only force quantum when the problem is large enough that
+        quantum hardware provides a real advantage over classical execution.
+        For small qubit counts, classical simulation is fast and reliable, so
+        we return ALLOW_BOTH to let the weighted merger decide.
         """
-        
+
         problem_rule = self.problem_type_rules.get(input_data.problem_type)
-        
+
         if problem_rule is None:
             return None
-        
+
         preferred_hw = problem_rule['preferred_hardware']
         reason = problem_rule['reason']
-        
+
         # Check if preferred hardware is compatible
         if preferred_hw == HardwareType.QUANTUM:
             if not compatibility['quantum_compatible']:
                 return None  # Can't use preferred hardware
-            
+
             # Check minimum qubit requirement if specified
             min_qubits = problem_rule.get('min_qubits', 0)
             if input_data.qubits_required < min_qubits:
@@ -443,7 +584,28 @@ class RuleBasedSystem:
                     'compatibility': compatibility,
                     'rules_triggered': ['problem_type_min_qubits']
                 }
-            
+
+            # Practical scale check: don't force quantum for small problems
+            # where classical simulation is trivial and NISQ overhead hurts.
+            # 30+ qubits (~1B amplitudes) is where classical simulation starts
+            # to become expensive; below that, let cost/ML analysis decide.
+            MIN_QUBITS_FOR_FORCE = 30
+            if input_data.qubits_required < MIN_QUBITS_FOR_FORCE:
+                # Problem type prefers quantum but scale is too small to force
+                # it. Return ALLOW_BOTH so the weighted merger (ML + cost) can
+                # make a balanced decision instead of blindly overriding.
+                return {
+                    'decision_type': RuleDecisionType.ALLOW_BOTH,
+                    'hardware': None,
+                    'confidence': 0.5,
+                    'rationale': (
+                        f"{input_data.problem_type.value} problems can benefit from quantum ({reason}), "
+                        f"but {input_data.qubits_required} qubits is efficiently simulable classically — deferring to weighted analysis"
+                    ),
+                    'compatibility': compatibility,
+                    'rules_triggered': ['problem_type_quantum_preferred_small_scale']
+                }
+
             return {
                 'decision_type': RuleDecisionType.FORCE_QUANTUM,
                 'hardware': HardwareType.QUANTUM,
@@ -452,7 +614,7 @@ class RuleBasedSystem:
                 'compatibility': compatibility,
                 'rules_triggered': ['problem_type_quantum_preferred']
             }
-        
+
         else:  # Classical preferred
             return {
                 'decision_type': RuleDecisionType.FORCE_CLASSICAL,
@@ -469,26 +631,101 @@ class RuleBasedSystem:
     
     def _calculate_nisq_viability(self, input_data: CodeAnalysisInput) -> float:
         """
-        Calculate NISQ era viability score
-        Lower scores indicate hardware cannot reliably execute the circuit
+        Physics-based NISQ viability score using real IBM device calibration data.
+
+        Estimates the probability of getting a correct result from the circuit,
+        based on three independent error sources:
+          1. Gate errors — each gate has a probability of failure
+          2. Readout errors — each measurement has a probability of misread
+          3. Decoherence — qubits lose coherence over time (T2 decay)
+
+        The combined viability is:
+          P(success) ≈ P(gates correct) × P(readouts correct) × P(no decoherence)
+
+        Calibration values are fetched live from the HAL (IBM device data) at startup,
+        falling back to published IBM Eagle r3 specs.
+
+        Sources:
+          - IBM Eagle r3 blog: median ECR error ~0.66%, T1 ~150μs, T2 ~100μs
+          - IBM Qiskit docs: backend.target for per-gate error/duration
         """
-        viability = 1.0
-        
-        # Penalize excessive qubits
-        if input_data.qubits_required > 50:
-            viability *= 0.5
-        if input_data.qubits_required > 80:
-            viability *= 0.3
-        
-        # Penalize deep circuits (decoherence)
-        if input_data.circuit_depth > 1000:
-            viability *= 0.5
-        if input_data.circuit_depth > 5000:
-            viability *= 0.2
-        
-        # Penalize high circuit volume
-        circuit_volume = input_data.qubits_required * input_data.circuit_depth
-        if circuit_volume > 50000:
-            viability *= 0.3
-        
+        cal = self.device_calibration
+        e_2q = cal['median_cx_error']
+        e_1q = cal['median_sx_error']
+        e_ro = cal['median_readout_error']
+        t2_us = cal['median_t2_us']
+        gate_time_ns = cal['median_gate_time_ns']
+
+        n_qubits = input_data.qubits_required
+        depth = input_data.circuit_depth
+        n_gates = input_data.gate_count
+        cx_ratio = input_data.cx_gate_ratio
+
+        n_2q = int(n_gates * cx_ratio)
+        n_1q = n_gates - n_2q
+        n_measurements = n_qubits
+
+        # 1. Gate error survival: P(all gates correct)
+        p_gates = ((1.0 - e_2q) ** n_2q) * ((1.0 - e_1q) ** n_1q)
+
+        # 2. Readout error survival: P(all readouts correct)
+        p_readout = (1.0 - e_ro) ** n_measurements
+
+        # 3. Decoherence survival: exp(-circuit_time / T2)
+        #    circuit_time ≈ depth × gate_time (sequential layers)
+        total_time_us = depth * gate_time_ns / 1000.0
+        if t2_us > 0:
+            p_decoherence = math.exp(-total_time_us / t2_us)
+        else:
+            p_decoherence = 0.0
+
+        viability = p_gates * p_readout * p_decoherence
+
+        logger.debug(
+            "NISQ viability for %d qubits, depth %d: "
+            "p_gates=%.4f, p_readout=%.4f, p_decoherence=%.4f → viability=%.6f",
+            n_qubits, depth, p_gates, p_readout, p_decoherence, viability,
+        )
+
         return max(viability, 0.0)
+
+    @staticmethod
+    def _fetch_device_calibration() -> dict:
+        """
+        Fetch live IBM device calibration from the HAL service.
+        Falls back to published IBM Eagle r3 specs if HAL is unreachable.
+        """
+        # IBM Eagle r3 published defaults (ibm_sherbrooke / ibm_brisbane)
+        DEFAULTS = {
+            'median_cx_error': 0.0066,       # 0.66% — IBM Eagle r3 blog
+            'median_sx_error': 0.0003,       # 0.03% — IBM benchmark data
+            'median_readout_error': 0.012,   # 1.2%  — IBM typical calibration
+            'median_t1_us': 150.0,           # 150μs — IBM Eagle r3
+            'median_t2_us': 100.0,           # 100μs — IBM Eagle r3
+            'median_gate_time_ns': 660.0,    # 660ns — IBM ECR gate
+        }
+
+        try:
+            import requests
+            from config.app_config import get_settings
+            hal_base = get_settings().HARDWARE_LAYER_URL
+            hal_url = f"{hal_base}/api/devices"
+            resp = requests.get(hal_url, timeout=5)
+            resp.raise_for_status()
+            devices = resp.json().get('devices', [])
+
+            for device in devices:
+                cal = device.get('calibration')
+                if cal and cal.get('median_cx_error') is not None:
+                    merged = {k: cal.get(k) or v for k, v in DEFAULTS.items()}
+                    logger.info(
+                        "Loaded live calibration from HAL device '%s': %s",
+                        device.get('name', '?'), merged,
+                    )
+                    return merged
+
+            logger.info("No calibration data in HAL response — using published IBM Eagle r3 defaults")
+        except Exception as e:
+            logger.info("HAL unreachable for calibration (%s) — using published IBM Eagle r3 defaults", e)
+
+        return DEFAULTS

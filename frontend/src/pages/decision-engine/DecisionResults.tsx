@@ -6,7 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatDurationMs } from "@/lib/number-format";
 import { type DecisionEngineResponse, HardwareType } from '@/types/decision-engine.tp';
+
+function formatCost(usd: number | null | undefined): string {
+  if (usd == null) return "N/A";
+  if (usd > 1e12) return "Infeasible";
+  if (usd < 0.01) return `$${usd.toFixed(6)}`;
+  if (usd < 1000) return `$${usd.toFixed(2)}`;
+  if (usd < 1e6) return `$${(usd / 1000).toFixed(1)}K`;
+  if (usd < 1e9) return `$${(usd / 1e6).toFixed(1)}M`;
+  return `$${(usd / 1e9).toFixed(1)}B`;
+}
 
 export default function DecisionResults() {
   const location = useLocation();
@@ -105,9 +116,7 @@ export default function DecisionResults() {
                   <span className="text-sm">Expected Time</span>
                 </div>
                 <p className="mt-1 font-mono text-2xl font-bold">
-                  {estimated_execution_time_ms 
-                    ? `${(estimated_execution_time_ms / 1000).toFixed(2)}s`
-                    : 'N/A'}
+                  {formatDurationMs(estimated_execution_time_ms)}
                 </p>
                 <p className="text-xs text-muted-foreground">Estimated execution</p>
               </div>
@@ -119,7 +128,7 @@ export default function DecisionResults() {
                   <span className="text-sm">Estimated Cost</span>
                 </div>
                 <p className="mt-1 font-mono text-2xl font-bold">
-                  ${estimated_cost_usd?.toFixed(4) || 'N/A'}
+                  {formatCost(estimated_cost_usd)}
                 </p>
                 <p className="text-xs text-muted-foreground">Per execution</p>
               </div>
@@ -224,11 +233,11 @@ export default function DecisionResults() {
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>Estimated time: <strong>{(estimated_execution_time_ms / 1000).toFixed(2)}s</strong></span>
+                    <span>Estimated time: <strong>{formatDurationMs(estimated_execution_time_ms)}</strong></span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>Estimated cost: <strong>${estimated_cost_usd.toFixed(4)}</strong></span>
+                    <span>Estimated cost: <strong>{formatCost(estimated_cost_usd)}</strong></span>
                   </div>
                 </div>
               )}

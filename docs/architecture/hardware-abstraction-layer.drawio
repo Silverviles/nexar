@@ -1,0 +1,145 @@
+<mxfile host="app.diagrams.net" modified="2026-04-08" agent="Nexar" version="24.0">
+  <diagram id="hal-diagram" name="Hardware Abstraction Layer">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Hardware Abstraction Layer" style="text;html=1;fontSize=22;fontStyle=1;align=center;fillColor=none;strokeColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="400" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Consumers -->
+        <mxCell id="ai-converter" value="AI Code Converter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10b981;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="200" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="decision-engine" value="Decision Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ef4444;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="200" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Unified API -->
+        <mxCell id="unified-api" value="Unified REST API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3f51b5;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="370" y="150" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Core Services -->
+        <mxCell id="compute-svc" value="Compute Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7c3aed;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="300" width="180" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="provider-factory" value="Provider Factory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f59e0b;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="520" y="300" width="180" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="job-manager" value="Job Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#059669;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="740" y="300" width="180" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Abstract Interface -->
+        <mxCell id="abstract-iface" value="Abstract Provider Interface" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dc2626;fontColor=#ffffff;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="350" y="430" width="270" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Quantum Providers -->
+        <mxCell id="ibm-quantum" value="IBM Quantum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565c0;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="570" width="160" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="aws-braket" value="Amazon Braket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e65100;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="570" width="160" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="azure-quantum" value="Azure Quantum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0097a7;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="570" width="160" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="local-sim" value="Local Simulator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#455a64;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="610" y="570" width="160" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Classical Providers -->
+        <mxCell id="cpu" value="CPU Compute" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e7d32;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="570" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gpu" value="GPU Compute" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e7d32;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="980" y="570" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="tpu" value="TPU Compute" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e7d32;fontColor=#ffffff;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="570" width="140" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Cloud backends -->
+        <mxCell id="ibm-cloud" value="IBM Quantum Network" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=11;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="aws-cloud" value="AWS Cloud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=11;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="700" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="azure-cloud" value="Azure Cloud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2ebf2;strokeColor=#0097a7;fontSize=11;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="700" width="160" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Group labels -->
+        <mxCell id="lbl-quantum" value="Quantum Providers" style="text;html=1;fontSize=12;fontStyle=5;fillColor=none;strokeColor=none;fontColor=#1565c0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="540" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-classical" value="Classical Providers" style="text;html=1;fontSize=12;fontStyle=5;fillColor=none;strokeColor=none;fontColor=#2e7d32;" vertex="1" parent="1">
+          <mxGeometry x="960" y="540" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows -->
+        <mxCell id="a1" value="Circuit submission" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=2;" edge="1" source="ai-converter" target="unified-api" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="Status query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#666;dashed=1;fontSize=10;fontStyle=2;" edge="1" source="decision-engine" target="unified-api" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#3f51b5;" edge="1" source="unified-api" target="compute-svc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#3f51b5;" edge="1" source="unified-api" target="job-manager" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" value="Dispatches" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#7c3aed;fontSize=10;fontStyle=2;" edge="1" source="compute-svc" target="abstract-iface" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" value="Initializes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#f59e0b;fontSize=10;fontStyle=2;" edge="1" source="provider-factory" target="abstract-iface" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" value="Tracks jobs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#059669;fontSize=10;fontStyle=2;" edge="1" source="job-manager" target="abstract-iface" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="830" y="455" /><mxPoint x="620" y="455" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- Interface to providers -->
+        <mxCell id="a7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#1565c0;" edge="1" source="abstract-iface" target="ibm-quantum" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#e65100;" edge="1" source="abstract-iface" target="aws-braket" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#0097a7;" edge="1" source="abstract-iface" target="azure-quantum" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#455a64;" edge="1" source="abstract-iface" target="local-sim" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#2e7d32;" edge="1" source="abstract-iface" target="cpu" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#2e7d32;" edge="1" source="abstract-iface" target="gpu" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#2e7d32;" edge="1" source="abstract-iface" target="tpu" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Providers to cloud -->
+        <mxCell id="a14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#1565c0;" edge="1" source="ibm-quantum" target="ibm-cloud" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#e65100;" edge="1" source="aws-braket" target="aws-cloud" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#0097a7;" edge="1" source="azure-quantum" target="azure-cloud" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

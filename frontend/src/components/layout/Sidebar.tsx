@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Workflow, label: "Run Pipeline", path: "/pipeline" },
   { icon: Code, label: "Code Analysis", path: "/analysis" },
   { icon: Sparkles, label: "Python → Quantum", path: "/ai-converter" },
   { icon: Sparkles, label: "AST Pattern Analyzer", path: "/ast-pattern-analyzer" },

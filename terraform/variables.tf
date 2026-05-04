@@ -86,19 +86,19 @@ variable "service_resources" {
   default = {
     api = {
       cpu    = "1"
-      memory = "128Mi"
+      memory = "256Mi"
     }
     frontend = {
       cpu    = "1"
       memory = "128Mi"
     }
     ai-code-converter = {
-      cpu    = "1"
-      memory = "1Gi"
+      cpu    = "2"
+      memory = "4Gi"
     }
     code-analysis-engine = {
       cpu    = "1"
-      memory = "512Mi"
+      memory = "4Gi"
     }
     decision-engine = {
       cpu    = "1"
@@ -168,7 +168,7 @@ variable "ai_code_converter_model_gcs_path" {
 variable "code_analysis_engine_model_gcs_path" {
   description = "GCS path (relative to the models bucket) for the Code Analysis Engine model folder (e.g. code-analysis-engine/trained)"
   type        = string
-  default     = "code-analysis-engine/version1"
+  default     = "code-analysis-engine/version2"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -194,6 +194,12 @@ variable "ibm_quantum_token" {
   description = "IBM Quantum API token for hardware access"
   type        = string
   sensitive   = true
+}
+
+variable "ibm_execution_mode" {
+  description = "IBM Quantum execution mode: 'direct' (works on all plans) or 'session' (requires paid plan)"
+  type        = string
+  default     = "direct"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

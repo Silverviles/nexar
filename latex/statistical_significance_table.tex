@@ -1,0 +1,33 @@
+\begin{table}[!t]
+\caption{Statistical Robustness of Routing Metrics. Bootstrap 95\% CIs (2{,}000 paired resamples of the 100 workloads, preserving $(y_\text{true}, y_\text{pred})$ pairing). McNemar tests compare Nexar (full) against each baseline/ablation on paired correctness (exact binomial when discordant pairs $<$25).}
+\label{tab:statistical-significance}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}l@{\hskip 3pt}cccc@{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{Oracle A}} & \multicolumn{2}{c}{\textbf{Oracle B}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Router} & \textbf{F1(Q) [CI]} & \textbf{$\kappa$ [CI]} & \textbf{F1(Q) [CI]} & \textbf{$\kappa$ [CI]} \\
+\midrule
+\textbf{Nexar (full)} & \textbf{0.46}[.22,.64] & \textbf{0.38}[.14,.58] & \textbf{0.50}[.23,.71] & \textbf{0.48}[.23,.68] \\
+\midrule
+B1 Qubit$\geq$50 & 0.42[.12,.67] & 0.41[.13,.64] & 0.67[.25,.92] & 0.67[.31,.92] \\
+B2 Vol$\geq$50k & 0.40[.11,.64] & 0.38[.11,.62] & 0.31[.00,.62] & 0.31[-.03,.62] \\
+B3 Random & 0.28[.13,.42] & 0.07[-.06,.20] & 0.18[.04,.31] & 0.05[-.05,.15] \\
+A1 ML-only & 0.42[.19,.61] & 0.33[.09,.54] & 0.46[.19,.67] & 0.42[.17,.64] \\
+A2 Rules-only & 0.64[.32,.84] & 0.63[.33,.84] & 0.67[.29,.91] & 0.68[.37,.92] \\
+A3 Cost-only & 0.25[.15,.35] & 0.00[.00,.00] & 0.13[.04,.21] & 0.00[.00,.00] \\
+\midrule
+\multicolumn{5}{@{}l}{\textit{McNemar paired-correctness vs.\ Nexar (full): $b$/$c$ discordant, $p$}} \\
+\quad vs.\ B1 Qubit$\geq$50 & \multicolumn{2}{l}{A: 13/5, $p{=}0.10$} & \multicolumn{2}{l}{B: 14/4, $p{=}0.03$} \\
+\quad vs.\ B2 Vol$\geq$50k & \multicolumn{2}{l}{A: 15/8, $p{=}0.21$} & \multicolumn{2}{l}{B: 14/9, $p{=}0.40$} \\
+\quad vs.\ B3 Random & \multicolumn{2}{l}{A: 9/37, $p{<}0.001$} & \multicolumn{2}{l}{B: 6/40, $p{<}0.001$} \\
+\quad vs.\ A1 ML-only & \multicolumn{2}{l}{A: 2/2, $p{=}1.00$} & \multicolumn{2}{l}{B: 2/2, $p{=}1.00$} \\
+\quad vs.\ A2 Rules-only & \multicolumn{2}{l}{A: 12/1, $p{=}0.003$} & \multicolumn{2}{l}{B: 11/2, $p{=}0.02$} \\
+\quad vs.\ A3 Cost-only & \multicolumn{2}{l}{A: 6/73, $p{<}0.001$} & \multicolumn{2}{l}{B: 0/79, $p{<}0.001$} \\
+\bottomrule
+\end{tabular}
+\\[0.50em]
+{\footnotesize\raggedright CI entries are 95\% bootstrap (leading ``0.'' suppressed in brackets). Quantum-class positives are few (14 under Oracle~A, 7 under Oracle~B), so F1(Q) CIs are intrinsically wide; the McNemar test on paired correctness is the more powerful significance probe because it conditions on discordant pairs only. $b$ = Nexar wrong, other correct; $c$ = Nexar correct, other wrong.\par}
+\end{table}

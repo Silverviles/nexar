@@ -49,10 +49,14 @@ class IBMQuantumProvider(QuantumProvider):
 
         try:
             if settings.IBM_QUANTUM_TOKEN:
-                self.service = QiskitRuntimeService(
-                    channel="ibm_quantum_platform",
-                    token=settings.IBM_QUANTUM_TOKEN
-                )
+                runtime_kwargs = {
+                    "channel": "ibm_quantum_platform",
+                    "token": settings.IBM_QUANTUM_TOKEN,
+                }
+                if settings.IBM_QUANTUM_INSTANCE:
+                    runtime_kwargs["instance"] = settings.IBM_QUANTUM_INSTANCE
+
+                self.service = QiskitRuntimeService(**runtime_kwargs)
                 logger.info("IBM Quantum Service initialized with provided token.")
             else:
                  # Fallback to default (env vars or saved account)

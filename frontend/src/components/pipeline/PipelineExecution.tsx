@@ -30,6 +30,15 @@ interface PipelineExecutionProps {
   code: string;
 }
 
+type GenericRecord = Record<string, unknown>;
+
+function isNumericRecord(value: unknown): value is Record<string, number> {
+  if (!value || typeof value !== "object") return false;
+  const entries = Object.entries(value as GenericRecord);
+  if (entries.length === 0) return false;
+  return entries.every(([, v]) => typeof v === "number" && Number.isFinite(v));
+}
+
 export function PipelineExecution({
   recommendedHardware,
   code,
@@ -238,6 +247,37 @@ export function PipelineExecution({
     return <Loader2 className="h-5 w-5 animate-spin text-primary" />;
   };
 
+  const resultEnvelope = (jobStatus.result ?? null) as GenericRecord | null;
+  const executionResult =
+    resultEnvelope && typeof resultEnvelope.result === "object"
+      ? (resultEnvelope.result as GenericRecord)
+      : null;
+
+  const quantumCounts = isNumericRecord(executionResult) ? executionResult : null;
+  const totalShots = quantumCounts
+    ? Object.values(quantumCounts).reduce((sum, count) => sum + count, 0)
+    : null;
+  const topOutcomes = quantumCounts
+    ? Object.entries(quantumCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+    : [];
+
+  const classicalStdout =
+    executionResult && typeof executionResult.stdout === "string"
+      ? executionResult.stdout
+      : null;
+  const classicalStderr =
+    executionResult && typeof executionResult.stderr === "string"
+      ? executionResult.stderr
+      : null;
+  const classicalVariables =
+    executionResult &&
+    typeof executionResult.variables === "object" &&
+    executionResult.variables !== null
+      ? (executionResult.variables as GenericRecord)
+      : null;
+
   return (
     <Card variant="glass" className="animate-fade-in">
       <CardHeader>
@@ -301,10 +341,89 @@ export function PipelineExecution({
 
           {jobStatus.result && (
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-              <p className="text-sm font-medium mb-2">Execution Results</p>
-              <pre className="overflow-x-auto text-xs font-mono">
-                {JSON.stringify(jobStatus.result, null, 2)}
-              </pre>
+              <p className="mb-2 text-sm font-medium">Execution Results</p>
+
+              {isQuantum && quantumCounts && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/20 p-3">
+                    <span className="text-sm text-muted-foreground">Total shots</span>
+                    <span className="font-mono text-sm">{totalShots}</span>
+                  </div>
+                  <div className="rounded-lg border border-border bg-secondary/20 p-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      Most likely outcomes
+                    </p>
+                    <div className="space-y-2">
+                      {topOutcomes.map(([bitstring, count]) => {
+                        const percentage =
+                          totalShots && totalShots > 0
+                            ? ((count / totalShots) * 100).toFixed(2)
+                            : "0.00";
+                        return (
+                          <div
+                            key={bitstring}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span className="font-mono">{bitstring}</span>
+                            <span className="font-mono text-muted-foreground">
+                              {count} ({percentage}%)
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!isQuantum && executionResult && (
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-border bg-secondary/20 p-3">
+                    <p className="mb-1 text-xs font-medium text-muted-foreground">
+                      Standard output
+                    </p>
+                    <pre className="max-h-56 overflow-auto text-xs font-mono whitespace-pre-wrap">
+                      {classicalStdout?.trim() || "No stdout output"}
+                    </pre>
+                  </div>
+                  {classicalStderr?.trim() && (
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
+                      <p className="mb-1 text-xs font-medium text-destructive">
+                        Standard error
+                      </p>
+                      <pre className="max-h-40 overflow-auto text-xs font-mono whitespace-pre-wrap text-destructive">
+                        {classicalStderr}
+                      </pre>
+                    </div>
+                  )}
+                  {classicalVariables && Object.keys(classicalVariables).length > 0 && (
+                    <div className="rounded-lg border border-border bg-secondary/20 p-3">
+                      <p className="mb-2 text-xs font-medium text-muted-foreground">
+                        Variables
+                      </p>
+                      <div className="space-y-1">
+                        {Object.entries(classicalVariables).slice(0, 10).map(([k, v]) => (
+                          <div key={k} className="flex items-start justify-between gap-3 text-xs">
+                            <span className="font-mono text-muted-foreground">{k}</span>
+                            <span className="max-w-[70%] break-all font-mono">
+                              {typeof v === "string" ? v : JSON.stringify(v)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs text-muted-foreground">
+                  View raw JSON
+                </summary>
+                <pre className="mt-2 max-h-64 overflow-auto rounded-md border border-border bg-secondary/30 p-2 text-xs font-mono">
+                  {JSON.stringify(jobStatus.result, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
         </div>

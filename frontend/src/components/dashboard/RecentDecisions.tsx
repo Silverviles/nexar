@@ -17,6 +17,12 @@ interface RecentDecisionsProps {
   isLoading: boolean;
 }
 
+function formatRecentDecisionCost(cost: number | null): string {
+  if (cost === null || !Number.isFinite(cost) || cost < 0) return "—";
+  if (Math.abs(cost) >= 1e6) return `$${cost.toExponential(2)}`;
+  return `$${cost.toFixed(2)}`;
+}
+
 const hardwareBadge: Record<string, "quantum" | "classical" | "hybrid"> = {
   quantum: "quantum",
   classical: "classical",
@@ -113,9 +119,7 @@ export function RecentDecisions({
                       </p>
                     </div>
                     <p className="w-12 text-right font-mono text-xs text-muted-foreground sm:w-16 sm:text-sm">
-                      {decision.cost !== null
-                        ? `$${decision.cost.toFixed(2)}`
-                        : "—"}
+                      {formatRecentDecisionCost(decision.cost)}
                     </p>
                   </div>
                 </div>

@@ -481,6 +481,10 @@ class IBMQuantumProvider(QuantumProvider):
         import builtins
         import math
 
+        # Import allowed modules from configuration before building
+        # the restricted importer.
+        allowed_modules = [m.strip() for m in settings.SANDBOX_ALLOWED_MODULES.split(',') if m.strip()]
+
         # Build a restricted __import__ that only permits allowed modules.
         # Without this, any `import` statement in user code raises ImportError
         # even for modules that are already pre-loaded in the sandbox namespace.
@@ -551,8 +555,6 @@ class IBMQuantumProvider(QuantumProvider):
             'None': None,
         }
 
-        # Import allowed modules
-        allowed_modules = settings.SANDBOX_ALLOWED_MODULES.split(',')
         namespace: Dict[str, Any] = {
             '__builtins__': safe_builtins,
         }

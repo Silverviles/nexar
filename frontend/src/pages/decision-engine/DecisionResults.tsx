@@ -6,20 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatDurationMs } from "@/lib/number-format";
 import { type DecisionEngineResponse, HardwareType } from '@/types/decision-engine.tp';
-
-function formatTime(ms: number | null | undefined): string {
-  if (ms == null) return "N/A";
-  if (ms > 1e15) return "Infeasible";
-  const s = ms / 1000;
-  if (s < 1) return `${ms.toFixed(0)}ms`;
-  if (s < 60) return `${s.toFixed(2)}s`;
-  if (s < 3600) return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ${Math.round((s % 3600) / 60)}m`;
-  const days = s / 86400;
-  if (days < 365) return `${days.toFixed(1)} days`;
-  return `${(days / 365).toFixed(1)} years`;
-}
 
 function formatCost(usd: number | null | undefined): string {
   if (usd == null) return "N/A";
@@ -128,7 +116,7 @@ export default function DecisionResults() {
                   <span className="text-sm">Expected Time</span>
                 </div>
                 <p className="mt-1 font-mono text-2xl font-bold">
-                  {formatTime(estimated_execution_time_ms)}
+                  {formatDurationMs(estimated_execution_time_ms)}
                 </p>
                 <p className="text-xs text-muted-foreground">Estimated execution</p>
               </div>
@@ -245,7 +233,7 @@ export default function DecisionResults() {
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>Estimated time: <strong>{formatTime(estimated_execution_time_ms)}</strong></span>
+                    <span>Estimated time: <strong>{formatDurationMs(estimated_execution_time_ms)}</strong></span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />

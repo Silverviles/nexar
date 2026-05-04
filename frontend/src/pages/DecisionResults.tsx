@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatDurationMs } from "@/lib/number-format";
 import { type DecisionEngineResponse, HardwareType } from '@/types/decision-engine.tp';
 
 export default function DecisionResults() {
@@ -105,9 +106,7 @@ export default function DecisionResults() {
                   <span className="text-sm">Expected Time</span>
                 </div>
                 <p className="mt-1 font-mono text-2xl font-bold">
-                  {estimated_execution_time_ms 
-                    ? `${(estimated_execution_time_ms / 1000).toFixed(2)}s`
-                    : 'N/A'}
+                  {formatDurationMs(estimated_execution_time_ms)}
                 </p>
                 <p className="text-xs text-muted-foreground">Estimated execution</p>
               </div>
@@ -224,7 +223,7 @@ export default function DecisionResults() {
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>Estimated time: <strong>{(estimated_execution_time_ms / 1000).toFixed(2)}s</strong></span>
+                    <span>Estimated time: <strong>{formatDurationMs(estimated_execution_time_ms)}</strong></span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />

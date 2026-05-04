@@ -7,7 +7,7 @@ const router = Router();
 const AI_CODE_CONVERTER_URL =
   process.env.AI_CODE_CONVERTER_URL || "http://127.0.0.1:8000";
 const REQUEST_TIMEOUT = 30_000;
-const SLOW_UPSTREAM_THRESHOLD_MS = 5_000;
+const SLOW_UPSTREAM_THRESHOLD_MS = 100_000;
 
 logger.debug("AI Code Converter routes initialized", {
   targetUrl: AI_CODE_CONVERTER_URL,

@@ -35,6 +35,7 @@ from modules.ast_builder import ASTBuilder
 from modules.complexity_analyzer import ComplexityAnalyzer
 from modules.quantum_analyzer import QuantumAnalyzer
 from modules.algorithm_detector import QuantumAlgorithmDetector 
+from modules.recursion_analyzer import RecursionAnalyzer, analyze_recursion as analyze_recursion_fn
 from models.analysis_result import CodeAnalysisResult, ProblemType, TimeComplexity
 from modules.ml_algorithm_classifier import MLAlgorithmClassifier
 from modules.codebert_algorithm_classifier import CodeBERTAlgorithmClassifier
@@ -65,36 +66,35 @@ ast_builder = ASTBuilder()
 complexity_analyzer = ComplexityAnalyzer()
 quantum_analyzer = QuantumAnalyzer()
 algorithm_detector = QuantumAlgorithmDetector() 
+recursion_analyzer = RecursionAnalyzer()
 
 # Try to load CodeBERT algorithm classifier (PRIMARY)
 # Falls back to pattern matching if CodeBERT not available
 codebert_classifier = None
 use_codebert = False
 
-try:
-    codebert_models_dir = Path("models/trained/trained_codebert")
-    if codebert_models_dir.exists() and (codebert_models_dir / "codebert_model.pt").exists():
-        print("✅ Loading CodeBERT algorithm classifier (PRIMARY MODEL)...")
-        codebert_classifier = CodeBERTAlgorithmClassifier()
-        codebert_classifier.load_models()
-        print("✅ CodeBERT classifier loaded successfully!")
-        print("   🚀 Using transformer-based semantic understanding")
-        print("   ✅ Multi-label support enabled")
-        use_codebert = True
-    else:
-        print("ℹ️  CodeBERT model not found. Train using:")
-        print("      python train_codebert_algorithm_classifier.py")
-        print("   📌 Falling back to pattern-based detection")
-        use_codebert = False
-except Exception as e:
-    print(f"⚠️  Error loading CodeBERT classifier: {e}")
-    print("   Falling back to pattern-based detection")
-    use_codebert = False
+if use_codebert:
+    try:
+        codebert_models_dir = Path("models/trained/trained_codebert")
+        if codebert_models_dir.exists() and (codebert_models_dir / "codebert_model.pt").exists():
+            print("Loading CodeBERT algorithm classifier (PRIMARY MODEL)...")
+            codebert_classifier = CodeBERTAlgorithmClassifier()
+            codebert_classifier.load_models()
+            print(" CodeBERT classifier loaded successfully!")
+            print(" Using transformer-based semantic understanding")
+            print(" Multi-label support enabled")
+        else:
+            print("CodeBERT model not found. Train using:")
+            print(" python train_codebert_algorithm_classifier.py")
+            print(" Falling back to pattern-based detection")
+    except Exception as e:
+        print(f"WARNING: Error loading CodeBERT classifier: {e}")
+        print(" Falling back to pattern-based detection")
 
 # Load legacy classifier as fallback
 ml_classifier = MLAlgorithmClassifier()
 if not use_codebert:
-    print("✅ Pattern-based algorithm detector loaded (FALLBACK).")
+    print("Pattern-based algorithm detector loaded (FALLBACK).")
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -196,17 +196,33 @@ async def analyze_code(submission: CodeSubmission, request: Request):
             'function_count': len(unified_ast.functions or [])
         }
 
+        # Run recursion analysis (framework-agnostic)
+        try:
+            recursion_result = analyze_recursion_fn(code, language=detected_lang.value)
+            metadata['loop_count'] = recursion_result.get('loop_counts', {}).get(recursion_result.get('recursive_functions')[0], metadata.get('loop_count', 0)) if recursion_result.get('recursive_functions') else recursion_result.get('loop_counts', {}).get('__global__', metadata.get('loop_count', 0))
+            # Attach recursion summary for downstream consumers
+            metadata['recursion'] = {
+                'has_recursion': recursion_result.get('has_recursion', False),
+                'recursive_functions': recursion_result.get('recursive_functions', []),
+                'recursion_patterns': recursion_result.get('recursion_patterns', {}),
+                'recursion_depths': recursion_result.get('recursion_depths', {}),
+                'loop_counts': recursion_result.get('loop_counts', {})
+            }
+        except Exception:
+            metadata['recursion'] = {'has_recursion': False, 'recursive_functions': []}
+
         if unified_ast.canonical_ir:
             ir_meta = unified_ast.canonical_ir.metadata or {}
-            metadata = {
+            # Merge canonical IR metadata into existing metadata, preserving recursion info
+            metadata.update({
                 'lines_of_code': ir_meta.get('lines_of_code', metadata['lines_of_code']),
-                'loop_count': unified_ast.canonical_ir.loop_count,
+                'loop_count': max(metadata.get('loop_count', 0), unified_ast.canonical_ir.loop_count),
                 'conditional_count': unified_ast.canonical_ir.conditional_count,
                 'nesting_depth': ir_meta.get('control_flow_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
                 'control_flow_nesting_depth': ir_meta.get('control_flow_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
                 'structural_nesting_depth': ir_meta.get('structural_nesting_depth', unified_ast.canonical_ir.max_nesting_depth),
                 'function_count': ir_meta.get('function_count', metadata['function_count'])
-            }
+            })
 
         if is_quantum:
             # === QUANTUM ANALYSIS ===
@@ -477,7 +493,8 @@ def build_analysis_result(
         # UI enhancement fields
         code_quality_metrics=code_quality,
         optimization_suggestions=suggestions,
-        ast_structure=ast_struct
+        ast_structure=ast_struct,
+        recursion=metadata.get('recursion') if metadata else None
     )
 
 def determine_quantum_time_complexity(

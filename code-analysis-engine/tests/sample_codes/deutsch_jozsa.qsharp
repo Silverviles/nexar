@@ -1,0 +1,33 @@
+namespace Quantum.DeutschJozsa {
+    open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Canon;
+    open Microsoft.Quantum.Measurement;
+
+    // Example oracle (balanced function)
+    operation Oracle(qs : Qubit[], target : Qubit) : Unit {
+        // f(x) = x0 XOR x1 (balanced)
+        CNOT(qs[0], target);
+        CNOT(qs[1], target);
+    }
+
+    operation RunDeutschJozsa() : Result[] {
+        use qs = Qubit[2];
+        use target = Qubit();
+
+        // Initialize target to |1⟩ then apply H → |−⟩
+        X(target);
+        H(target);
+
+        // Step 1: Apply H to input qubits
+        ApplyToEach(H, qs);
+
+        // Step 2: Apply oracle
+        Oracle(qs, target);
+
+        // Step 3: Apply H again
+        ApplyToEach(H, qs);
+
+        // Measure input qubits
+        return [M(qs[0]), M(qs[1])];
+    }
+}

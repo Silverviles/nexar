@@ -137,6 +137,8 @@ class CodeAnalysisResult(BaseModel):
     ast_structure: Optional[ASTNode] = Field(default=None, description="Abstract Syntax Tree for visualization")
     code_quality_metrics: Optional[CodeQualityMetrics] = Field(default=None, description="Code quality assessment")
     optimization_suggestions: List[OptimizationSuggestion] = Field(default_factory=list, description="Recommended optimizations")
+    # Recursion metadata (framework-agnostic)
+    recursion: Optional[Dict[str, Any]] = None
     
     class Config:
         json_schema_extra = {

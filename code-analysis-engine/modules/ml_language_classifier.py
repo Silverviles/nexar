@@ -7,6 +7,7 @@ Fallback hierarchy:
 2. Heuristic detector (70-80% accuracy)
 """
 
+import pandas as pd
 import torch
 import numpy as np
 import joblib
@@ -49,7 +50,7 @@ class MLLanguageClassifier:
         try:
             self.load_models()
         except Exception as e:
-            print(f"⚠️  ML language models not loaded: {e}")
+            print(f"WARNING: ML language models not loaded: {e}")
             print("   Will use heuristic fallback")
     
     def load_models(self):
@@ -78,7 +79,7 @@ class MLLanguageClassifier:
             self.ensemble_weights = json.load(f)
         
         self.loaded = True
-        print("✅ ML language models loaded successfully!")
+        print("ML language models loaded successfully")
     
     def detect(self, code: str) -> Dict[str, any]:
         """
@@ -248,7 +249,7 @@ class ContinuousLearningManager:
             samples = [json.loads(line) for line in f]
         
         if len(samples) >= self.retrain_threshold:
-            print(f"🔄 Retraining triggered ({len(samples)} new samples collected)")
+            print(f"Retraining triggered ({len(samples)} new samples collected)")
             self._trigger_retraining()
     
     def _trigger_retraining(self):
@@ -286,7 +287,7 @@ class ContinuousLearningManager:
             for code, label in zip(all_codes, all_labels):
                 f.write(json.dumps({'code': code, 'label': label}) + '\n')
         
-        print(f"✅ Augmented dataset created: {len(all_codes):,} samples")
+        print(f"Augmented dataset created: {len(all_codes):,} samples")
         
         # Retrain models
         from language_classifier_trainer import LanguageClassifierTrainer
@@ -301,7 +302,7 @@ class ContinuousLearningManager:
         self.feedback_file.unlink()
         
         print("=" * 80)
-        print("✅ Retraining complete! New model deployed.")
+        print("Retraining complete. New model deployed.")
         print("=" * 80)
     
     def _version_models(self, results: Dict):
@@ -330,7 +331,7 @@ class ContinuousLearningManager:
         with open(version_dir / 'metadata.json', 'w') as f:
             json.dump(metadata, f, indent=2)
         
-        print(f"📦 Models versioned: {version_dir}")
+        print(f"Models versioned: {version_dir}")
 
 
 # ============================================================================
@@ -399,4 +400,4 @@ qc.measure_all()
         print(f"Details: {result['details']}")
         print("=" * 80)
     else:
-        print("⚠️  Models not loaded. Run training first.")
+        print("WARNING: Models not loaded. Run training first.")

@@ -47,7 +47,7 @@ class MLAlgorithmClassifier:
         try:
             self.load_models()
         except Exception as e:
-            print(f"⚠️  ML models not loaded: {e}")
+            print(f"WARNING: ML models not loaded: {e}")
             print("   Will use pattern matching fallback")
     
     def load_models(self):
@@ -64,7 +64,7 @@ class MLAlgorithmClassifier:
         
         self.loaded = True
         logger.info("ML models loaded successfully from %s", self.models_dir)
-        print("✅ ML models loaded successfully!")
+        print("ML models loaded successfully!")
     
     def extract_features_from_ast(self, unified_ast: UnifiedAST, quantum_metrics) -> np.ndarray:
         """
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     classifier = MLAlgorithmClassifier()
     
     if not classifier.loaded:
-        print("⚠️  Models not loaded. Run training first:")
+        print("WARNING: Models not loaded. Run training first:")
         print("   python run_complete_pipeline.py")
         exit()
     
@@ -420,10 +420,10 @@ if __name__ == "__main__":
     ])
     
     if len(preds) > 1:
-        print(f"\n✅ Models give DIFFERENT predictions ({len(preds)} unique)")
+        print(f"\nMODELS give DIFFERENT predictions ({len(preds)} unique)")
         print("   This means ensemble will be more robust!")
     else:
-        print(f"\n⚠️  All models agree on: {preds.pop()}")
+        print(f"\nWARNING: All models agree on: {preds.pop()}")
     
     # Get detailed probabilities
     print("\n" + "=" * 80)

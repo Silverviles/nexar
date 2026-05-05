@@ -60,7 +60,7 @@ function Home() {
           >
             Quantum classical
             <br />
-            <span className="text-muted-foreground">code routing, refined.</span>
+            <span className="text-muted-foreground">code router</span>
           </motion.h1>
 
           <motion.p

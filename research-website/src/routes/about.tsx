@@ -45,7 +45,7 @@ const projectHighlights = [
 
 const supervisors = [
   { name: "Prof. Nuwan Kodagoda", role: "Supervisor", department: "Department of Information Technology, SLIIT", img: imgNuwan , contactUrl: "https://www.linkedin.com/in/nuwan-kodagoda-a4875a4"},
-  { name: "Dr. Kapila Dissanayaka", role: "Co-Supervisor", department: "Department of Computer Science and Software Engineering, SLIIT", img: imgKapila , contactUrl: "https://www.sliit.lk/academic/academic-staff/kapila.d"},
+  { name: "Dr. Kapila Dissanayaka", role: "Co-Supervisor", department: "Department of Computer Science and Software Engineering, SLIIT", img: imgKapila , contactUrl: "https://www.linkedin.com/in/kapila-d-dissanayaka"},
 ];
 
 const team = [

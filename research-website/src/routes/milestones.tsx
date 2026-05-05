@@ -23,7 +23,7 @@ const milestones = [
   { title: "Status Document I", date: "TBD", marks: "TBD", status: "done", desc: "Detailed documentation capturing current progress, blockers, and methodology updates." },
   { title: "Progress Presentation II", date: "March 2026", marks: "TBD", status: "done", desc: "Final comprehensive presentation of the fully functional system." },
   { title: "Research Paper", date: "April 2026", marks: "TBD", status: "done", desc: "Drafting and submission of the primary research paper to an academic conference or journal." },
-  { title: "Status Document II", date: "TBD", marks: "TBD", status: "pending", desc: "Second official progress review document prior to final developments." },
+  { title: "Status Document II", date: "May 2026", marks: "TBD", status: "done", desc: "Second official progress review document prior to final developments." },
   { title: "Final Reports (Thesis)", date: "May 2026", marks: "TBD", status: "pending", desc: "Complete dissertation combining all research, methodology, and results." },
   { title: "Final Evaluation", date: "May 2026", marks: "TBD", status: "pending", desc: "System evaluation and viva-voce with the examination panel." },
   { title: "Logbook Evaluation", date: "May 2026", marks: "TBD", status: "pending", desc: "Assessment of consistent progress logging throughout the project cycle." },

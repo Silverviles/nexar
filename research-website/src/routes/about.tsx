@@ -1,7 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Users, BookOpen, Sparkles, Workflow, FileCode2, BrainCircuit, GitFork, Cpu } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  Sparkles,
+  Workflow,
+  FileCode2,
+  BrainCircuit,
+  GitFork,
+  Cpu,
+  ExternalLink,
+} from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionHeader } from "@/components/SectionHeader";
+
 
 import imgSiriwardhana from "../assets/about/member-siriwardhana.jpeg";
 import imgPrasad from "../assets/about/member-prasad.png";
@@ -14,7 +25,10 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About — NEXAR" },
-      { name: "description", content: "The story behind NEXAR, the research team, and our motivations." },
+      {
+        name: "description",
+        content: "The story behind NEXAR, the research team, and our motivations.",
+      },
       { property: "og:title", content: "About — NEXAR" },
       { property: "og:description", content: "Learn about the researchers and research driving NEXAR forward." },
     ],
@@ -30,15 +44,15 @@ const projectHighlights = [
 ];
 
 const supervisors = [
-  { name: "Prof. Nuwan Kodagoda", role: "Supervisor", department: "Department of Information Technology, SLIIT", img: imgNuwan },
-  { name: "Dr. Kapila Dissanayaka", role: "Co-Supervisor", department: "Department of Computer Science and Software Engineering, SLIIT", img: imgKapila },
+  { name: "Prof. Nuwan Kodagoda", role: "Supervisor", department: "Department of Information Technology, SLIIT", img: imgNuwan , contactUrl: "https://www.linkedin.com/in/nuwan-kodagoda-a4875a4"},
+  { name: "Dr. Kapila Dissanayaka", role: "Co-Supervisor", department: "Department of Computer Science and Software Engineering, SLIIT", img: imgKapila , contactUrl: "https://www.sliit.lk/academic/academic-staff/kapila.d"},
 ];
 
 const team = [
-  { name: "Siriwardhana A. H. L. T. S.", alias: "Sudaraka Tharindu", id: "IT22094568", role: "Hardware Abstraction Layer", img: imgSiriwardhana },
-  { name: "Prasad H. G. A. T.", alias: "Ashi", id: "IT22056870", role: "Decision Engine", img: imgPrasad },
-  { name: "Jayasinghe Y. L.", alias: "Yashodha Lasith", id: "IT22103840", role: "Code Analysis Engine", img: imgJayasinghe },
-  { name: "Hettiarachchi S. R.", alias: "Sayun", id: "IT22128386", role: "AI Code Converter", img: imgHettiarachchi },
+  { name: "Siriwardhana A. H. L. T. S.", alias: "Sudaraka Tharindu", id: "IT22094568", role: "Hardware Abstraction Layer", img: imgSiriwardhana , contactUrl: "https://www.linkedin.com/in/tharindu-siriwardhana" },
+  { name: "Prasad H. G. A. T.", alias: "Ashan Tharindu", id: "IT22056870", role: "Decision Engine", img: imgPrasad, contactUrl: "https://www.linkedin.com/in/ashan-tharindu" },
+  { name: "Jayasinghe Y. L.", alias: "Yashodha Lasith", id: "IT22103840", role: "Code Analysis Engine", img: imgJayasinghe , contactUrl :"https://www.linkedin.com/in/yashodha-jayasinghe-1104122a3"},
+  { name: "Hettiarachchi S. R.", alias: "Sayun Hettiarachchi", id: "IT22128386", role: "AI Code Converter", img: imgHettiarachchi, contactUrl: "https://www.linkedin.com/in/sayun-hettiarachchi-37b14a2a6" },
 ];
 
 const contributions = [
@@ -113,7 +127,12 @@ function AboutPage() {
                     <img src={s.img} alt={s.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                   </div>
                   <div className="flex flex-col justify-center">
-                    <h4 className="font-display text-[17px] font-semibold group-hover:text-primary transition-colors">{s.name}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-display text-[17px] font-semibold group-hover:text-primary transition-colors">{s.name}</h4>
+                      <a href={s.contactUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors shrink-0" aria-label={`Contact ${s.name}`}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
                     <span className="text-[13px] font-medium text-primary mb-1.5">{s.role}</span>
                     <p className="text-[13px] text-muted-foreground leading-relaxed pr-2">{s.department}</p>
                   </div>
@@ -129,7 +148,12 @@ function AboutPage() {
                     <img src={m.img} alt={m.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                   </div>
                   <div className="flex flex-col justify-center">
-                    <h4 className="font-display text-[17px] font-semibold group-hover:text-primary transition-colors">{m.name}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-display text-[17px] font-semibold group-hover:text-primary transition-colors">{m.name}</h4>
+                      <a href={m.contactUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors shrink-0" aria-label={`Contact ${m.name}`}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
                     <span className="text-[12.5px] text-muted-foreground mb-3">{m.alias} <span className="opacity-50 mx-1">|</span> {m.id}</span>
                     <span className="inline-flex max-w-fit items-center rounded-md bg-primary/10 px-2.5 py-1 text-[11.5px] font-medium text-primary border border-primary/20">
                       {m.role}

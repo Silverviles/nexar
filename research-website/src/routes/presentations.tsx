@@ -41,8 +41,8 @@ const decks = [
     title: "Final Presentation",
     date: "May 2026",
     desc: "100% completion with deployed solution and final evaluation.",
-    viewUrl: null,
-    embedUrl: null,
+    viewUrl: "https://drive.google.com/file/d/1BB3lGJZ-4S57_rnNCJHFEIkyVs6VDasu/view?usp=sharing",
+    embedUrl: "https://drive.google.com/file/d/1BB3lGJZ-4S57_rnNCJHFEIkyVs6VDasu/preview",
   },
 ];
 

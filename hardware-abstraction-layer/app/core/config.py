@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     # IBM Quantum
     IBM_QUANTUM_TOKEN: Optional[str] = None
+    IBM_QUANTUM_INSTANCE: Optional[str] = None
 
     # IBM Classical (Cloud Functions)
     IBM_CLOUD_API_KEY: Optional[str] = None

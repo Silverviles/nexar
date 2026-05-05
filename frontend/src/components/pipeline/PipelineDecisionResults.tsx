@@ -25,20 +25,7 @@ import {
   HardwareType,
 } from "@/types/decision-engine.tp";
 import { cn } from "@/lib/utils";
-
-/** Format execution time (ms) into a readable string */
-function formatTime(ms: number | null | undefined): string {
-  if (ms == null) return "N/A";
-  if (ms > 1e15) return "Infeasible";
-  const s = ms / 1000;
-  if (s < 1) return `${ms.toFixed(0)}ms`;
-  if (s < 60) return `${s.toFixed(2)}s`;
-  if (s < 3600) return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ${Math.round((s % 3600) / 60)}m`;
-  const days = s / 86400;
-  if (days < 365) return `${days.toFixed(1)} days`;
-  return `${(days / 365).toFixed(1)} years`;
-}
+import { formatDurationMs } from "@/lib/number-format";
 
 /** Format cost (USD) into a readable string */
 function formatCost(usd: number | null | undefined): string {
@@ -136,7 +123,7 @@ export function PipelineDecisionResults({
                 <span className="text-xs">Expected Time</span>
               </div>
               <p className="mt-1 font-mono text-xl font-bold">
-                {formatTime(estimated_execution_time_ms)}
+                {formatDurationMs(estimated_execution_time_ms)}
               </p>
             </div>
 

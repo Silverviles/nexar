@@ -1,8 +1,8 @@
 from typing import List, Dict, Any, Union, Optional
 import logging
-import signal
 import statistics
 import time
+import threading
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import BackendV2
@@ -49,10 +49,14 @@ class IBMQuantumProvider(QuantumProvider):
 
         try:
             if settings.IBM_QUANTUM_TOKEN:
-                self.service = QiskitRuntimeService(
-                    channel="ibm_quantum_platform",
-                    token=settings.IBM_QUANTUM_TOKEN
-                )
+                runtime_kwargs = {
+                    "channel": "ibm_quantum_platform",
+                    "token": settings.IBM_QUANTUM_TOKEN,
+                }
+                if settings.IBM_QUANTUM_INSTANCE:
+                    runtime_kwargs["instance"] = settings.IBM_QUANTUM_INSTANCE
+
+                self.service = QiskitRuntimeService(**runtime_kwargs)
                 logger.info("IBM Quantum Service initialized with provided token.")
             else:
                  # Fallback to default (env vars or saved account)
@@ -477,6 +481,10 @@ class IBMQuantumProvider(QuantumProvider):
         import builtins
         import math
 
+        # Import allowed modules from configuration before building
+        # the restricted importer.
+        allowed_modules = [m.strip() for m in settings.SANDBOX_ALLOWED_MODULES.split(',') if m.strip()]
+
         # Build a restricted __import__ that only permits allowed modules.
         # Without this, any `import` statement in user code raises ImportError
         # even for modules that are already pre-loaded in the sandbox namespace.
@@ -547,8 +555,6 @@ class IBMQuantumProvider(QuantumProvider):
             'None': None,
         }
 
-        # Import allowed modules
-        allowed_modules = settings.SANDBOX_ALLOWED_MODULES.split(',')
         namespace: Dict[str, Any] = {
             '__builtins__': safe_builtins,
         }
@@ -599,46 +605,41 @@ class IBMQuantumProvider(QuantumProvider):
             SandboxTimeoutError: If execution times out
         """
         timeout = settings.PYTHON_EXEC_TIMEOUT
+        result_holder: Dict[str, Any] = {}
+        error_holder: Dict[str, Exception] = {}
 
-        def timeout_handler(signum, frame):
+        def _runner() -> None:
+            try:
+                compiled_code = compile(code, '<user_code>', 'exec')
+                exec(compiled_code, sandbox_globals, sandbox_locals)
+
+                if 'circuit' not in sandbox_locals:
+                    raise ValueError(
+                        "Code must define a 'circuit' variable. "
+                        "Example: circuit = QuantumCircuit(2, 2)"
+                    )
+
+                circuit = sandbox_locals['circuit']
+                if not isinstance(circuit, QuantumCircuit):
+                    raise ValueError(
+                        f"'circuit' must be a QuantumCircuit, got {type(circuit).__name__}"
+                    )
+
+                result_holder["circuit"] = circuit
+            except SyntaxError as e:
+                error_holder["error"] = ValueError(f"Syntax error in user code: {e}")
+            except Exception as e:
+                error_holder["error"] = ValueError(f"Error executing user code: {e}")
+
+        worker = threading.Thread(target=_runner, daemon=True)
+        worker.start()
+        worker.join(timeout)
+
+        if worker.is_alive():
             raise SandboxTimeoutError(f"Code execution exceeded {timeout} seconds timeout")
 
-        # Set timeout (Unix only - on Windows this is a no-op)
-        old_handler = None
-        if hasattr(signal, 'SIGALRM'):
-            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(timeout)
+        if "error" in error_holder:
+            raise error_holder["error"]
 
-        try:
-            # Compile and execute
-            compiled_code = compile(code, '<user_code>', 'exec')
-            exec(compiled_code, sandbox_globals, sandbox_locals)
-
-            # Extract circuit
-            if 'circuit' not in sandbox_locals:
-                raise ValueError(
-                    "Code must define a 'circuit' variable. "
-                    "Example: circuit = QuantumCircuit(2, 2)"
-                )
-
-            circuit = sandbox_locals['circuit']
-            if not isinstance(circuit, QuantumCircuit):
-                raise ValueError(
-                    f"'circuit' must be a QuantumCircuit, got {type(circuit).__name__}"
-                )
-
-            return circuit
-
-        except SandboxTimeoutError:
-            raise
-        except SyntaxError as e:
-            raise ValueError(f"Syntax error in user code: {e}")
-        except Exception as e:
-            raise ValueError(f"Error executing user code: {e}")
-        finally:
-            # Restore signal handler
-            if hasattr(signal, 'SIGALRM'):
-                signal.alarm(0)
-                if old_handler:
-                    signal.signal(signal.SIGALRM, old_handler)
+        return result_holder["circuit"]
 

@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { formatDurationMs, formatSignedMilliseconds } from "@/lib/number-format";
 import { decisionEngineService } from "@/services/decision-engine-service";
 import type {
   DecisionLogEntry,
@@ -200,9 +201,7 @@ export default function ExecutionHistory() {
                   Avg Time Delta
                 </div>
                 <p className="text-2xl font-bold font-mono">
-                  {accuracyStats.averageTimeDelta !== 0
-                    ? `${accuracyStats.averageTimeDelta > 0 ? "+" : ""}${accuracyStats.averageTimeDelta}ms`
-                    : "N/A"}
+                  {formatSignedMilliseconds(accuracyStats.averageTimeDelta)}
                 </p>
               </CardContent>
             </Card>
@@ -308,7 +307,7 @@ export default function ExecutionHistory() {
               const isExpanded = expandedId === decision.id;
 
               const predictedTime = decision.estimated_execution_time_ms
-                ? `${(decision.estimated_execution_time_ms / 1000).toFixed(1)}s`
+                ? formatDurationMs(decision.estimated_execution_time_ms)
                 : "—";
               const predictedCost = decision.estimated_cost_usd
                 ? `$${decision.estimated_cost_usd.toFixed(4)}`
@@ -316,7 +315,7 @@ export default function ExecutionHistory() {
               const actualTime =
                 decision.feedback?.actual_execution_time_ms !== null &&
                 decision.feedback?.actual_execution_time_ms !== undefined
-                  ? `${(decision.feedback.actual_execution_time_ms / 1000).toFixed(1)}s`
+                  ? formatDurationMs(decision.feedback.actual_execution_time_ms)
                   : "—";
               const actualCost =
                 decision.feedback?.actual_cost_usd !== null &&

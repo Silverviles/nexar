@@ -210,6 +210,64 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                 </div>
               </div>
             )}
+
+            {/* Recursion Analysis */}
+            {result.recursion && (
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-400">
+                  <Terminal className="h-4 w-4" />
+                  Recursion Analysis
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded border border-border/50 bg-secondary/10 p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Has Recursion
+                    </div>
+                    <div className="mt-1 font-mono text-sm font-semibold">
+                      {result.recursion.has_recursion ? "Yes" : "No"}
+                    </div>
+                  </div>
+
+                  <div className="rounded border border-border/50 bg-secondary/10 p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Recursive Functions
+                    </div>
+                    <div className="mt-1 font-mono text-sm font-semibold">
+                      {result.recursion.recursive_functions.length > 0
+                        ? result.recursion.recursive_functions.join(", ")
+                        : "None"}
+                    </div>
+                  </div>
+
+                  <div className="rounded border border-border/50 bg-secondary/10 p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Recursion Patterns
+                    </div>
+                    <div className="mt-1 font-mono text-xs font-semibold">
+                      {Object.keys(result.recursion.recursion_patterns).length >
+                      0
+                        ? Object.entries(result.recursion.recursion_patterns)
+                            .map(([name, pattern]) => `${name}: ${pattern}`)
+                            .join(" • ")
+                        : "None"}
+                    </div>
+                  </div>
+
+                  <div className="rounded border border-border/50 bg-secondary/10 p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Recursion Depths
+                    </div>
+                    <div className="mt-1 font-mono text-xs font-semibold">
+                      {Object.keys(result.recursion.recursion_depths).length > 0
+                        ? Object.entries(result.recursion.recursion_depths)
+                            .map(([name, count]) => `${name}: ${count}`)
+                            .join(" • ")
+                        : "None"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

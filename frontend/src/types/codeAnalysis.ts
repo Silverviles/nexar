@@ -65,6 +65,13 @@ export interface QuantumMetrics {
   estimated_logical_runtime_ms: number | null;
 }
 
+export interface RecursionAnalysis {
+  has_recursion: boolean;
+  recursive_functions: string[];
+  recursion_patterns: Record<string, string>;
+  recursion_depths: Record<string, number>;
+}
+
 export interface AnalysisResult {
   detected_language: SupportedLanguage;
   language_confidence: number;
@@ -89,6 +96,7 @@ export interface AnalysisResult {
   optimization_suggestions?: OptimizationSuggestion[];
   ast_structure?: ASTNode;
   language_detection_method?: string;
+  recursion?: RecursionAnalysis | null;
 }
 
 export interface ASTNode {

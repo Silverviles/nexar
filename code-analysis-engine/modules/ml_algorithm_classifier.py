@@ -339,7 +339,7 @@ if __name__ == "__main__":
     classifier = MLAlgorithmClassifier()
     
     if not classifier.loaded:
-        print("⚠️  Models not loaded. Run training first:")
+        print("WARNING: Models not loaded. Run training first:")
         print("   python run_complete_pipeline.py")
         exit()
     
@@ -420,10 +420,10 @@ if __name__ == "__main__":
     ])
     
     if len(preds) > 1:
-        print(f"\n✅ Models give DIFFERENT predictions ({len(preds)} unique)")
+        print(f"\nMODELS give DIFFERENT predictions ({len(preds)} unique)")
         print("   This means ensemble will be more robust!")
     else:
-        print(f"\n⚠️  All models agree on: {preds.pop()}")
+        print(f"\nWARNING: All models agree on: {preds.pop()}")
     
     # Get detailed probabilities
     print("\n" + "=" * 80)

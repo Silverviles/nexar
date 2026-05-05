@@ -1,12 +1,27 @@
-import cirq
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
-# Bell state creation
-qubits = cirq.LineQubit.range(2)
-circuit = cirq.Circuit()
+# Grover's algorithm for 2 qubits
+qr = QuantumRegister(2, 'q')
+cr = ClassicalRegister(2, 'c')
+qc = QuantumCircuit(qr, cr)
 
-# Create Bell state
-circuit.append(cirq.H(qubits[0]))
-circuit.append(cirq.CNOT(qubits[0], qubits[1]))
+# Initialize
+qc.h(0)
+qc.h(1)
+
+# Oracle (marking |11>)
+qc.cz(0, 1)
+
+# Diffusion operator
+qc.h(0)
+qc.h(1)
+qc.x(0)
+qc.x(1)
+qc.cz(0, 1)
+qc.x(0)
+qc.x(1)
+qc.h(0)
+qc.h(1)
 
 # Measure
-circuit.append(cirq.measure(*qubits, key='result'))
+qc.measure(qr, cr)

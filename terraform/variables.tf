@@ -148,6 +148,11 @@ variable "deploy_service_account_id" {
 # GCS — ML Models Bucket
 # ──────────────────────────────────────────────────────────────────────────────
 
+variable "state_bucket_name" {
+  description = "Name of the GCS bucket for the project state object"
+  type        = string
+}
+
 variable "models_bucket_name" {
   description = "Name of the GCS bucket for ML model artifacts"
   type        = string

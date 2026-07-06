@@ -1,0 +1,127 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  IBM Plex Mono is used on product surfaces (code editors, numeric IDs, the
+  analysis terminal log) even though DESIGN-ibm.md documents "no mono on
+  marketing surfaces" -- that rule is written for ibm.com's marketing pages,
+  and nexar-web is an authenticated app with real code/data surfaces.
+*/
+
+@theme {
+  --color-primary: #0f62fe;
+  --color-primary-hover: #0050e6;
+  --color-primary-pressed: #002d9c;
+  --color-blue-60: #0043ce;
+  --color-blue-80: #002d9c;
+  --color-on-primary: #ffffff;
+
+  --color-ink: #161616;
+  --color-ink-muted: #525252;
+  --color-ink-subtle: #8c8c8c;
+  --color-canvas: #ffffff;
+  --color-surface-1: #f4f4f4;
+  --color-surface-2: #e0e0e0;
+  --color-hairline: #e0e0e0;
+  --color-hairline-strong: #161616;
+
+  --color-inverse-canvas: #161616;
+  --color-inverse-surface-1: #262626;
+  --color-inverse-ink: #ffffff;
+  --color-inverse-ink-muted: #c6c6c6;
+
+  --color-success: #24a148;
+  --color-warning: #f1c21b;
+  --color-error: #da1e28;
+  --color-info: #0f62fe;
+
+  /* Domain compute-backend color coding: one true chromatic accent (blue),
+     one neutral gray, one reused semantic green -- see plan for rationale. */
+  --color-quantum: #0f62fe;
+  --color-classical: #525252;
+  --color-hybrid: #24a148;
+
+  --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+
+  /*
+    DESIGN-ibm.md's named spacing scale (xxs..section) is deliberately NOT
+    added here as --spacing-* theme tokens: Tailwind v4's --spacing-* namespace
+    is shared by every sizing utility (w-*, max-w-*, p-*, gap-*, etc.), so
+    named keys that collide with Tailwind's own defaults (xs/sm/md/lg/xl) would
+    silently hijack utilities like max-w-md/max-w-lg app-wide. Components use
+    Tailwind's default pixel/rem scale (p-6, gap-3, px-4 py-2, ...) directly.
+  */
+}
+
+/*
+  Carbon Gray 100 dark theme. Overrides the light-mode @theme tokens by
+  variable name so every component that already consumes bg-canvas/text-ink/
+  etc. picks up dark mode automatically -- no component markup changes needed.
+  --color-inverse-* are deliberately NOT overridden here: they back permanently
+  -dark UI (secondary button, tooltips, Landing footer) regardless of theme.
+*/
+.dark {
+  --color-primary: #4589ff;
+  --color-primary-hover: #6ea6ff;
+  --color-primary-pressed: #0043ce;
+  --color-on-primary: #161616;
+
+  --color-ink: #f4f4f4;
+  --color-ink-muted: #c6c6c6;
+  --color-ink-subtle: #8d8d8d;
+  --color-canvas: #161616;
+  --color-surface-1: #262626;
+  --color-surface-2: #393939;
+  --color-hairline: #393939;
+  --color-hairline-strong: #f4f4f4;
+
+  --color-success: #42be65;
+  --color-warning: #f1c21b;
+  --color-error: #fa4d56;
+  --color-info: #4589ff;
+
+  --color-quantum: #4589ff;
+  --color-classical: #8d8d8d;
+  --color-hybrid: #42be65;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+  }
+
+  html,
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: 0.16px;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  /* Carbon's signature focus treatment: 2px primary outline, no ring/glow. */
+  .carbon-focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  .carbon-focus-input:focus-within {
+    border-bottom: 2px solid var(--color-primary);
+    margin-bottom: -1px;
+  }
+}

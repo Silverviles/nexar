@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,6 +9,7 @@ const GoogleCallback: React.FC = () => {
   const [error, setError] = useState('');
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const hasExchangedCode = useRef(false);
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -23,6 +24,11 @@ const GoogleCallback: React.FC = () => {
       setError('No authorization code received from Google.');
       return;
     }
+
+    // Google authorization codes are single-use; guard against React
+    // StrictMode's dev-mode double-invoke firing the exchange twice.
+    if (hasExchangedCode.current) return;
+    hasExchangedCode.current = true;
 
     loginWithGoogle(code)
       .then(() => {

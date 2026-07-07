@@ -101,7 +101,7 @@ Service names:
   decision-engine           Python  (port 8003)
   hardware-abstraction-layer Python (port 8004)
   api                       Node.js (port 3000)
-  frontend                  Node.js (port 5173)
+  nexar-web                  Node.js (port 5173)
 
 Examples:
   bash setup-dev.sh --force code-analysis-engine   Recreate broken venv
@@ -577,7 +577,7 @@ get_color_code() {
         decision-engine)            echo "0;34" ;;
         hardware-abstraction-layer) echo "1;37" ;;
         api)                        echo "0;32" ;;
-        frontend)                   echo "0;36" ;;
+        nexar-web)                   echo "0;36" ;;
         *)                          echo "0"    ;;
     esac
 }
@@ -589,7 +589,7 @@ get_service_color() {
         decision-engine)            echo "$BLUE"    ;;
         hardware-abstraction-layer) echo "$WHITE"   ;;
         api)                        echo "$GREEN"   ;;
-        frontend)                   echo "$CYAN"    ;;
+        nexar-web)                   echo "$CYAN"    ;;
         *)                          echo "$NC"      ;;
     esac
 }
@@ -628,7 +628,7 @@ echo ""
 NODE_PIDS=()
 NODE_SERVICES=()
 
-for svc_name in api frontend; do
+for svc_name in api nexar-web; do
     if should_setup "$svc_name"; then
         svc_color="$(get_service_color "$svc_name")"
         color_code="$(get_color_code "$svc_name")"
@@ -649,7 +649,7 @@ fi
 # ── Phase 4: Summary ──
 log_header "Setup Summary"
 
-ALL_SERVICES=(ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer api frontend)
+ALL_SERVICES=(ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer api nexar-web)
 ALL_OK=true
 SETUP_COUNT=0
 OK_COUNT=0

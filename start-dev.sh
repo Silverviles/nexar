@@ -7,7 +7,7 @@
 #
 # Usage:
 #   bash start-dev.sh                     # Start all services
-#   bash start-dev.sh api frontend        # Start only specific services
+#   bash start-dev.sh api nexar-web        # Start only specific services
 #   bash start-dev.sh --no-python         # Start only Node services
 #   bash start-dev.sh --no-node           # Start only Python services
 # =============================================================================
@@ -72,7 +72,7 @@ for arg in "$@"; do
         --help|-h)
             echo "Usage: bash start-dev.sh [options] [service ...]"
             echo ""
-            echo "Services: frontend api ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer"
+            echo "Services: nexar-web api ai-code-converter code-analysis-engine decision-engine hardware-abstraction-layer"
             echo ""
             echo "Options:"
             echo "  --no-python      Skip all Python services"
@@ -197,9 +197,25 @@ maybe_download_models() {
     esac
 }
 
+# ── Pre-start Port Cleanup ──
+cleanup_orphaned_ports() {
+    echo -e "${GRAY}Checking for orphaned processes on required ports...${NC}"
+
+    # Run lsof and capture output, using '|| true' so pipefail doesn't crash the script if empty
+    local orphaned_pids
+    orphaned_pids=$(lsof -ti:8001,8002,8003,8004,3000,5173 2>/dev/null || true)
+
+    if [[ -n "$orphaned_pids" ]]; then
+        echo -e "${YELLOW}Found ghost processes holding our ports. Terminating them...${NC}"
+        echo "$orphaned_pids" | xargs kill -9 2>/dev/null || true
+        sleep 1 # Give the OS a brief moment to free the network sockets
+    fi
+}
+
 # ── Service launchers ──
 
 start_python_service() {
+    cleanup_orphaned_ports
     local name=$1 dir=$2 entry=$3 port=$4 color=$5 sed_color=$6 label=$7
 
     local uvicorn="$SCRIPT_DIR/$dir/.venv/$VENV_BIN/uvicorn"
@@ -305,10 +321,10 @@ if should_start "api" "node"; then
         "$GREEN" "$SED_GREEN" "API"
 fi
 
-if should_start "frontend" "node"; then
+if should_start "nexar-web" "node"; then
     start_node_service \
-        "frontend" \
-        "frontend" \
+        "nexar-web" \
+        "nexar-web" \
         5173 \
         "$CYAN" "$SED_CYAN" "FRONTEND"
 fi

@@ -1,0 +1,140 @@
+/**
+ * Quantum Metrics Display Component
+ */
+
+import { Cpu, Layers, Zap, Activity, Box, Clock, Sparkles, Link } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { MetricCard } from './MetricCard'
+import type { QuantumMetrics } from '@/types/codeAnalysis'
+
+interface QuantumMetricsProps {
+  metrics: QuantumMetrics
+  detectedAlgorithms: string[]
+}
+
+export function QuantumMetricsDisplay({ metrics, detectedAlgorithms }: QuantumMetricsProps) {
+  const getScoreColor = (score: number): 'default' | 'success' | 'warning' => {
+    if (score >= 0.7) return 'success'
+    if (score >= 0.4) return 'default'
+    return 'warning'
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card variant="glass" className="border-quantum/30 bg-quantum/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-quantum">
+            <Cpu className="h-5 w-5" />
+            Quantum Circuit Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {metrics.has_superposition && (
+              <Badge variant="quantum" className="gap-1">
+                <Sparkles className="h-3 w-3" />
+                Superposition Capable
+              </Badge>
+            )}
+            {metrics.has_entanglement && (
+              <Badge variant="quantum" className="gap-1">
+                <Link className="h-3 w-3" />
+                Entanglement Capable
+              </Badge>
+            )}
+            {detectedAlgorithms.length > 0 && (
+              <Badge variant="outline" className="border-quantum/40 text-quantum">
+                {detectedAlgorithms.join(', ')}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        <MetricCard icon={Cpu} label="Qubits Required" value={metrics.qubits_required} subtitle="Quantum registers" variant="quantum" animate />
+        <MetricCard icon={Layers} label="Circuit Depth" value={metrics.circuit_depth} subtitle="Gate layers" variant="quantum" animate />
+        <MetricCard
+          icon={Zap}
+          label="Total Gates"
+          value={metrics.gate_count}
+          subtitle={`${metrics.single_qubit_gates} single, ${metrics.two_qubit_gates} two-qubit`}
+          variant="quantum"
+          animate
+        />
+        <MetricCard
+          icon={Activity}
+          label="CX Gate Ratio"
+          value={`${(metrics.cx_gate_ratio * 100).toFixed(1)}%`}
+          subtitle={`${metrics.cx_gate_count} CNOT gates`}
+          variant={getScoreColor(metrics.cx_gate_ratio)}
+          animate
+        />
+        <MetricCard
+          icon={Box}
+          label="Logical Circuit Volume"
+          value={metrics.logical_circuit_volume ?? 'N/A'}
+          subtitle="Resource scale"
+          variant="quantum"
+          animate
+        />
+        <MetricCard
+          icon={Clock}
+          label="Est. Runtime"
+          value={metrics.estimated_logical_runtime_ms ? `${metrics.estimated_logical_runtime_ms.toFixed(3)}ms` : 'N/A'}
+          subtitle="Execution time"
+          variant="quantum"
+          animate
+        />
+      </div>
+
+      <Card variant="glass">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Quantum Characteristics</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-quantum" />
+                <span className="text-ink-muted">Superposition Utilization</span>
+              </div>
+              <span className="font-mono font-semibold text-ink">{(metrics.superposition_score * 100).toFixed(1)}%</span>
+            </div>
+            <Progress value={metrics.superposition_score * 100} className="h-2" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <Link className="h-4 w-4 text-quantum" />
+                <span className="text-ink-muted">Peak Entanglement Achieved</span>
+              </div>
+              <span className="font-mono font-semibold text-ink">{(metrics.entanglement_score * 100).toFixed(1)}%</span>
+            </div>
+            <Progress value={metrics.entanglement_score * 100} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card variant="glass">
+        <CardContent className="pt-6">
+          <div className="space-y-2 text-sm">
+            <p className="text-ink-muted">
+              <span className="font-semibold text-ink">Gate Composition:</span> Circuit contains {metrics.single_qubit_gates} single-qubit
+              gates and {metrics.two_qubit_gates} two-qubit entangling gates.
+            </p>
+            <p className="text-ink-muted">
+              <span className="font-semibold text-ink">Logical Circuit Volume:</span>{' '}
+              {metrics.logical_circuit_volume
+                ? `${metrics.logical_circuit_volume} - indicates the circuit's computational power and error resilience.`
+                : 'Not calculated for this circuit.'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

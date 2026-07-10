@@ -6,7 +6,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit_aer import Aer
 
 class QuantumPerformanceAnalyzer:
-    def __init__(self, api_url="http://127.0.0.1:8000"):
+    def __init__(self, api_url="http://127.0.0.1:8001"):
         self.api_url = api_url
         self.simulator = Aer.get_backend('aer_simulator')
     

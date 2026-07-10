@@ -16,7 +16,7 @@ import pipelineRoutes from '@routes/pipeline.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DECISION_ENGINE_URL = process.env.DECISION_ENGINE_URL || 'http://localhost:8003';
-const AI_CODE_CONVERTER_URL = process.env.AI_CODE_CONVERTER_URL || 'http://localhost:8000';
+const AI_CODE_CONVERTER_URL = process.env.AI_CODE_CONVERTER_URL || 'http://localhost:8001';
 const CODE_ANALYSIS_ENGINE_URL = process.env.CODE_ANALYSIS_ENGINE_URL || "http://localhost:8002";
 const HARDWARE_LAYER_URL = process.env.HARDWARE_LAYER_URL || 'http://localhost:8004';
 

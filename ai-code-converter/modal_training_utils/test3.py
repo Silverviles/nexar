@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image
 
 # FastAPI server URL (update if needed)
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8001"
 
 def test_full_flow():
     """Test the complete flow: Python → Translation → Execution"""
@@ -141,7 +141,7 @@ def test_full_flow():
 
 if __name__ == "__main__":
     # Make sure your FastAPI server is running first!
-    print("Make sure your FastAPI server is running on http://127.0.0.1:8000")
+    print("Make sure your FastAPI server is running on http://127.0.0.1:8001")
     print("Starting full flow test...\n")
     
     try:

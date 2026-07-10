@@ -7,7 +7,7 @@ from io import BytesIO
 from PIL import Image
 import time
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8001"
 
 def get_user_gate():
     valid_gates = ["XOR", "OR", "NOT", "NOR"]
@@ -418,7 +418,7 @@ def display_results_summary(results):
     print(f"Total Gates: {circuit_analysis.get('num_gates', 'N/A')}")
 
 if __name__ == "__main__":
-    print("Make sure your FastAPI server is running on http://127.0.0.1:8000")
+    print("Make sure your FastAPI server is running on http://127.0.0.1:8001")
     print("Starting full flow test...\n")
     
     try:

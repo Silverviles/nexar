@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 import sys
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8001"
 
 class ModelEvaluator:
     def __init__(self):

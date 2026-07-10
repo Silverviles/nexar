@@ -3,9 +3,8 @@ import axios from "axios";
 import { logger } from "@config/logger.js";
 
 const router = Router();
-// Change this URL to your FastAPI backend
 const AI_CODE_CONVERTER_URL =
-  process.env.AI_CODE_CONVERTER_URL || "http://127.0.0.1:8000";
+  process.env.AI_CODE_CONVERTER_URL || "http://127.0.0.1:8001";
 const DEFAULT_TIMEOUT = 30_000;       // 30s for lightweight endpoints
 const MODEL_INFERENCE_TIMEOUT = 120_000; // 120s for T5 model inference (/translate)
 const EXECUTION_TIMEOUT = 150_000;    // 150s for circuit execution (HAL polling can be slow)

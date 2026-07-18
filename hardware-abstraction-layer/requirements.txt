@@ -54,6 +54,7 @@ pydantic_core==2.41.5
 Pygments==2.19.2
 PyJWT==2.10.1
 pyparsing==3.2.5
+pylatexenc==2.10
 pyspnego==0.12.0
 pytest==9.0.2
 python-dateutil==2.9.0.post0

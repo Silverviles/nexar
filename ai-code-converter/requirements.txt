@@ -11,7 +11,8 @@ matplotlib
 scipy
 seaborn
 
-transformers
+transformers==4.46.3
+tokenizers>=0.20,<0.21
 torch>=2.4.0,<2.5.0
 scikit-learn
 datasets

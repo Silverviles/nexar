@@ -4,6 +4,7 @@ import statistics
 import time
 import threading
 
+import qiskit.qasm2 as qasm2
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import BackendV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -42,10 +43,18 @@ class IBMQuantumProvider(QuantumProvider):
     # Calibration cache TTL: 1 hour (IBM recalibrates ~daily)
     _CALIBRATION_CACHE_TTL = 3600
 
+    # Device list cache TTL: fetching backends() + per-backend status() from
+    # IBM Cloud is a live network round-trip (~10s+); cache briefly so
+    # repeated /devices polls don't each pay that cost.
+    _DEVICES_CACHE_TTL = 30
+
     def __init__(self):
         self.service = None
         self._calibration_cache: Dict[str, Dict[str, Any]] = {}
         self._calibration_cache_time: float = 0.0
+        self._devices_cache: Optional[List[Dict[str, Any]]] = None
+        self._devices_cache_time: float = 0.0
+        self._error_cache: Dict[str, Optional[str]] = {}
 
         try:
             if settings.IBM_QUANTUM_TOKEN:
@@ -72,7 +81,14 @@ class IBMQuantumProvider(QuantumProvider):
     def list_devices(self) -> List[Dict[str, Any]]:
         if not self.service:
             return []
-        
+
+        now = time.time()
+        if (
+            self._devices_cache is not None
+            and (now - self._devices_cache_time) < self._DEVICES_CACHE_TTL
+        ):
+            return self._devices_cache
+
         try:
             backends = self.service.backends()
         except Exception as e:
@@ -143,6 +159,9 @@ class IBMQuantumProvider(QuantumProvider):
                     "calibration": calibration,
                 }
             )
+
+        self._devices_cache = devices
+        self._devices_cache_time = now
         return devices
 
     def _get_calibration(self, backend: Any) -> Dict[str, Any]:
@@ -268,7 +287,7 @@ class IBMQuantumProvider(QuantumProvider):
 
     def execute_circuit(
             self,
-            circuit: QuantumCircuit,
+            circuit: Union[QuantumCircuit, str],
             device_name: str,
             shots: int,
             mode: Optional[Union[BackendV2, Session, Batch]] = None,
@@ -276,6 +295,9 @@ class IBMQuantumProvider(QuantumProvider):
         if not self.service:
             raise RuntimeError("IBM Quantum Service not initialized (missing credentials).")
         backend = self.service.backend(device_name)
+
+        if isinstance(circuit, str):
+            circuit = qasm2.loads(circuit)
 
         pm = generate_preset_pass_manager(target=backend.target, optimization_level=1)
         transpiled_circuit = pm.run(circuit)
@@ -295,15 +317,17 @@ class IBMQuantumProvider(QuantumProvider):
         job = sampler.run([transpiled_circuit], shots=shots)
         return job.job_id()
 
-    def execute_batch(self, tasks: List[QuantumCircuit], device_name: str, **kwargs) -> List[str]:
+    def execute_batch(self, tasks: List[Union[QuantumCircuit, str]], device_name: str, **kwargs) -> List[str]:
         if not self.service:
             raise RuntimeError("IBM Quantum Service not initialized (missing credentials).")
         backend = self.service.backend(device_name)
         shots = kwargs.get("shots", 1024)
         mode = kwargs.get("mode")
 
+        circuits = [qasm2.loads(t) if isinstance(t, str) else t for t in tasks]
+
         pm = generate_preset_pass_manager(target=backend.target, optimization_level=1)
-        transpiled_circuits = pm.run(tasks)
+        transpiled_circuits = pm.run(circuits)
 
         if mode is not None:
             sampler = Sampler(mode=mode)
@@ -325,10 +349,23 @@ class IBMQuantumProvider(QuantumProvider):
         try:
             job = self.service.job(real_id)
             raw = job.status().title()
-            return _IBM_STATUS_MAP.get(raw, raw.upper())
+            mapped = _IBM_STATUS_MAP.get(raw, raw.upper())
         except RuntimeJobNotFound:
             logger.warning("IBM job not found while checking status: %s", real_id)
             return "UNKNOWN"
+
+        if mapped == "FAILED":
+            try:
+                self._error_cache[real_id] = job.error_message()
+            except Exception as e:
+                logger.debug(f"Could not fetch error message for job {real_id}: {e}")
+
+        return mapped
+
+    def get_job_error(self, job_id: str) -> Optional[str]:
+        """Returns the failure reason IBM reported for a job, if known."""
+        real_id = job_id.split(":")[0]
+        return self._error_cache.get(real_id)
 
     def get_job_result(self, job_id: str) -> Dict[str, Any]:
         if not self.service:

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 
 from app.models.quantum_models import QuantumCircuit
@@ -39,7 +39,7 @@ def execute_quantum_circuit(
     strategy: OptimizationStrategy = OptimizationStrategy.TIME
 ):
     req = JobRequest(
-        task=circuit,
+        task=circuit.qasm,
         provider_name=provider_name,
         device_name=device_name,
         shots=shots,
@@ -161,7 +161,7 @@ def schedule_quantum_job(
         else:
             # QASM circuit job
             req = JobRequest(
-                task=circuit,
+                task=circuit.qasm,
                 provider_name="ibm-quantum",
                 device_name=device_name,
                 shots=shots,
@@ -311,7 +311,13 @@ def get_job_status(provider_name: str, job_id: str):
     status = job_manager.get_job_status(job_id)
     if status == "UNKNOWN":
         status = compute_service.get_job_status(provider_name, job_id)
-    return {"job_id": job_id, "provider": provider_name, "status": status}
+
+    response: Dict[str, Any] = {"job_id": job_id, "provider": provider_name, "status": status}
+    if status == "FAILED":
+        error = job_manager.get_job_error(job_id)
+        if error:
+            response["error"] = error
+    return response
 
 
 @router.get("/jobs/{provider_name}/{job_id}/result")

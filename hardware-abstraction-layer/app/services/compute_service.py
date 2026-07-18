@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, cast
+from typing import List, Dict, Any, Optional, cast
 
 from app.models.classical_models import ClassicalTask
 from app.models.execution import DeviceAvailability
@@ -116,6 +116,15 @@ class ComputeService:
         """
         provider = self._get_provider(provider_name)
         return provider.get_job_status(job_id)
+
+    def get_job_error(self, provider_name: str, job_id: str) -> Optional[str]:
+        """
+        Gets the failure reason for a job, if the provider tracks one.
+        """
+        provider = self._get_provider(provider_name)
+        if not hasattr(provider, 'get_job_error'):
+            return None
+        return cast(Any, provider).get_job_error(job_id)
 
     def get_job_result(self, provider_name: str, job_id: str) -> Dict[str, Any]:
         """

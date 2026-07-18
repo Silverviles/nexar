@@ -61,3 +61,4 @@ class JobSubmission(BaseModel):
     provider_job_id: Optional[str] = None
     scheduled_time: Optional[float] = None  # Unix timestamp for scheduled execution
     is_python_code: bool = False  # Flag for Python code jobs
+    error: Optional[str] = None  # Failure reason, set when status is FAILED

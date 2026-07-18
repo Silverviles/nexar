@@ -338,16 +338,26 @@ class JobManager:
             if submission.provider_job_id:
                 # Delegate to provider
                 status = compute_service.get_job_status(
-                    submission.request.provider_name, 
+                    submission.request.provider_name,
                     submission.provider_job_id
                 )
                 if status != submission.status:
                     submission.status = status
+                    if status == "FAILED" and not submission.error:
+                        submission.error = compute_service.get_job_error(
+                            submission.request.provider_name,
+                            submission.provider_job_id
+                        )
                     self._persist_job(submission)
                     self._publish_status_update(submission, status)
                 return status
             return submission.status
         return "UNKNOWN"
+
+    def get_job_error(self, job_id: str) -> Optional[str]:
+        """Returns the stored failure reason for a job, if known."""
+        submission = self._jobs.get(job_id)
+        return submission.error if submission else None
 
     def get_job_result(self, job_id: str) -> Dict:
         if job_id in self._jobs:
@@ -497,6 +507,7 @@ class JobManager:
             except Exception as e:
                 logger.error(f"Python code execution failed for job {sub.id}: {e}")
                 sub.status = "FAILED"
+                sub.error = str(e)
                 self._persist_job(sub)
                 self._publish_status_update(sub, "FAILED", extra_data={"error": str(e)})
 
@@ -523,6 +534,7 @@ class JobManager:
                 logger.error(f"Batch execution failed: {e}")
                 for sub in regular_jobs:
                     sub.status = "FAILED"
+                    sub.error = str(e)
                     self._persist_job(sub)
                     self._publish_status_update(sub, "FAILED", extra_data={"error": str(e)})
 

@@ -87,6 +87,8 @@ export interface JobStatusResponse {
   provider: string
   status: string
   state?: string
+  /** Failure reason, present only when status is "FAILED". */
+  error?: string
 }
 
 export interface JobResultResponse {

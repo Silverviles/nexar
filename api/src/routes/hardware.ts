@@ -8,6 +8,10 @@ const HARDWARE_LAYER_URL = process.env.HARDWARE_LAYER_URL || 'http://localhost:8
 // Timeout constants
 const DEFAULT_TIMEOUT = 10_000;   // 10s for read-only queries
 const EXECUTION_TIMEOUT = 60_000; // 60s for job submission (transpilation + queuing can be slow)
+// /devices aggregates across all providers, including live IBM Quantum
+// backends() + per-backend status() calls, which can take 10s+ on a cold
+// cache.
+const AGGREGATE_DEVICES_TIMEOUT = 20_000;
 const SLOW_UPSTREAM_THRESHOLD_MS = 5_000;
 
 logger.debug("Hardware routes initialized", {
@@ -296,7 +300,7 @@ const proxyToHalDynamic = (buildPath: (req: Request) => string, timeout = DEFAUL
 router.get('/status', proxyToHal('/api/v1/hardware/status'));
 
 // GET /api/v1/hardware/devices  ->  HAL GET /api/v1/hardware/devices
-router.get('/devices', proxyToHal('/api/v1/hardware/devices'));
+router.get('/devices', proxyToHal('/api/v1/hardware/devices', AGGREGATE_DEVICES_TIMEOUT));
 
 // GET /api/v1/hardware/providers  ->  HAL GET /api/providers
 router.get('/providers', proxyToHal('/api/providers'));

@@ -39,6 +39,15 @@ function isNumericRecord(value: unknown): value is Record<string, number> {
   return entries.every(([, v]) => typeof v === "number" && Number.isFinite(v));
 }
 
+/** Detects raw OpenQASM source (vs. Python) by its first non-comment line. */
+function isQasmCode(code: string): boolean {
+  const firstMeaningfulLine = code
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0 && !line.startsWith("//"));
+  return !!firstMeaningfulLine && /^OPENQASM\b/i.test(firstMeaningfulLine);
+}
+
 export function PipelineExecution({
   recommendedHardware,
   code,
@@ -83,15 +92,26 @@ export function PipelineExecution({
 
     try {
       if (isQuantum) {
-        // Submit to IBM Quantum via execute-python endpoint
-        // The code must define a `circuit` variable (QuantumCircuit)
-        const result = await hardwareService.submitPythonCode({
-          code,
-          device_name: deviceName,
-          shots,
-        });
-        setProvider(result.provider ?? "ibm-quantum");
-        setJobId(result.job_id);
+        if (isQasmCode(code)) {
+          // Raw OpenQASM source - submit directly as a circuit
+          const result = await hardwareService.submitQuantumCircuit("ibm-quantum", {
+            qasm: code,
+            device_name: deviceName,
+            shots,
+          });
+          setProvider(result.provider ?? "ibm-quantum");
+          setJobId(result.job_id);
+        } else {
+          // Python code via execute-python endpoint
+          // The code must define a `circuit` variable (QuantumCircuit)
+          const result = await hardwareService.submitPythonCode({
+            code,
+            device_name: deviceName,
+            shots,
+          });
+          setProvider(result.provider ?? "ibm-quantum");
+          setJobId(result.job_id);
+        }
       } else {
         // Submit to local classical Python executor
         const result = await hardwareService.submitClassicalTask("local", {
@@ -129,7 +149,8 @@ export function PipelineExecution({
                 <div className="text-sm text-muted-foreground">
                   Your code will be submitted to{" "}
                   <Badge variant="quantum">IBM Quantum</Badge> via the Qiskit
-                  Runtime. The code must define a{" "}
+                  Runtime. Raw OpenQASM source is submitted directly; Python
+                  code must define a{" "}
                   <code className="rounded bg-secondary/50 px-1.5 py-0.5 font-mono text-xs">
                     circuit
                   </code>{" "}

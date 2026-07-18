@@ -121,6 +121,8 @@ export interface JobStatusResponse {
   job_id: string;
   provider: string;
   status: string;
+  /** Failure reason, present only when status is "FAILED". */
+  error?: string;
 }
 
 export interface JobResultResponse {

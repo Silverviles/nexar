@@ -26,7 +26,9 @@ export const hardwareService = {
 
   /** List all available hardware devices from all providers. */
   async getDevices(): Promise<HardwareDevicesResponse> {
-    const { data } = await api.get<HardwareDevicesResponse>(`${API_BASE}/devices`)
+    // Aggregates across all providers, including live IBM Quantum backend
+    // calls, which can take 10s+ on a cold cache — use a longer timeout.
+    const { data } = await api.get<HardwareDevicesResponse>(`${API_BASE}/devices`, { timeout: 20000 })
     return data
   },
 

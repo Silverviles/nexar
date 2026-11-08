@@ -39,7 +39,8 @@ code-analysis-engine/
 │   ├── test_language_detector.py
 │   └── sample_codes/
 ├── main.py                 # FastAPI application entry point
-├── requirements.txt        # Python dependencies
+├── requirements.txt        # Runtime Python dependencies
+├── requirements-dev.txt    # Training / development Python dependencies
 ├── run_complete_pipeline.py# Full analysis pipeline runner
 └── README.md              # This file
 ```
@@ -64,9 +65,17 @@ source .venv/bin/activate  # macOS/Linux
 # or
 .venv\Scripts\activate     # Windows
 
-# Install dependencies
+# Install runtime dependencies
 pip install -r requirements.txt
+
+# ...or install runtime + training/testing dependencies
+pip install -r requirements-dev.txt
 ```
+
+`requirements.txt` contains only what is needed to run the service.
+`requirements-dev.txt` adds the packages used by the training, evaluation and
+test scripts (`language_classifier_trainer.py`,
+`train_codebert_algorithm_classifier.py`, `datasets/`, `tests/`).
 
 ### 2. Run the Service
 
@@ -450,6 +459,23 @@ PORT=8002
 # Currently allows: http://localhost:8080, http://127.0.0.1:5173
 ```
 
+## Dependencies
+
+Runtime dependencies (`requirements.txt`):
+- **fastapi / uvicorn / pydantic** - Web framework and validation
+- **radon** - Cyclomatic complexity analysis
+- **qiskit** - Qiskit / OpenQASM code analysis
+- **numpy / scipy** - Numerical analysis and state simulation
+- **pandas / joblib / scikit-learn / xgboost** - Loading and running the trained language-classifier ensemble
+- **torch / transformers** - CodeBERT language and algorithm classifiers
+- **google-cloud-storage / google-cloud-logging** - GCS model download and Cloud Run logging
+
+Training and development dependencies (`requirements-dev.txt`):
+- **matplotlib / seaborn** - Training and evaluation plots
+- **tqdm** - Training progress bars
+- **accelerate** - Hugging Face `Trainer` backend
+- **pytest / requests** - Testing and tooling
+
 ## Troubleshooting
 
 ### Common Issues
@@ -459,14 +485,6 @@ PORT=8002
 ```bash
 # Ensure all dependencies are installed
 pip install -r requirements.txt
-```
-
-**Tree-sitter Build Issues**
-
-```bash
-# Rebuild tree-sitter parsers
-pip uninstall tree-sitter
-pip install tree-sitter==0.20.4
 ```
 
 **Port Already in Use**

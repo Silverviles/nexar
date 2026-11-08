@@ -33,7 +33,8 @@ ai-code-converter/
 ├── models.py                  # AI model definitions
 ├── main.py                    # FastAPI app factory
 ├── run.py                     # Development server runner
-├── requirements.txt           # Python dependencies
+├── requirements.txt           # Runtime Python dependencies
+├── requirements-dev.txt       # Training / development Python dependencies
 └── README.md                  # This file
 ```
 
@@ -57,9 +58,16 @@ source .venv/bin/activate  # macOS/Linux
 # or
 .venv\Scripts\activate     # Windows
 
-# Install dependencies
+# Install runtime dependencies
 pip install -r requirements.txt
+
+# ...or install runtime + training/testing dependencies
+pip install -r requirements-dev.txt
 ```
+
+`requirements.txt` contains only what is needed to run the service.
+`requirements-dev.txt` adds the packages used by `modal_training_utils/`
+(model training and dataset generation) and by local testing.
 
 ### 2. Run the Service
 
@@ -604,13 +612,18 @@ This service integrates with:
 
 ## Dependencies
 
-Key dependencies:
+Runtime dependencies (`requirements.txt`):
 - **fastapi** - Web framework
 - **uvicorn** - ASGI server
 - **pydantic** - Data validation
 - **qiskit** - Quantum computing framework
 - **torch/transformers** - ML for code generation
-- **scikit-learn** - ML utilities
+- **google-cloud-storage / google-cloud-logging** - GCS model download and Cloud Run logging
+
+Training and development dependencies (`requirements-dev.txt`):
+- **datasets / evaluate / accelerate** - Model training utilities
+- **scikit-learn / pandas / seaborn** - Training metrics and plots
+- **pytest** - Testing
 
 ## Contributing
 

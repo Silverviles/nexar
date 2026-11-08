@@ -1,0 +1,22 @@
+# Development / training dependencies
+#
+# Installs the runtime dependencies first, then the extra packages used by the
+# scripts in modal_training_utils/ (model training and dataset generation) and
+# by local testing.
+#
+#   pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+# Model training / dataset generation
+datasets
+evaluate
+accelerate>=0.26.0
+scikit-learn
+pandas
+seaborn
+
+# Testing / tooling
+pytest
+requests
+protobuf
